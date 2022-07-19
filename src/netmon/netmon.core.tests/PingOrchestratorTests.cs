@@ -1,4 +1,5 @@
 ﻿using netmon.core.Data;
+using netmon.core.Handlers;
 using netmon.core.Orchestators;
 using Newtonsoft.Json;
 using System.Net;
@@ -11,10 +12,12 @@ namespace netmon.core.tests
         private CancellationToken _cancellationToken;
         private PingOrchestrator _unit;
         private JsonSerializerSettings _settings;
+        private IPingHandler _pingHandler;
         [SetUp]
         public void Setup()
         {
-            _unit = new PingOrchestrator();
+            _pingHandler = new PingHandler();
+            _unit = new PingOrchestrator(_pingHandler);
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
             _settings = new JsonSerializerSettings();
@@ -51,7 +54,7 @@ namespace netmon.core.tests
         [Test]
         public void OnExecuteWithComplexRequestkRequestFor4SecondsItSucceeeds()
         {
-            var duration = new TimeSpan(0, 0, 20);
+            var duration = new TimeSpan(0, 0, 10);
             var request = new IPAddress[] {
                 IPAddress.Parse("127.0.0.1"),
                 IPAddress.Parse("192.168.0.1"),

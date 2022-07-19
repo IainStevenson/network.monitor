@@ -11,22 +11,27 @@ namespace netmon.core.Orchestators
     public class PingOrchestrator
     {
         private TimeSpan _pauseTimeBetweenInstances = new TimeSpan(0, 0, 1);
+        private IPingHandler _pingHandler;
+        public PingOrchestrator(IPingHandler pingHandler)
+        {
+            _pingHandler = pingHandler;
+        }
 
         public async Task<PingResponses> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
 
-            var end  = DateTimeOffset.UtcNow.Add(until);
+            var end = DateTimeOffset.UtcNow.Add(until);
             var responses = new PingResponses();
 
-            while (DateTimeOffset.UtcNow < end)
+            while (DateTimeOffset.UtcNow < end && !cancellation.IsCancellationRequested)
             {
                 var looptime = DateTimeOffset.UtcNow.Add(_pauseTimeBetweenInstances);
                 var parallelTasks = new List<Task<PingResponseModel>>(addresses.Length);
-                
+
                 for (int i = 0; i < addresses.Length; i++)
                 {
                     var request = new PingRequestModel() { Address = addresses[i] };
-                    Task<PingResponseModel> task = new PingHandler().Execute(request, cancellation);
+                    Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
                     parallelTasks.Add(task);
                 }
 
@@ -35,13 +40,17 @@ namespace netmon.core.Orchestators
                 var results = parallelTasks.Select(x => x.Result);
                 foreach (var result in results)
                 {
-                    responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>( result.Start, result.Request.Address), result);
+                    responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
                 }
-                while (DateTimeOffset.UtcNow < looptime)
+                if (!cancellation.IsCancellationRequested)
                 {
-                    Thread.Sleep((int)(_pauseTimeBetweenInstances.Milliseconds / 10));
+                    while (DateTimeOffset.UtcNow < looptime)
+                    {
+                        Thread.Sleep((int)(_pauseTimeBetweenInstances.Milliseconds / 10));
+                    }
                 }
             }
+
             return responses;
         }
     }
