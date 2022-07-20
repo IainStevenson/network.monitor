@@ -3,7 +3,7 @@
     /// <summary>
     /// Operating options for the <see cref="Orchestrators.TraceRouteOrchestrator"/>
     /// </summary>
-    public class TraceRoutOrchestratorOptions
+    public class TraceRouteOrchestratorOptions
     {
         /// <summary>
         /// The maximum Hops allowed in a trace to the destination.

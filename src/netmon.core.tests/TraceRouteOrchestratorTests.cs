@@ -22,7 +22,7 @@ namespace netmon.core.tests
             // unit setup
             _pingHandler = new PingHandler(new PingHandlerOptions());
             _pingRequestModelFactory = new PingRequestModelFactory();
-            var traceRouteHandlerOptions = new TraceRoutOrchestratorOptions();
+            var traceRouteHandlerOptions = new TraceRouteOrchestratorOptions();
 
             _unit = new TraceRouteOrchestrator(_pingHandler, traceRouteHandlerOptions, _pingRequestModelFactory);
 

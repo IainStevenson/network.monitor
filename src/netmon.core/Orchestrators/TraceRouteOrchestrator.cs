@@ -13,10 +13,10 @@ namespace netmon.core.Orchestrators
     public class TraceRouteOrchestrator
     {
         private readonly IPingHandler _pingHandler;
-        private readonly TraceRoutOrchestratorOptions _options;
+        private readonly TraceRouteOrchestratorOptions _options;
         private readonly IPingRequestModelFactory _requestModelFactory;
 
-        public TraceRouteOrchestrator(IPingHandler pingHandler, TraceRoutOrchestratorOptions options, IPingRequestModelFactory requestModelFactory)
+        public TraceRouteOrchestrator(IPingHandler pingHandler, TraceRouteOrchestratorOptions options, IPingRequestModelFactory requestModelFactory)
         {
             _pingHandler = pingHandler;
             _options = options;
