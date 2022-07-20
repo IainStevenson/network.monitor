@@ -1,9 +1,10 @@
-﻿using netmon.core.Data;
+﻿using netmon.core.Configuration;
+using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Models;
 using System.Net;
 
-namespace netmon.core.Orchestators
+namespace netmon.core.Orchestrators
 {
     /// <summary>
     /// Handles complex ping tasks and recording results via the <see cref="PingHandler"/> and <see cref="PingResponses"/>.
@@ -12,9 +13,12 @@ namespace netmon.core.Orchestators
     {
         private TimeSpan _pauseTimeBetweenInstances = new TimeSpan(0, 0, 1);
         private IPingHandler _pingHandler;
-        public PingOrchestrator(IPingHandler pingHandler)
+        private IPingRequestModelFactory _pingRequestModelFactory;
+        
+        public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory)
         {
             _pingHandler = pingHandler;
+            _pingRequestModelFactory = pingRequestModelFactory;   
         }
 
         public async Task<PingResponses> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
@@ -30,7 +34,9 @@ namespace netmon.core.Orchestators
 
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    var request = new PingRequestModel() { Address = addresses[i] };
+                    //var request = new PingRequestModel() { Address = addresses[i] };
+                    var request = _pingRequestModelFactory.Create(_pingHandler.Options);
+                    request.Address = addresses[i];
                     Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
                     parallelTasks.Add(task);
                 }

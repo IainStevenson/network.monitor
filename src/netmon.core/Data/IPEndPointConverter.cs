@@ -4,6 +4,9 @@ using System.Net;
 
 namespace netmon.core.Data
 {
+    /// <summary>
+    /// Serialisation converter for classes dependent on <see cref="IPEndPoint"/>.
+    /// </summary>
     public class IPEndPointConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)

@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json.Converters;
+﻿using netmon.core.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Text.Json.Serialization;
 
 namespace netmon.core.Models
 {
@@ -14,6 +12,12 @@ namespace netmon.core.Models
         public TimeSpan Duration { get { return new TimeSpan(Finish.Ticks - Start.Ticks); } }
 
         public PingReply Response { get; set; }
-        public PingRequestModel Request { get; internal set; }
+        public PingRequestModel Request { get; set; } = new PingRequestModel();
+        public int Hop { get; set; } = 1;
+
+        public int Attempt { get; set; } = 1;
+        public int MaxAttempts { get; set; } = 3;
+        public int Ttl { get; set; } = 0;
+
     }
 }
