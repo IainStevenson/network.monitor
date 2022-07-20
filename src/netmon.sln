@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core", "netmon.core\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core.tests", "netmon.core.tests\netmon.core.tests.csproj", "{47B53F2C-9D2C-4437-8903-3A5B416642C4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D2BF152F-23FE-4F78-A0E2-C084A7BA7F1D}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+		..\usage.md = ..\usage.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
