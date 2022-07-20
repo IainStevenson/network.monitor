@@ -39,8 +39,8 @@ namespace netmon.core.Handlers
                         Ttl =_pingOptions.Ttl 
                     };
 
-                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Options.Ttl}");
 
+                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING request  {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Options.Ttl}");
                     response.Start = DateTimeOffset.UtcNow;
                     PingReply reply = pingSender.Send(
                         request.Address, 
@@ -51,7 +51,7 @@ namespace netmon.core.Handlers
                     
                     response.Response = reply;
 
-                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration} ms, Status {response.Response.Status}");
+                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration.TotalMilliseconds} ms, Status {response.Response.Status}");
 
 
                 }
