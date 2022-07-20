@@ -41,7 +41,7 @@ namespace netmon.core.tests
         
 
         [Test]
-        public async Task  OnExecuteItAutoConfiguresMonitorsAndDoesNotThrowException()
+        public async Task  OnExecuteItAutoConfiguresAndMonitors()
         {
             var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0,0,2); // two seconds is long enough
@@ -69,8 +69,6 @@ namespace netmon.core.tests
             _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
 
             var responses = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
-
-
 
             ShowResults(_monitorModel);
             ShowResults(responses);

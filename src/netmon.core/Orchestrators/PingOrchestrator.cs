@@ -1,5 +1,4 @@
-﻿using netmon.core.Configuration;
-using netmon.core.Data;
+﻿using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Models;
 using System.Net;
@@ -34,7 +33,6 @@ namespace netmon.core.Orchestrators
 
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    //var request = new PingRequestModel() { Address = addresses[i] };
                     var request = _pingRequestModelFactory.Create(_pingHandler.Options);
                     request.Address = addresses[i];
                     Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
