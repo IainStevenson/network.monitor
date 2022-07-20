@@ -1,6 +1,8 @@
-﻿using netmon.core.Data;
+﻿using netmon.core.Configuration;
+using netmon.core.Data;
 using netmon.core.Handlers;
-using netmon.core.Orchestators;
+using netmon.core.Models;
+using netmon.core.Orchestrators;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -13,13 +15,23 @@ namespace netmon.core.tests
         private PingOrchestrator _unit;
         private JsonSerializerSettings _settings;
         private IPingHandler _pingHandler;
+        private PingHandlerOptions _pingHandlerOptions;
+        private IPingRequestModelFactory _pingRequestModelFactory;
         [SetUp]
         public void Setup()
         {
-            _pingHandler = new PingHandler();
-            _unit = new PingOrchestrator(_pingHandler);
+            // unit setup
+            _pingRequestModelFactory = new PingRequestModelFactory();
+            _pingHandlerOptions = new PingHandlerOptions();
+            _pingHandler = new PingHandler(_pingHandlerOptions);
+
+            _unit = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
+
+            // control setup
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
+            
+            // output setup
             _settings = new JsonSerializerSettings();
             _settings.Converters.Add(new IPAddressConverter());
             _settings.Converters.Add(new IPEndPointConverter());
@@ -31,7 +43,7 @@ namespace netmon.core.tests
         public void OnExecuteWithDefaltLoopbackRequestFor2SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 2);
-            var request = new IPAddress[] { IPAddress.Parse("127.0.0.1") };
+            var request = new IPAddress[] { Defaults.LoopbackAddress };
             var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
@@ -39,10 +51,10 @@ namespace netmon.core.tests
         }
 
         [Test]
-        public void OnExecuteWithDefaltLoopbackRequestFor4SecondsItSucceeeds()
+        public void OnExecuteWithDefaltLoopbackRequestFor3SecondsItSucceeeds()
         {
-            var duration = new TimeSpan(0, 0, 4);
-            var request = new IPAddress[] { IPAddress.Parse("127.0.0.1") };
+            var duration = new TimeSpan(0, 0, 3);
+            var request = new IPAddress[] { Defaults.LoopbackAddress };
             var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
@@ -55,24 +67,12 @@ namespace netmon.core.tests
         public void OnExecuteWithComplexRequestkRequestFor4SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 10);
-            var request = new IPAddress[] {
-                IPAddress.Parse("127.0.0.1"),
-                IPAddress.Parse("192.168.0.1"),
-                IPAddress.Parse("172.16.0.1"),
-                IPAddress.Parse("172.26.19.5"),
-                IPAddress.Parse("172.26.24.142"),
-                IPAddress.Parse("172.26.24.93"),
-                IPAddress.Parse("172.26.3.146"),
-                IPAddress.Parse("185.153.237.154"),
-                IPAddress.Parse("185.153.237.155"),
-                IPAddress.Parse("216.239.48.217"),
-                IPAddress.Parse("142.251.52.145"),
-                IPAddress.Parse("142.251.52.145"),
-                IPAddress.Parse("8.8.8.8")
-            };
-            var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
+            var request = new List<IPAddress>();
+            request.AddRange(TestConditions.LocalAddresses);
+            request.AddRange(TestConditions.WorldAddresses);
+
+            var responses = _unit.PingManyUntil(request.ToArray(), duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
-            //Assert.That(responses.Where(x => x.Value.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
             TestContext.Out.WriteLine(JsonConvert.SerializeObject(responses, _settings));
         }
 

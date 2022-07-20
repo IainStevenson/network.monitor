@@ -1,6 +1,7 @@
-﻿using netmon.core.Models;
+﻿using netmon.core.Configuration;
+using netmon.core.Data;
+using netmon.core.Models;
 using System.Net.NetworkInformation;
-using System.Text;
 
 namespace netmon.core.Handlers
 {
@@ -10,6 +11,14 @@ namespace netmon.core.Handlers
     /// </summary>
     public class PingHandler : IPingHandler
     {
+        private readonly PingHandlerOptions _pingOptions;
+        public PingHandlerOptions Options {  get {  return  _pingOptions; } }
+
+        public PingHandler(PingHandlerOptions pingOptions)     
+        {
+            _pingOptions = pingOptions;
+        }
+
         /// <summary>
         /// Asnychronously emit a ping to an address and return the response.
         /// </summary>
@@ -21,25 +30,29 @@ namespace netmon.core.Handlers
 
             return Task.Run(() =>
             {
+                //request.Options = _pingOptions; // record the options currently working with so the client does not have to
                 using (Ping pingSender = new())
                 {
-                    // Create a buffer of 32 bytes of data to be transmitted.
-
-
                     response.Request = request;
+                    var pingOptions = new PingOptions() { 
+                        DontFragment = _pingOptions.DontFragment, 
+                        Ttl =_pingOptions.Ttl 
+                    };
+
+                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Options.Ttl}");
+
                     response.Start = DateTimeOffset.UtcNow;
-                    PingReply reply = pingSender.Send(request.Address, request.Timeout, request.Buffer, request.Options);
+                    PingReply reply = pingSender.Send(
+                        request.Address, 
+                        _pingOptions.Timeout, 
+                        request.Buffer, 
+                        pingOptions);
                     response.Finish = DateTimeOffset.UtcNow;
+                    
                     response.Response = reply;
 
-                    //if (reply.Status == IPStatus.Success)
-                    //{
-                    //    response.RespondingAddress = reply.Address;
-                    //    response.RoundTripTime = reply.RoundtripTime;
-                    //    response.Options.Ttl = reply.Options?.Ttl ?? request.Options.Ttl;
-                    //    response.Options.DontFragment = reply.Options?.DontFragment ?? true;
-                    //    response.BufferSize = reply.Buffer.Length;
-                    //}
+                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration} ms, Status {response.Response.Status}");
+
 
                 }
                 return response;

@@ -3,6 +3,9 @@ using System.Net;
 
 namespace netmon.core.Data
 { 
+    /// <summary>
+    /// Serialisation converter for classes dependent on <see cref="IPAddress"/>.
+    /// </summary>
     public class IPAddressConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
