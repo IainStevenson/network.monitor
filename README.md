@@ -1,5 +1,7 @@
 # network.monitor
 
+Work In progress!
+
 A command line tool and reusable libraries that use the .NET PING to test connections to remote addresses.
 
 Uses PING and TRACERT techniques and can call out to external code such as the ookla speed test cli to monitor and record your networks connection to the internet in terms of access, reliability and performance.
