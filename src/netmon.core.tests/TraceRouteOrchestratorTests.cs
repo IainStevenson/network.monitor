@@ -3,17 +3,12 @@ using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
-using Newtonsoft.Json;
 
 namespace netmon.core.tests
 {
-    public class TraceRouteOrchestratorTests
+    public class TraceRouteOrchestratorTests : TestBase<TraceRouteOrchestrator>
     {
-        private TraceRouteOrchestrator _unit;
-        private IPingHandler _pingHandler;
-        private CancellationTokenSource _cancellationTokenSource;
-        private CancellationToken _cancellationToken;
-        private JsonSerializerSettings _settings;
+        private IPingHandler _pingHandler;       
         private IPingRequestModelFactory _pingRequestModelFactory;
 
         [SetUp]
@@ -26,16 +21,7 @@ namespace netmon.core.tests
 
             _unit = new TraceRouteOrchestrator(_pingHandler, traceRouteHandlerOptions, _pingRequestModelFactory);
 
-            // control setup
-            _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationToken = _cancellationTokenSource.Token;
-
-            // output setup
-            _settings = new JsonSerializerSettings();
-            _settings.Converters.Add(new IPAddressConverter());
-            _settings.Converters.Add(new IPEndPointConverter());
-            _settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            _settings.Formatting = Formatting.Indented;
+            
         }
 
         [Test]
@@ -48,14 +34,6 @@ namespace netmon.core.tests
             ShowResults(responses);
         }
 
-        public void ShowResults(PingResponses results)
-        {
-            TestContext.Out.WriteLine(JsonConvert.SerializeObject(
-               results.AsOrderedList()
-
-               , _settings)
-               );
-        }
 
         [Test]
         public void OnExecuteToWorldAddressItReturnsResponses()

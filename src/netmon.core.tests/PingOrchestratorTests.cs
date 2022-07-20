@@ -8,12 +8,8 @@ using System.Net;
 
 namespace netmon.core.tests
 {
-    public class PingOrchestratorTests
+    public class PingOrchestratorTests : TestBase<PingOrchestrator>
     {
-        private CancellationTokenSource _cancellationTokenSource;
-        private CancellationToken _cancellationToken;
-        private PingOrchestrator _unit;
-        private JsonSerializerSettings _settings;
         private IPingHandler _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
@@ -27,16 +23,7 @@ namespace netmon.core.tests
 
             _unit = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
 
-            // control setup
-            _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationToken = _cancellationTokenSource.Token;
             
-            // output setup
-            _settings = new JsonSerializerSettings();
-            _settings.Converters.Add(new IPAddressConverter());
-            _settings.Converters.Add(new IPEndPointConverter());
-            _settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            _settings.Formatting = Formatting.Indented;
         }
 
         [Test]
@@ -47,7 +34,8 @@ namespace netmon.core.tests
             var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
-            TestContext.Out.WriteLine(JsonConvert.SerializeObject(responses, _settings));
+            
+            ShowResults(responses);
         }
 
         [Test]
@@ -58,7 +46,7 @@ namespace netmon.core.tests
             var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
-            TestContext.Out.WriteLine(JsonConvert.SerializeObject(responses, _settings));
+            ShowResults(responses);
         }
 
 
@@ -73,7 +61,7 @@ namespace netmon.core.tests
 
             var responses = _unit.PingManyUntil(request.ToArray(), duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
-            TestContext.Out.WriteLine(JsonConvert.SerializeObject(responses, _settings));
+            ShowResults(responses);
         }
 
 

@@ -51,7 +51,7 @@ namespace netmon.core.Handlers
                     
                     response.Response = reply;
 
-                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration} ms, Status {response.Response.Status}");
+                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration.TotalMilliseconds} ms, Status {response.Response.Status}");
 
 
                 }
