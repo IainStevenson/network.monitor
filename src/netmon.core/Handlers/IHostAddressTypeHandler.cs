@@ -1,4 +1,5 @@
-﻿using netmon.core.Models;
+﻿using netmon.core.Data;
+using netmon.core.Models;
 using System.Net;
 
 namespace netmon.core.Handlers

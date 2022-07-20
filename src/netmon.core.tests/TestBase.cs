@@ -19,8 +19,9 @@ namespace netmon.core.tests
             // output setup
             _settings = new JsonSerializerSettings();
             _settings.Converters.Add(new IPAddressConverter());
-            _settings.Converters.Add(new IPEndPointConverter());
+            //_settings.Converters.Add(new IPEndPointConverter());
             _settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            _settings.Converters.Add(new HostAdddresAndTypeConverter());
             _settings.Formatting = Formatting.Indented;
         }
 

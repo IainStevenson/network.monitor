@@ -1,5 +1,6 @@
 ﻿using netmon.core.Data;
 using System.Net;
+using System.Text.Json.Serialization;
 
 namespace netmon.core.Configuration
 {
@@ -8,7 +9,7 @@ namespace netmon.core.Configuration
         /// <summary>
         /// The monitoring target. Defaults to dns.google.com
         /// </summary>
-        public IPAddress Destination { get; set; } = Defaults.DefaultMonitoringDestination;
+        [JsonConverter(typeof(IPAddressConverter))] public IPAddress Destination { get; set; } = Defaults.DefaultMonitoringDestination;
         /// <summary>
         /// The interval in milliseconds between consecutive ping requests for any host.
         /// </summary>

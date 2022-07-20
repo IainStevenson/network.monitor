@@ -11,7 +11,7 @@ namespace netmon.core.tests
     {
         private MonitorOrchestrator _unit;
         private MonitorOptions _monitorOptions;
-        private MonitorModel _monitorModel;
+        private MonitorRequestModel _monitorModel;
         private TraceRouteOrchestrator _traceRouteOrchestrator;
         private PingOrchestrator _pingOrchestrator;
         private IHostAddressTypeHandler _hostAddressTypeHandler;
@@ -32,7 +32,7 @@ namespace netmon.core.tests
             _pingHandler = new  PingHandler(_pingOptions);
             _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
-            _monitorModel = new MonitorModel();
+            _monitorModel = new MonitorRequestModel();
             _monitorOptions = new MonitorOptions();
             _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);          
 
@@ -41,7 +41,7 @@ namespace netmon.core.tests
         
 
         [Test]
-        public async Task  OnExecuteItDoesNotThrowException()
+        public async Task  OnExecuteItAutoConfiguresMonitorsAndDoesNotThrowException()
         {
             var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0,0,2); // two seconds is long enough
@@ -49,8 +49,34 @@ namespace netmon.core.tests
 
             var responses  = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
 
+
+            Assert.That(_monitorModel.LocalHosts.Count, Is.GreaterThanOrEqualTo(1));
+            Assert.That(_monitorModel.Hosts.Count, Is.GreaterThan(0));
+            Assert.That(responses.Count, Is.GreaterThan(0));
+
+            ShowResults(_monitorModel);
             ShowResults(responses);
         }
+
+
+        [Test]
+        public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
+        {
+            var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            var until = new TimeSpan(0, 0, 2); // two seconds is long enough
+
+            var monitorJson = File.ReadAllText($@".\MonitorModel.json");
+            _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+
+            var responses = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
+
+
+
+            ShowResults(_monitorModel);
+            ShowResults(responses);
+        }
+
+
 
     }
 }

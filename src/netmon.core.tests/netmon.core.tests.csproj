@@ -20,4 +20,10 @@
     <ProjectReference Include="..\netmon.core\netmon.core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="MonitorModel.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

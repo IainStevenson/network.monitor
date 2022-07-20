@@ -28,7 +28,7 @@ namespace netmon.core.Orchestrators
             _hostAddressTypeHandler = hostAddressTypeHandler;
         }
 
-        public async Task Configure(MonitorModel monitor,  CancellationToken cancellationToken)
+        public async Task Configure(MonitorRequestModel monitor, CancellationToken cancellationToken)
         {
             var tracedRoutes = await _routeOrchestrator.Execute(monitor.Destination, cancellationToken);
 
@@ -39,11 +39,11 @@ namespace netmon.core.Orchestrators
                                     ;
             // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
             if (!_monitorOptions.Roaming)
-                monitor.LocalHosts.Add(validHosts.Select(x => x.Response.Address).First());
+                monitor.LocalHosts.Add(validHosts.Select(x => x.Response.Address as IPAddress).First());
 
             foreach (var host in validHosts.Where(w => w.Attempt == 1))
             {
-                monitor.Hosts.Add(host.Response.Address, _hostAddressTypeHandler.GetPrivateHostType(host.Response.Address));
+                monitor.Hosts.Add(host.Response.Address as IPAddress, _hostAddressTypeHandler.GetPrivateHostType(host.Response.Address as IPAddress));
             }
 
             foreach (var host in monitor.LocalHosts)
@@ -59,17 +59,20 @@ namespace netmon.core.Orchestrators
         /// <param name="until">The time span to continue moitoring over.</param>
         /// <param name="cancellationToken">The asnyc cacnellaction token for earyl termination.</param>
         /// <returns>An instance of <see cref="Task"/> delivering an isntance of <see cref="PingResponses"/></returns>
-        public async Task<PingResponses> Execute(MonitorModel monitorModel, TimeSpan until, CancellationToken cancellationToken)
+        public async Task<MonitorRespones> Execute(MonitorRequestModel monitorModel, TimeSpan until, CancellationToken cancellationToken)
         {
             if (!monitorModel.Hosts.Any())
             {
                 await Configure(monitorModel, cancellationToken);
             }
 
-            var responses = await _pingOrchestrator.PingManyUntil(
-                    monitorModel.Hosts.Select(x=>x.Key).ToArray(),
-                    until, 
-                    cancellationToken);
+            MonitorRespones responses = new MonitorRespones();
+
+            responses.AddRange((await _pingOrchestrator.PingManyUntil(
+                     monitorModel.Hosts.Select(x => x.Key).ToArray(),
+                     until,
+                     cancellationToken)).Select(s => s.Value).ToList());
+
             return responses;
         }
     }

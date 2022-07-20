@@ -20,7 +20,7 @@ namespace netmon.core.tests
         [TestCase("172.16.0.0/12", "172.26.19.5")]
         public void IpV4SubnetMaskMatchesValidIpAddress(string netMask, string ipAddress)
         {
-            var ipAddressObj = IPAddress.Parse(ipAddress);
+            IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
             Assert.True(ipAddressObj.IsInSubnet(netMask));
         }
 
@@ -33,7 +33,7 @@ namespace netmon.core.tests
         [TestCase("10.128.240.50/30", "10.127.240.51")]
         public void IpV4SubnetMaskDoesNotMatchInvalidIpAddress(string netMask, string ipAddress)
         {
-            var ipAddressObj = IPAddress.Parse(ipAddress);
+            IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
             Assert.False(ipAddressObj.IsInSubnet(netMask));
         }
 
@@ -49,7 +49,7 @@ namespace netmon.core.tests
         [TestCase("2001:db8:abcd:0012::0/0", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")]
         public void IpV6SubnetMaskMatchesValidIpAddress(string netMask, string ipAddress)
         {
-            var ipAddressObj = IPAddress.Parse(ipAddress);
+            IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
             Assert.True(ipAddressObj.IsInSubnet(netMask));
         }
 
@@ -63,7 +63,7 @@ namespace netmon.core.tests
         [TestCase("2001:db8:abcd:5678::0/53", "2001:0db8:abcd:5800:0000:0000:0000:0000")]
         public void IpV6SubnetMaskDoesNotMatchInvalidIpAddress(string netMask, string ipAddress)
         {
-            var ipAddressObj = IPAddress.Parse(ipAddress);
+            IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
             Assert.False(ipAddressObj.IsInSubnet(netMask));
         }
     }

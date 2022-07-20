@@ -5,6 +5,7 @@ using System.Net.Sockets;
 
 namespace netmon.core.Data
 {
+
     /// <summary>
     /// Solution default values.
     /// </summary>
@@ -15,7 +16,7 @@ namespace netmon.core.Data
         /// NOTE: If you set this to <see cref="IPAddress.Loopback"/> then it will not serialize due to ScopeId. 
         /// Is this a bug in <see cref="IPAddressConverter"/> ???
         /// </summary>
-        public static IPAddress LoopbackAddress = IPAddress.Parse("127.0.0.1");
+        public static IPAddress LoopbackAddress =  IPAddress.Parse("127.0.0.1");
 
         /// <summary>
         /// Default Ping options.
