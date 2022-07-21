@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 
-namespace netmon.core.Data
+namespace netmon.core.Serialisation
 {
     public class HostAdddresAndTypeConverter : JsonConverter
     {
@@ -14,7 +14,6 @@ namespace netmon.core.Data
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            if (objectType == typeof(KeyValuePair<IPAddress, HostTypes>)) return true;
             if (objectType == typeof(Dictionary<IPAddress, HostTypes>)) return true;
             return false;
         }
@@ -28,20 +27,17 @@ namespace netmon.core.Data
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-
-            if (objectType == typeof(Dictionary<IPAddress, HostTypes>))
-            {
-               var items =  JToken.Load(reader)
-                    .Select(item => new KeyValuePair<string,string>(
-                            item["address"].ToString(), 
-                            item["hostType"].ToString() )
-                    ).ToList().ToDictionary(t => IPAddress.Parse(t.Key), t => (HostTypes)Enum.Parse(typeof(HostTypes), t.Value));
-                return items;
-            }
-            throw new NotImplementedException();
+            var items = JToken.Load(reader)
+                 .Select(item => new KeyValuePair<string, string>(
+                         item["address"].ToString(),
+                         item["hostType"].ToString())
+                 ).ToList().ToDictionary(t => IPAddress.Parse(t.Key), t => (HostTypes)Enum.Parse(typeof(HostTypes), t.Value));
+            return items;
         }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
         /// <summary>
         /// Serialise: Write the object to Json.
@@ -52,17 +48,10 @@ namespace netmon.core.Data
         /// <exception cref="NotImplementedException"></exception>
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-
-
-            if (value.GetType() == typeof(Dictionary<IPAddress, HostTypes>))
-            {
-                JToken.FromObject((from n in (Dictionary<IPAddress, HostTypes>)value
-                                   select
-                                   new { address = n.Key.ToString(), hostType = n.Value.ToString() }
-                                   ).ToList()).WriteTo(writer);
-                return;
-            }
-            throw new NotImplementedException();
+            JToken.FromObject((from n in value as Dictionary<IPAddress, HostTypes>
+                               select
+                               new { address = n.Key.ToString(), hostType = n.Value.ToString() }
+                               ).ToList()).WriteTo(writer);
         }
     }
 }

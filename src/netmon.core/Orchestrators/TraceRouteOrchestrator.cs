@@ -33,12 +33,13 @@ namespace netmon.core.Orchestrators
         {
             var responses = new PingResponses();
             _pingHandler.Options.Ttl = 1;
-            var destiantionReachedAndFinished = false;
+            
             for (var hop = 1; hop <= _options.MaxHops; hop++)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
                 var pingRequest = _requestModelFactory.Create(_pingHandler.Options);
+
                 pingRequest.Address = iPAddress;
                 
                 for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
@@ -48,35 +49,35 @@ namespace netmon.core.Orchestrators
                     try
                     {
 
-                        var pingResponse =  await _pingHandler.Execute(pingRequest, cancellationToken);
-
-                        pingResponse.Attempt = attempt;
-                        pingResponse.MaxAttempts = _options.MaxAttempts;
-                        pingResponse.Hop = hop;
-                        pingResponse.Ttl = _pingHandler.Options.Ttl;
+                        PingResponseModel pingResponse = await AttemptRequest(pingRequest, attempt, hop, cancellationToken);
 
                         responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(pingResponse.Start, pingResponse.Request.Address), pingResponse);
 
-                        if (pingResponse.Response == null) continue;
-                        if (
-                            pingResponse?.Response != null 
-                            && pingResponse.Response.Status == IPStatus.Success
-                            && attempt == _options.MaxAttempts) destiantionReachedAndFinished = true;
+                      
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
                     }
-                    
-                }
-                if (destiantionReachedAndFinished)
-                {
-                    break;
+
                 }
                 _pingHandler.Options.Ttl += 1;
             }
             _pingHandler.Options.Ttl = Defaults.Ttl;
             return responses;
+        }
+
+        private async Task<PingResponseModel> AttemptRequest(PingRequestModel pingRequest, int attempt, int hop, CancellationToken cancellationToken)
+        {
+            var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
+
+            pingResponse.Attempt = attempt;
+            pingResponse.Hop = hop;
+            pingResponse.MaxAttempts = _options.MaxAttempts;
+            pingResponse.Ttl = _pingHandler.Options.Ttl;
+
+
+            return pingResponse;
         }
     }
 }

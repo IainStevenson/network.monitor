@@ -33,3 +33,8 @@ For use
 
 Download this repository
 In the repository root folder execute ```.\netmon --monitor```
+
+
+# Notes:
+
+For those looking for a way to serialise System.Net.IPAddress reliably to and from json, either alone or in Lists/Dictionaries. Look in the tests and Serialisation namespace code.

@@ -3,23 +3,29 @@ using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
+using NSubstitute;
+using System.Net.NetworkInformation;
 
 namespace netmon.core.tests
 {
     public class TraceRouteOrchestratorTests : TestBase<TraceRouteOrchestrator>
     {
+        private PingHandlerOptions _pingHandlerOptions;
         private IPingHandler _pingHandler;       
         private IPingRequestModelFactory _pingRequestModelFactory;
+        private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
             // unit setup
-            _pingHandler = new PingHandler(new PingHandlerOptions());
+            _pingHandlerOptions = new PingHandlerOptions();
+            _pingHandler = new PingHandler(_pingHandlerOptions);
             _pingRequestModelFactory = new PingRequestModelFactory();
-            var traceRouteHandlerOptions = new TraceRouteOrchestratorOptions();
+            _traceRouteHandlerOptions = new TraceRouteOrchestratorOptions();
 
-            _unit = new TraceRouteOrchestrator(_pingHandler, traceRouteHandlerOptions, _pingRequestModelFactory);
+            _unit = new TraceRouteOrchestrator(_pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory);
 
             
         }
@@ -29,7 +35,20 @@ namespace netmon.core.tests
         {
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
 
-            Assert.That(responses.Count, Is.GreaterThan(0));
+            Assert.That(actual: responses, Is.Not.Empty);
+            Assert.That(actual: responses, Has.Count.EqualTo(90));
+
+            ShowResults(responses);
+        }
+        [Test]
+        public void OnExecuteToLoopbackAddressWhenCancelledReturnsFewerResponses()
+        {
+            _cancellationTokenSource.CancelAfter(50);
+            
+            var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
+            
+            Assert.That(actual: responses, Is.Not.Empty);
+            Assert.That(actual: responses, Has.Count.LessThan(90));
 
             ShowResults(responses);
         }
@@ -39,24 +58,38 @@ namespace netmon.core.tests
         public void OnExecuteToWorldAddressItReturnsResponses()
         {
             var responses = _unit.Execute(TestConditions.WorldAddresses.Last(), _cancellationToken).Result;
-
-            Assert.That(responses.Count, Is.GreaterThan(0));
-
-            var incorrectTtlValues = responses
-                .Where(x => x.Value.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
-                .Where(z => z.Value.Response?.Options?.Ttl + z.Value.Ttl + 1 != Defaults.Ttl);
-            
-            Assert.That(!incorrectTtlValues.Any());
-
-            incorrectTtlValues = responses
-                .Where(x => x.Value.Response.Status != System.Net.NetworkInformation.IPStatus.Success)
-                .Where(z => (z.Value.Response?.Options?.Ttl?? Defaults.Ttl) != Defaults.Ttl);
-
-            Assert.That(!incorrectTtlValues.Any());
-
-
-
-            ShowResults(responses);
+            var expectedCount = TestConditions.WorldAddresses.Length * 10;
+            Assert.That(actual: responses, Is.Not.Empty);
+            Assert.That(actual: responses, Has.Count.EqualTo(expectedCount));
+            ShowResults(responses);          
         }
+
+
+
+
+        /// <summary>
+        /// using Mocked ping handler to emit exception types
+        /// note this will make 30 * 3 attempts to reach the loopback but generate 30 exceptions simulating a network not working at all.
+        /// </summary>
+        [Test]
+        public void OnExecuteToLoopbackOnPingExceptionReturnsEmptyList()
+        {
+            var pingHandler = Substitute.For<IPingHandler>();
+
+            pingHandler.Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>())
+                        .Returns(Task.FromException<PingResponseModel>(new PingException("some fake error")));
+
+            pingHandler.Options.Returns(_pingHandlerOptions);
+
+            _unit = new TraceRouteOrchestrator(pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory);
+
+            var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
+            
+            Assert.That(actual: responses, Is.Empty);
+
+            pingHandler.Received(_traceRouteHandlerOptions.MaxHops * _traceRouteHandlerOptions.MaxAttempts)
+                    .Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>());
+        }
+
     }
 }

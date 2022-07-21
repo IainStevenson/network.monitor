@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Net;
 
-namespace netmon.core.Data
+namespace netmon.core.Serialisation
 {
     /// <summary>
     /// Class lifted from: https://pingfu.net/how-to-serialise-ipaddress-ipendpoint
@@ -29,6 +29,9 @@ namespace netmon.core.Data
         /// <param name="existingValue"></param>
         /// <param name="serializer"></param>
         /// <returns></returns>
+#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8604 // Possible null reference argument.
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             // convert an ipaddress represented as a string into an IPAddress object and return it to the caller
@@ -38,13 +41,11 @@ namespace netmon.core.Data
             }
 
             // convert an array of IPAddresses represented as strings into a List<IPAddress> object and return it to the caller
-            if (objectType == typeof(List<IPAddress>))
-            {
-                return JToken.Load(reader).Select(address => IPAddress.Parse((string)address)).ToList();
-            }
-
-            throw new NotImplementedException();
+            return JToken.Load(reader).Select(address => IPAddress.Parse((string)address)).ToList();
         }
+#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
 
         /// <summary>
         /// Serialise: Write the object to Json.
@@ -52,6 +53,8 @@ namespace netmon.core.Data
         /// <param name="writer"></param>
         /// <param name="value"></param>
         /// <param name="serializer"></param>
+#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+#pragma warning disable CS8604 // Possible null reference argument.
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             if (value.GetType() == typeof(IPAddress))
@@ -59,14 +62,9 @@ namespace netmon.core.Data
                 JToken.FromObject(value.ToString()).WriteTo(writer);
                 return;
             }
-
-            if (value.GetType() == typeof(List<IPAddress>))
-            {
-                JToken.FromObject((from n in (List<IPAddress>)value select n.ToString()).ToList()).WriteTo(writer);
-                return;
-            }
-
-            throw new NotImplementedException();
+            JToken.FromObject((from n in (List<IPAddress>)value select n.ToString()).ToList()).WriteTo(writer);
         }
     }
+#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+#pragma warning restore CS8604 // Possible null reference argument.
 }

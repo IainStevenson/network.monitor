@@ -11,30 +11,30 @@ namespace netmon.core.Orchestrators
     /// </summary>
     public class PingOrchestrator
     {
-        private TimeSpan _pauseTimeBetweenInstances = new TimeSpan(0, 0, 1);
         private IPingHandler _pingHandler;
         private IPingRequestModelFactory _pingRequestModelFactory;
-        
-        public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory)
+        private PingOrchestratorOptions _options;
+
+        public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory, PingOrchestratorOptions options)
         {
             _pingHandler = pingHandler;
-            _pingRequestModelFactory = pingRequestModelFactory;   
+            _pingRequestModelFactory = pingRequestModelFactory;  
+            _options = options;
         }
 
-        public async Task<PingResponses> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
+        public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
-
+            var pauseTimeBetweenInstances = new TimeSpan( _options.MillisecondsBetweenPings * 10000);
             var end = DateTimeOffset.UtcNow.Add(until);
             var responses = new PingResponses();
 
             while (DateTimeOffset.UtcNow < end && !cancellation.IsCancellationRequested)
             {
-                var looptime = DateTimeOffset.UtcNow.Add(_pauseTimeBetweenInstances);
+                var looptime = DateTimeOffset.UtcNow.Add(pauseTimeBetweenInstances);
                 var parallelTasks = new List<Task<PingResponseModel>>(addresses.Length);
 
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    //var request = new PingRequestModel() { Address = addresses[i] };
                     var request = _pingRequestModelFactory.Create(_pingHandler.Options);
                     request.Address = addresses[i];
                     Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
@@ -52,7 +52,7 @@ namespace netmon.core.Orchestrators
                 {
                     while (DateTimeOffset.UtcNow < looptime)
                     {
-                        Thread.Sleep((int)(_pauseTimeBetweenInstances.Milliseconds / 10));
+                        Thread.Sleep((int)(pauseTimeBetweenInstances.Milliseconds / 10));
                     }
                 }
             }

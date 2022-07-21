@@ -9,7 +9,6 @@ namespace netmon.core.tests
 {
     public class MonitorOrchestratorTests : TestBase<MonitorOrchestrator>
     {
-        private MonitorOrchestrator _unit;
         private MonitorOptions _monitorOptions;
         private MonitorRequestModel _monitorModel;
         private TraceRouteOrchestrator _traceRouteOrchestrator;
@@ -19,62 +18,118 @@ namespace netmon.core.tests
         private TraceRouteOrchestratorOptions _traceRouteOrchestratorOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
         private PingHandlerOptions _pingOptions;
-       
+        private PingOrchestratorOptions _pingOrchestratorOptions;
+
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
             // unit setup - need to get more interfaces going and uses mocking.
             _pingOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
             _pingRequestModelFactory = new PingRequestModelFactory();
-            _hostAddressTypeHandler = new  HostAddressTypeHandler();
-            _pingHandler = new  PingHandler(_pingOptions);
+            _hostAddressTypeHandler = new HostAddressTypeHandler();
+            _pingHandler = new PingHandler(_pingOptions);
             _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
-            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
+            _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
+            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
             _monitorModel = new MonitorRequestModel();
             _monitorOptions = new MonitorOptions();
-            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);          
+            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);
 
         }
 
-        
+
 
         [Test]
-        public async Task  OnExecuteItAutoConfiguresMonitorsAndDoesNotThrowException()
+        public async Task OnExecuteItAutoConfiguresAndMonitors()
         {
-            var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
-            var until = new TimeSpan(0,0,2); // two seconds is long enough
-            
+            //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            var until = new TimeSpan(0, 0, 2);
+            // two seconds is long enough , must keep ratio of until to _pingOrchestratorOptions.MillsecondsBetweenPings as  even seconds to get count
+            _monitorModel = new MonitorRequestModel();
 
-            var responses  = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
+            var multiPingMonitorResponses = await _unit.Execute(_monitorModel, until, _cancellationToken);
 
 
-            Assert.That(_monitorModel.LocalHosts.Count, Is.GreaterThanOrEqualTo(1));
-            Assert.That(_monitorModel.Hosts.Count, Is.GreaterThan(0));
-            Assert.That(responses.Count, Is.GreaterThan(0));
+            Assert.That(actual: _monitorModel.Hosts, Is.Not.Empty);
+            Assert.That(actual: _monitorModel.LocalHosts, Is.Not.Empty);
+            Assert.IsNotNull(multiPingMonitorResponses);
+            Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
+            var expectedCount = _monitorModel.Hosts.Count *
+                    (int)(until.TotalMilliseconds / _pingOrchestratorOptions.MillisecondsBetweenPings);
+
+            Assert.That(actual: multiPingMonitorResponses.Count, Is.EqualTo(expectedCount));
 
             ShowResults(_monitorModel);
-            ShowResults(responses);
+            ShowResults(multiPingMonitorResponses);
         }
 
-
         [Test]
+#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
         public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
         {
-            var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0, 0, 2); // two seconds is long enough
-
             var monitorJson = File.ReadAllText($@".\MonitorModel.json");
-            _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+            if (monitorJson != null)
+            {
+                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
 
-            var responses = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
+                if (_monitorModel != null)
+                {
+                    ShowResults(_monitorModel);
 
+                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+                    Assert.That(actual: responses, Is.Not.Empty);
 
-
-            ShowResults(_monitorModel);
-            ShowResults(responses);
+                    ShowResults(responses);
+                }
+                else
+                {
+                    Assert.Fail("Failed to deserialise the model.");
+                }
+            }
+            else
+            {
+                Assert.Fail("Failed to deserialise the model.");
+            }
         }
+#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
+
+        [Test]
+#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
+        public async Task OnExecuteWithConfigurationWhileRoamingItReConfiguresMonitorsSpecifiedHosts()
+        {
+            //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            var until = new TimeSpan(0, 0, 2); // two seconds is long enough
+            var monitorJson = File.ReadAllText($@".\MonitorModel.json");
+            if (monitorJson != null)
+            {
+                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+
+                if (_monitorModel != null)
+                {
+                    ShowResults(_monitorModel);
+                    _monitorOptions.Roaming = true;
+                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+                    Assert.That(actual: responses, Is.Not.Empty);
+
+                    Assert.That ( JsonConvert.SerializeObject(_monitorModel,_settings), Is.Not.EqualTo(monitorJson));
+                    ShowResults(responses);
+                }
+                else
+                {
+                    Assert.Fail("Failed to deserialise the model.");
+                }
+            }
+            else
+            {
+                Assert.Fail("Failed to deserialise the model.");
+            }
+        }
+#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
 
 
 
