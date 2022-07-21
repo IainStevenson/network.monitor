@@ -33,12 +33,13 @@ namespace netmon.core.Orchestrators
         {
             var responses = new PingResponses();
             _pingHandler.Options.Ttl = 1;
-            var operationComplete = false;
+            
             for (var hop = 1; hop <= _options.MaxHops; hop++)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
                 var pingRequest = _requestModelFactory.Create(_pingHandler.Options);
+
                 pingRequest.Address = iPAddress;
                 
                 for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
@@ -52,20 +53,13 @@ namespace netmon.core.Orchestrators
 
                         responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(pingResponse.Start, pingResponse.Request.Address), pingResponse);
 
-                        operationComplete = (pingResponse.Response != null &&
-                                                            pingResponse.Response.Status == IPStatus.Success
-                                                            && attempt == _options.MaxAttempts);
-
+                      
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
                     }
 
-                }
-                if (operationComplete)
-                {
-                    break;
                 }
                 _pingHandler.Options.Ttl += 1;
             }

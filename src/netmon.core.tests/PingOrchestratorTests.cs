@@ -13,6 +13,7 @@ namespace netmon.core.tests
         private IPingHandler _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
+        private PingOrchestratorOptions _pingOrchestratorOptions;
         [SetUp]
         public void Setup()
         {
@@ -20,10 +21,8 @@ namespace netmon.core.tests
             _pingRequestModelFactory = new PingRequestModelFactory();
             _pingHandlerOptions = new PingHandlerOptions();
             _pingHandler = new PingHandler(_pingHandlerOptions);
-
-            _unit = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
-
-            
+            _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };
+            _unit = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
         }
 
         [Test]
@@ -34,7 +33,7 @@ namespace netmon.core.tests
             var responses = _unit.PingUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
-            
+
             ShowResults(responses);
         }
 

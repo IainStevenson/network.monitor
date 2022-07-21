@@ -18,10 +18,7 @@ namespace netmon.core.Data
         public List<PingResponseModel> AsOrderedList()
         {
             return this
-                .OrderBy(a => a.Value.Hop)
-                .ThenBy(b=>b.Value.Attempt)
-                .ThenBy(c => c.Key.Item1)
-                .ThenBy(c => c.Key.Item2)
+                .OrderBy(a => a.Value.Start) // order of execution
                 .Select( s=> s.Value).ToList();
         }
     }

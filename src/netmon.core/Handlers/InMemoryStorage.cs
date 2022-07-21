@@ -8,7 +8,7 @@ namespace netmon.core.Handlers
 
     public class InMemoryStorage
     {
-        private readonly BlockingCollection<PingResponseModel> _storage = new BlockingCollection<PingResponseModel>();
+        private readonly BlockingCollection<PingResponseModel> _storage = new ();
 
         public int Count()
         {

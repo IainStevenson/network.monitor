@@ -28,57 +28,86 @@ namespace netmon.core.Orchestrators
             _hostAddressTypeHandler = hostAddressTypeHandler;
         }
 
-        public async Task Configure(MonitorRequestModel monitor, CancellationToken cancellationToken)
+
+        
+        private void AddValidHosts(MonitorRequestModel monitor, List<PingResponseModel> validHosts)
         {
-            var tracedRoutes = await _routeOrchestrator.Execute(monitor.Destination, cancellationToken);
-
-            var validHosts = tracedRoutes
-                                .AsOrderedList()
-                                        .Where(w => w.Response?.Status == System.Net.NetworkInformation.IPStatus.Success ||
-                                                    w.Response?.Status == System.Net.NetworkInformation.IPStatus.TtlExpired)
-                                    ;
-            // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
-
-            if (!_monitorOptions.Roaming)
-            {
-#pragma warning disable CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
-                monitor.LocalHosts.Add(validHosts.Select(s => s.Response.Address).First());
-#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
-            }
 
             foreach (var host in validHosts.Where(w => w.Attempt == 1))
             {
-#pragma warning disable CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
-                monitor.Hosts.Add(host.Response.Address, _hostAddressTypeHandler.GetPrivateHostType(host.Response.Address as IPAddress));
-#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
+                var respdondingAddress = host.Response?.Address;
+                if (respdondingAddress != null)
+                {
+                    if (!monitor.Hosts.ContainsKey(respdondingAddress))
+                    {
+                        monitor.Hosts.Add(respdondingAddress, _hostAddressTypeHandler.GetPrivateHostType(respdondingAddress));
+                    }
+                }
             }
 
-            foreach (var host in monitor.LocalHosts)
+        }
+#pragma warning disable CS8602 // Dereference of a possibly null reference. Defended due to Status = Success
+        public async Task Configure(MonitorRequestModel monitorRequestModel, CancellationToken cancellationToken)
+        {
+            PingResponses tracedRoutes = await _routeOrchestrator.Execute(monitorRequestModel.Destination, cancellationToken);
+
+            var validHosts = tracedRoutes.AsOrderedList()
+                                        .Where(w => w.Response?.Status == System.Net.NetworkInformation.IPStatus.Success ||
+                                                    w.Response?.Status == System.Net.NetworkInformation.IPStatus.TtlExpired)
+                                        .ToList()
+                                    ;
+
+            AddFirstAddressAsLocalHostType(monitorRequestModel, validHosts);
+
+            AddValidHosts(monitorRequestModel, validHosts);
+
+            MarkLocalHosts(monitorRequestModel);
+
+            monitorRequestModel.Data = tracedRoutes;
+        }
+
+        private void AddFirstAddressAsLocalHostType(MonitorRequestModel monitorRequestModel, List<PingResponseModel> validHosts)
+        {
+            if (_monitorOptions.Roaming) return;
+            // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
+            var firstAddress = validHosts.Select(s => s.Response.Address).FirstOrDefault();
+            if (firstAddress != null)
             {
-                monitor.Hosts[host] = HostTypes.Local;
+                if (!monitorRequestModel.LocalHosts.Contains(firstAddress))
+                    monitorRequestModel.LocalHosts.Add(firstAddress);
             }
         }
+
+        private static void MarkLocalHosts(MonitorRequestModel monitorRequestModel)
+        {
+            foreach (IPAddress host in monitorRequestModel.LocalHosts)
+            {
+                monitorRequestModel.Hosts[host] = HostTypes.Local;
+            }
+        }
+#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
 
         /// <summary>
         /// Monitor according to the configuration, build configuration as needed. Continue until period or told to stop.
         /// </summary>
-        /// <param name="monitorModel">The configuration model to process.</param>
+        /// <param name="monitorRequestModel">The configuration model to process.</param>
         /// <param name="until">The time span to continue moitoring over.</param>
         /// <param name="cancellationToken">The asnyc cacnellaction token for earyl termination.</param>
         /// <returns>An instance of <see cref="Task"/> delivering an isntance of <see cref="PingResponses"/></returns>
-        public async Task<MonitorRespones> Execute(MonitorRequestModel monitorModel, TimeSpan until, CancellationToken cancellationToken)
+        public async Task<MonitorResponses> Execute(MonitorRequestModel monitorRequestModel, TimeSpan until, CancellationToken cancellationToken)
         {
-            if (!monitorModel.Hosts.Any())
+            if (!monitorRequestModel.Hosts.Any())
             {
-                await Configure(monitorModel, cancellationToken);
+                await Configure(monitorRequestModel, cancellationToken);
             }
 
-            MonitorRespones responses = new();
+            MonitorResponses responses = new();
 
-            responses.AddRange((await _pingOrchestrator.PingUntil(
-                     monitorModel.Hosts.Select(x => x.Key).ToArray(),
-                     until,
-                     cancellationToken)).Select(s => s.Value).ToList());
+            responses.AddRange((await _pingOrchestrator.PingUntil(monitorRequestModel.Hosts.Select(x => x.Key).ToArray(),
+                                                                     until,
+                                                                     cancellationToken))
+                                                                     .Select(s => s.Value)
+                                                                     .ToList());
 
             return responses;
         }

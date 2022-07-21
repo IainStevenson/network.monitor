@@ -34,7 +34,7 @@ namespace netmon.core.Handlers
         }
 
 
-        private bool IsAPrivateAddress(IPAddress address)  => 
+        private static bool IsAPrivateAddress(IPAddress address)  => 
             address.IsInSubnet("192.0.0.0/24")
                         || address.IsInSubnet("192.168.0.0/16")
                         //|| address.IsInSubnet("198.18.0.0/15")

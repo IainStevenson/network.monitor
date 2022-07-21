@@ -4,5 +4,5 @@ using System.Diagnostics.CodeAnalysis;
 namespace netmon.core.Data
 {
     [ExcludeFromCodeCoverage]
-    public class MonitorRespones: List<PingResponseModel> { }
+    public class MonitorResponses: List<PingResponseModel> { }
 }

@@ -18,7 +18,8 @@ namespace netmon.core.tests
         private TraceRouteOrchestratorOptions _traceRouteOrchestratorOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
         private PingHandlerOptions _pingOptions;
-       
+        private PingOrchestratorOptions _pingOrchestratorOptions;
+
 
         [SetUp]
         public void Setup()
@@ -27,34 +28,41 @@ namespace netmon.core.tests
             _pingOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
             _pingRequestModelFactory = new PingRequestModelFactory();
-            _hostAddressTypeHandler = new  HostAddressTypeHandler();
-            _pingHandler = new  PingHandler(_pingOptions);
+            _hostAddressTypeHandler = new HostAddressTypeHandler();
+            _pingHandler = new PingHandler(_pingOptions);
             _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
-            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory);
+            _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
+            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
             _monitorModel = new MonitorRequestModel();
             _monitorOptions = new MonitorOptions();
-            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);          
+            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);
 
         }
 
-        
+
 
         [Test]
-        public async Task  OnExecuteItAutoConfiguresAndMonitors()
+        public async Task OnExecuteItAutoConfiguresAndMonitors()
         {
             //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
-            var until = new TimeSpan(0,0,2); // two seconds is long enough
-            
+            var until = new TimeSpan(0, 0, 2);
+            // two seconds is long enough , must keep ratio of until to _pingOrchestratorOptions.MillsecondsBetweenPings as  even seconds to get count
+            _monitorModel = new MonitorRequestModel();
 
-            var responses  = await _unit.Execute(_monitorModel, until, _cancellationToken);
-            Assert.Multiple(() =>
-            {
-                Assert.That(actual: _monitorModel.LocalHosts, Is.Not.Empty);
-                Assert.That(actual: _monitorModel.Hosts, Is.Not.Empty);
-                Assert.That(actual: responses, Is.Not.Empty);
-            });
+            var multiPingMonitorResponses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+
+
+            Assert.That(actual: _monitorModel.Hosts, Is.Not.Empty);
+            Assert.That(actual: _monitorModel.LocalHosts, Is.Not.Empty);
+            Assert.IsNotNull(multiPingMonitorResponses);
+            Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
+            var expectedCount = _monitorModel.Hosts.Count *
+                    (int)(until.TotalMilliseconds / _pingOrchestratorOptions.MillisecondsBetweenPings);
+
+            Assert.That(actual: multiPingMonitorResponses.Count, Is.EqualTo(expectedCount));
+
             ShowResults(_monitorModel);
-            ShowResults(responses);
+            ShowResults(multiPingMonitorResponses);
         }
 
         [Test]

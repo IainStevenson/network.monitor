@@ -15,5 +15,6 @@ namespace netmon.core.Models
         public Dictionary<IPAddress, HostTypes> Hosts { get; set; } = new Dictionary<IPAddress, HostTypes>();
         [JsonConverter(typeof(IPAddressConverter))]
         public List<IPAddress> LocalHosts { get; set; } = new List<IPAddress>();
+        public PingResponses? Data { get;  set; }
     }
 }
