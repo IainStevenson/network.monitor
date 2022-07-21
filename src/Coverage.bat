@@ -16,5 +16,5 @@ dotnet build netmon.sln
 
 %report% -reports:%coverfile% -targetdir:%coverreport%
 
-%coverreport%\index.html
+start %coverreport%\index.html
 ENDLOCAL
