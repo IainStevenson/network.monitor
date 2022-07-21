@@ -31,7 +31,7 @@ namespace netmon.core.tests
         {
             var duration = new TimeSpan(0, 0, 2);
             var request = new IPAddress[] { Defaults.LoopbackAddress };
-            var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
+            var responses = _unit.PingUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
             
@@ -43,7 +43,7 @@ namespace netmon.core.tests
         {
             var duration = new TimeSpan(0, 0, 3);
             var request = new IPAddress[] { Defaults.LoopbackAddress };
-            var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
+            var responses = _unit.PingUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
             ShowResults(responses);
@@ -59,7 +59,7 @@ namespace netmon.core.tests
             request.AddRange(TestConditions.LocalAddresses);
             request.AddRange(TestConditions.WorldAddresses);
 
-            var responses = _unit.PingManyUntil(request.ToArray(), duration, _cancellationToken).Result;
+            var responses = _unit.PingUntil(request.ToArray(), duration, _cancellationToken).Result;
             Assert.That(responses.Count, Is.EqualTo(request.Count() * duration.Seconds), "The test returned the wrong number of results");
             ShowResults(responses);
         }

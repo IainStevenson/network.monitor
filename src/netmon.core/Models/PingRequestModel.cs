@@ -1,5 +1,6 @@
 ﻿using netmon.core.Configuration;
 using netmon.core.Data;
+using netmon.core.Serialisation;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -18,7 +19,7 @@ namespace netmon.core.Models
         [JsonConverter(typeof(IPAddressConverter))]
         public IPAddress Address { get; internal set; } = Defaults.LoopbackAddress;
 
-        public PingHandlerOptions Options { get; set; }
+        public PingHandlerOptions Options { get; set; } = new PingHandlerOptions();
 
         public byte[] Buffer
         {

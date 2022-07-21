@@ -20,7 +20,7 @@ namespace netmon.core.Orchestrators
             _pingRequestModelFactory = pingRequestModelFactory;   
         }
 
-        public async Task<PingResponses> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
+        public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
 
             var end = DateTimeOffset.UtcNow.Add(until);

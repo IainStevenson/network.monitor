@@ -1,5 +1,6 @@
 ﻿using netmon.core.Models;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace netmon.core.Data
@@ -7,6 +8,7 @@ namespace netmon.core.Data
     /// <summary>
     /// A time and <see cref="IPAddress "/> keyed dictionary of <see cref="PingRequestModel"/> data from completed ping requests.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class PingResponses : ConcurrentDictionary<Tuple<DateTimeOffset, IPAddress>, PingResponseModel>
     {
         /// <summary>

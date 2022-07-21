@@ -9,7 +9,6 @@ namespace netmon.core.tests
 {
     public class MonitorOrchestratorTests : TestBase<MonitorOrchestrator>
     {
-        private MonitorOrchestrator _unit;
         private MonitorOptions _monitorOptions;
         private MonitorRequestModel _monitorModel;
         private TraceRouteOrchestrator _traceRouteOrchestrator;
@@ -43,35 +42,53 @@ namespace netmon.core.tests
         [Test]
         public async Task  OnExecuteItAutoConfiguresAndMonitors()
         {
-            var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0,0,2); // two seconds is long enough
             
 
-            var responses  = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
-
-
-            Assert.That(_monitorModel.LocalHosts.Count, Is.GreaterThanOrEqualTo(1));
-            Assert.That(_monitorModel.Hosts.Count, Is.GreaterThan(0));
-            Assert.That(responses.Count, Is.GreaterThan(0));
-
+            var responses  = await _unit.Execute(_monitorModel, until, _cancellationToken);
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual: _monitorModel.LocalHosts, Is.Not.Empty);
+                Assert.That(actual: _monitorModel.Hosts, Is.Not.Empty);
+                Assert.That(actual: responses, Is.Not.Empty);
+            });
             ShowResults(_monitorModel);
             ShowResults(responses);
         }
 
-
         [Test]
         public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
         {
-            var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0, 0, 2); // two seconds is long enough
 
             var monitorJson = File.ReadAllText($@".\MonitorModel.json");
-            _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+            if (monitorJson != null)
+            {
+#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
+                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
 
-            var responses = _unit.Execute(_monitorModel, until, _cancellationToken).Result;
+                if (_monitorModel != null)
+                {
+                    ShowResults(_monitorModel);
 
-            ShowResults(_monitorModel);
-            ShowResults(responses);
+                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+                    Assert.That(actual: responses, Is.Not.Empty);
+
+                    ShowResults(responses);
+                }
+                else
+                {
+                    Assert.Fail("Failed to deserialise the model.");
+                }
+
+            }
+            else
+            {
+                Assert.Fail("Failed to deserialise the model.");
+            }
         }
 
 

@@ -8,8 +8,8 @@ using System.Net;
 namespace netmon.core.Orchestrators
 {
     /// <summary>
-    /// Monitor the network according to <see cref="MonitorOptions"/>. 
-    /// If no options currently exist (are null), then perform a traceroute to the specified default destination option <see cref="IPAddress"/> and use the <see cref="TraceRouteOrchestrator"/>results to create a configuration to use.
+    /// Monitor the network according to <see cref="MonitorOptions"/> and <see cref="MonitorRequestModel"/> data. 
+    /// If no model is provided or is empty, then perform a traceroute to the specified default destination option <see cref="IPAddress"/> and use the <see cref="TraceRouteOrchestrator"/>results to create a configuration to use.
     /// Will ping the route addresses to the destination once every period defined in the configuration to log access and response times.
     /// Every bandwidth test period the external utility will be called to determine the actual badnwidth avaiable at the time.
     /// </summary>
@@ -34,16 +34,23 @@ namespace netmon.core.Orchestrators
 
             var validHosts = tracedRoutes
                                 .AsOrderedList()
-                                        .Where(w => w.Response.Status == System.Net.NetworkInformation.IPStatus.Success ||
-                                                    w.Response.Status == System.Net.NetworkInformation.IPStatus.TtlExpired)
+                                        .Where(w => w.Response?.Status == System.Net.NetworkInformation.IPStatus.Success ||
+                                                    w.Response?.Status == System.Net.NetworkInformation.IPStatus.TtlExpired)
                                     ;
             // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
+
             if (!_monitorOptions.Roaming)
-                monitor.LocalHosts.Add(validHosts.Select(x => x.Response.Address as IPAddress).First());
+            {
+#pragma warning disable CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
+                monitor.LocalHosts.Add(validHosts.Select(s => s.Response.Address).First());
+#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
+            }
 
             foreach (var host in validHosts.Where(w => w.Attempt == 1))
             {
-                monitor.Hosts.Add(host.Response.Address as IPAddress, _hostAddressTypeHandler.GetPrivateHostType(host.Response.Address as IPAddress));
+#pragma warning disable CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
+                monitor.Hosts.Add(host.Response.Address, _hostAddressTypeHandler.GetPrivateHostType(host.Response.Address as IPAddress));
+#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
             }
 
             foreach (var host in monitor.LocalHosts)
@@ -66,9 +73,9 @@ namespace netmon.core.Orchestrators
                 await Configure(monitorModel, cancellationToken);
             }
 
-            MonitorRespones responses = new MonitorRespones();
+            MonitorRespones responses = new();
 
-            responses.AddRange((await _pingOrchestrator.PingManyUntil(
+            responses.AddRange((await _pingOrchestrator.PingUntil(
                      monitorModel.Hosts.Select(x => x.Key).ToArray(),
                      until,
                      cancellationToken)).Select(s => s.Value).ToList());

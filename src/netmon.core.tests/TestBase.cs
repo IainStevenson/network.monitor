@@ -1,4 +1,5 @@
 ﻿using netmon.core.Data;
+using netmon.core.Serialisation;
 using Newtonsoft.Json;
 
 namespace netmon.core.tests
@@ -10,7 +11,9 @@ namespace netmon.core.tests
         protected CancellationToken _cancellationToken;
         protected JsonSerializerSettings _settings;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public TestBase()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             // control setup
             _cancellationTokenSource = new CancellationTokenSource();
@@ -19,7 +22,6 @@ namespace netmon.core.tests
             // output setup
             _settings = new JsonSerializerSettings();
             _settings.Converters.Add(new IPAddressConverter());
-            //_settings.Converters.Add(new IPEndPointConverter());
             _settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             _settings.Converters.Add(new HostAdddresAndTypeConverter());
             _settings.Formatting = Formatting.Indented;
@@ -31,11 +33,9 @@ namespace netmon.core.tests
             var disposable = _unit as IDisposable;
             disposable?.Dispose();
         }
-        protected void ShowResults<T>(T results)
+        protected void ShowResults<TData>(TData results)
         {
-            var output = results as PingResponses;
-
-            if (output != null)
+            if (results is PingResponses output)
             {
                 TestContext.Out.WriteLine(JsonConvert.SerializeObject(output.AsOrderedList(), _settings));
             }

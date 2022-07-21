@@ -11,7 +11,7 @@ namespace netmon.core.Models
         public DateTimeOffset Finish { get; internal set; } = DateTimeOffset.MinValue;
         public TimeSpan Duration { get { return new TimeSpan(Finish.Ticks - Start.Ticks); } }
 
-        public PingReply Response { get; set; }
+        public PingReply? Response { get; set; }
         public PingRequestModel Request { get; set; } = new PingRequestModel();
         public int Hop { get; set; } = 1;
 

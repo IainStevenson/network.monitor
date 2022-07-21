@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 
-namespace netmon.core.Data
+namespace netmon.core.Serialisation
 {
     public class HostAdddresAndTypeConverter : JsonConverter
     {
@@ -14,7 +14,6 @@ namespace netmon.core.Data
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            if (objectType == typeof(KeyValuePair<IPAddress, HostTypes>)) return true;
             if (objectType == typeof(Dictionary<IPAddress, HostTypes>)) return true;
             return false;
         }
@@ -33,11 +32,13 @@ namespace netmon.core.Data
 
             if (objectType == typeof(Dictionary<IPAddress, HostTypes>))
             {
-               var items =  JToken.Load(reader)
-                    .Select(item => new KeyValuePair<string,string>(
-                            item["address"].ToString(), 
-                            item["hostType"].ToString() )
-                    ).ToList().ToDictionary(t => IPAddress.Parse(t.Key), t => (HostTypes)Enum.Parse(typeof(HostTypes), t.Value));
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                var items = JToken.Load(reader)
+                     .Select(item => new KeyValuePair<string, string>(
+                             item["address"].ToString(),
+                             item["hostType"].ToString())
+                     ).ToList().ToDictionary(t => IPAddress.Parse(t.Key), t => (HostTypes)Enum.Parse(typeof(HostTypes), t.Value));
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 return items;
             }
             throw new NotImplementedException();
@@ -54,6 +55,7 @@ namespace netmon.core.Data
         {
 
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             if (value.GetType() == typeof(Dictionary<IPAddress, HostTypes>))
             {
                 JToken.FromObject((from n in (Dictionary<IPAddress, HostTypes>)value
@@ -62,6 +64,7 @@ namespace netmon.core.Data
                                    ).ToList()).WriteTo(writer);
                 return;
             }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
             throw new NotImplementedException();
         }
     }

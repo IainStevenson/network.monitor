@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using netmon.core.Serialisation;
+using System.Collections;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
