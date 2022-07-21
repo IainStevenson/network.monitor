@@ -29,7 +29,7 @@ namespace netmon.core.tests
         {
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
 
-            Assert.That(responses.Count, Is.GreaterThan(0));
+            Assert.That(actual: responses, Is.Not.Empty);
 
             ShowResults(responses);
         }
@@ -40,23 +40,23 @@ namespace netmon.core.tests
         {
             var responses = _unit.Execute(TestConditions.WorldAddresses.Last(), _cancellationToken).Result;
 
-            Assert.That(responses.Count, Is.GreaterThan(0));
+            Assert.That(actual: responses, Is.Not.Empty);
+
+            // show responses first because 'sometimes' there are incorrect Ttl values and we need to work out why?
+            ShowResults(responses);
 
             var incorrectTtlValues = responses
-                .Where(x => x.Value.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
+                .Where(x => x.Value.Response?.Status == System.Net.NetworkInformation.IPStatus.Success)
                 .Where(z => z.Value.Response?.Options?.Ttl + z.Value.Ttl + 1 != Defaults.Ttl);
             
             Assert.That(!incorrectTtlValues.Any());
 
             incorrectTtlValues = responses
-                .Where(x => x.Value.Response.Status != System.Net.NetworkInformation.IPStatus.Success)
+                .Where(x => x.Value.Response?.Status != System.Net.NetworkInformation.IPStatus.Success)
                 .Where(z => (z.Value.Response?.Options?.Ttl?? Defaults.Ttl) != Defaults.Ttl);
 
             Assert.That(!incorrectTtlValues.Any());
-
-
-
-            ShowResults(responses);
+          
         }
     }
 }
