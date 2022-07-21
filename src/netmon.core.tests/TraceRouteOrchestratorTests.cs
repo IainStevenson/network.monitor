@@ -47,7 +47,7 @@ namespace netmon.core.tests
 
             var incorrectTtlValues = responses
                 .Where(x => x.Value.Response?.Status == System.Net.NetworkInformation.IPStatus.Success)
-                .Where(z => z.Value.Response?.Options?.Ttl + z.Value.Ttl + 1 != Defaults.Ttl);
+                .Where(z => z.Value.Response?.Options?.Ttl + z.Value.Ttl + 1 >= Defaults.Ttl); // routes may have changed during hop progression
             
             Assert.That(!incorrectTtlValues.Any());
 
