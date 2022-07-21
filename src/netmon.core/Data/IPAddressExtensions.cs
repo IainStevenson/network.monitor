@@ -9,7 +9,7 @@ namespace netmon.core.Data
     /// Lifted from: https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public static class Networking
+    public static class IPAddressExtensions
     {
 
         /// <summary>

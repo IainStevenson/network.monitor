@@ -22,8 +22,9 @@ namespace netmon.core.tests
 
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
             // unit setup - need to get more interfaces going and uses mocking.
             _pingOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
@@ -66,17 +67,15 @@ namespace netmon.core.tests
         }
 
         [Test]
+#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
         public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
         {
-            //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0, 0, 2); // two seconds is long enough
-
             var monitorJson = File.ReadAllText($@".\MonitorModel.json");
             if (monitorJson != null)
             {
-#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
                 _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
-#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
 
                 if (_monitorModel != null)
                 {
@@ -91,13 +90,46 @@ namespace netmon.core.tests
                 {
                     Assert.Fail("Failed to deserialise the model.");
                 }
-
             }
             else
             {
                 Assert.Fail("Failed to deserialise the model.");
             }
         }
+#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
+
+        [Test]
+#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
+        public async Task OnExecuteWithConfigurationWhileRoamingItReConfiguresMonitorsSpecifiedHosts()
+        {
+            //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+            var until = new TimeSpan(0, 0, 2); // two seconds is long enough
+            var monitorJson = File.ReadAllText($@".\MonitorModel.json");
+            if (monitorJson != null)
+            {
+                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
+
+                if (_monitorModel != null)
+                {
+                    ShowResults(_monitorModel);
+                    _monitorOptions.Roaming = true;
+                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+                    Assert.That(actual: responses, Is.Not.Empty);
+
+                    Assert.That ( JsonConvert.SerializeObject(_monitorModel,_settings), Is.Not.EqualTo(monitorJson));
+                    ShowResults(responses);
+                }
+                else
+                {
+                    Assert.Fail("Failed to deserialise the model.");
+                }
+            }
+            else
+            {
+                Assert.Fail("Failed to deserialise the model.");
+            }
+        }
+#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
 
 
 

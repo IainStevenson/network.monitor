@@ -15,9 +15,7 @@ namespace netmon.core.tests
         public TestBase()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
-            // control setup
-            _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationToken = _cancellationTokenSource.Token;
+            
 
             // output setup
             _settings = new JsonSerializerSettings();
@@ -26,6 +24,15 @@ namespace netmon.core.tests
             _settings.Converters.Add(new HostAdddresAndTypeConverter());
             _settings.Formatting = Formatting.Indented;
         }
+
+        [SetUp]
+        public virtual void Setup()
+        {
+            // control setup
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
+        }
+
 
         [TearDown]
         public void Teardown()

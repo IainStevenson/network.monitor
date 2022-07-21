@@ -10,7 +10,7 @@ namespace netmon.core.tests
         private HostAddressTypeHandler _unit;
 
         [SetUp]
-        public void Sestup()
+        public void Setup()
         {
             _unit = new HostAddressTypeHandler();
         }

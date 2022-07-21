@@ -96,7 +96,7 @@ namespace netmon.core.Orchestrators
         /// <returns>An instance of <see cref="Task"/> delivering an isntance of <see cref="PingResponses"/></returns>
         public async Task<MonitorResponses> Execute(MonitorRequestModel monitorRequestModel, TimeSpan until, CancellationToken cancellationToken)
         {
-            if (!monitorRequestModel.Hosts.Any())
+            if (!monitorRequestModel.Hosts.Any() || _monitorOptions.Roaming)
             {
                 await Configure(monitorRequestModel, cancellationToken);
             }

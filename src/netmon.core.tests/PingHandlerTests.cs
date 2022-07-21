@@ -11,8 +11,9 @@ namespace netmon.core.tests
         private IPingRequestModelFactory _pingRequestModelFactory;
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
             _pingRequestModelFactory = new PingRequestModelFactory();
             _pingHandlerOptions = new PingHandlerOptions();
             _unit = new PingHandler(_pingHandlerOptions);

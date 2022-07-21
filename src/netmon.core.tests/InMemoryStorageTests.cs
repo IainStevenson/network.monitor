@@ -6,8 +6,10 @@ namespace netmon.core.tests
 {
     public class InMemoryStorageTests: TestBase<InMemoryStorage>
     {
-        [SetUp] public void Setup() 
+        [SetUp] 
+        public override void Setup() 
         { 
+            base.Setup();
             _unit = new InMemoryStorage();
         }
 

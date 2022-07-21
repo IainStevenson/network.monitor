@@ -16,8 +16,9 @@ namespace netmon.core.tests
         private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
             // unit setup
             _pingHandlerOptions = new PingHandlerOptions();
             _pingHandler = new PingHandler(_pingHandlerOptions);
@@ -35,6 +36,19 @@ namespace netmon.core.tests
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
 
             Assert.That(actual: responses, Is.Not.Empty);
+            Assert.That(actual: responses, Has.Count.EqualTo(90));
+
+            ShowResults(responses);
+        }
+        [Test]
+        public void OnExecuteToLoopbackAddressWhenCancelledReturnsFewerResponses()
+        {
+            _cancellationTokenSource.CancelAfter(50);
+            
+            var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
+            
+            Assert.That(actual: responses, Is.Not.Empty);
+            Assert.That(actual: responses, Has.Count.LessThan(90));
 
             ShowResults(responses);
         }
@@ -44,11 +58,14 @@ namespace netmon.core.tests
         public void OnExecuteToWorldAddressItReturnsResponses()
         {
             var responses = _unit.Execute(TestConditions.WorldAddresses.Last(), _cancellationToken).Result;
-
+            var expectedCount = TestConditions.WorldAddresses.Length * 10;
             Assert.That(actual: responses, Is.Not.Empty);
-
+            Assert.That(actual: responses, Has.Count.EqualTo(expectedCount));
             ShowResults(responses);          
         }
+
+
+
 
         /// <summary>
         /// using Mocked ping handler to emit exception types
