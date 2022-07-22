@@ -32,6 +32,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteToLoopbackAddressItReturnsResponses()
         {
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
@@ -49,6 +50,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteToLoopbackAddressWhenCancelledReturnsFewerResponses()
         {
             _cancellationTokenSource.Cancel();
@@ -62,6 +64,7 @@ namespace netmon.core.tests
 
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteToWorldAddressItReturnsResponses()
         {
             var responses = _unit.Execute(TestConditions.WorldAddresses.Last(), _cancellationToken).Result;
@@ -87,26 +90,28 @@ namespace netmon.core.tests
 
         /// <summary>
         /// using Mocked ping handler to emit exception types
-        /// note this will make 30 * 3 attempts to reach the loopback but generate 30 exceptions simulating a network not working at all.
         /// </summary>
         [Test]
-        public void OnExecuteToLoopbackOnPingExceptionReturnsEmptyList()
+        [Category("Unit")]
+        public void OnExecuteToLoopbackOnPingExceptionReturnsResultsWithoutResponses()
         {
             var pingHandler = Substitute.For<IPingHandler>();
 
             pingHandler.Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>())
                         .Returns(Task.FromException<PingResponseModel>(new PingException("some fake error")));
-
-            //pingHandler.Options.Returns(_pingHandlerOptions);
-
+        
             _unit = new TraceRouteOrchestrator(pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory);
 
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
             
-            Assert.That(actual: responses, Is.Empty);
+            ShowResults(responses);
 
-            //pingHandler.Received(_traceRouteHandlerOptions.MaxHops * _traceRouteHandlerOptions.MaxAttempts)
-            //        .Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>());
+            pingHandler.Received(_traceRouteHandlerOptions.MaxHops).Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>());
+            Assert.That(actual: responses, Has.Count.EqualTo(1));
+            Assert.That(actual: responses.Where(x=>x.Value.Request != null & x.Value.Response == null).ToList(), Has.Count.EqualTo(1));
+
+
+
         }
 
     }

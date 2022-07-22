@@ -29,6 +29,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestFor2SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 2);
@@ -41,6 +42,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestFor3SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 3);
@@ -52,6 +54,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithComplexRequestkRequestFor4SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 1);

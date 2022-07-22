@@ -21,6 +21,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnJsonConvertOfIPAddressItSerialisesBiDirectionally()
         {
             var addressString = "127.0.0.1";
@@ -41,6 +42,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnJsonConvertOfMonitorRequestItSerialisesBiDirectionally()
         {
             MonitorRequestModel request = new()

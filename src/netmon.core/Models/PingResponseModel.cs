@@ -38,7 +38,7 @@ namespace netmon.core.Models
         /// <summary>
         /// The maximum attempts number foa trace route operation
         /// </summary>
-        public int? MaxAttempts { get; set; } 
-
+        public int? MaxAttempts { get; set; }
+        public Exception? Exception { get; set; }
     }
 }

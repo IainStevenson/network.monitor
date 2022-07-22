@@ -30,6 +30,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Unit")]
         public void OnStoreItShouldContaiaTheAddedItems()
         {
             Assert.That(_unit.Count, Is.EqualTo(0));            

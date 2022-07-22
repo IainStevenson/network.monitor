@@ -84,6 +84,9 @@ namespace netmon.core.Orchestrators
                 catch (Exception ex)
                 {
                     System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
+                    
+                    RecordResult(responses, new PingResponseModel() { Request = pingRequest, Exception = ex});
+
                 }
             }
             return responses;

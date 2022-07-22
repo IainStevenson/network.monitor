@@ -44,6 +44,7 @@ namespace netmon.core.tests
 
 
         [Test]
+        [Category("Integration")]
         public async Task OnExecuteItAutoConfiguresAndMonitors()
         {
             //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
@@ -69,6 +70,7 @@ namespace netmon.core.tests
 
         [Test]
 #pragma warning disable CS8601 // Possible null reference assignment. Defended against below
+        [Category("Integration")]
         public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
         {
             //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
@@ -101,6 +103,7 @@ namespace netmon.core.tests
 
         [Test]
 #pragma warning disable CS8601 // Possible null reference assignment. Defended against below
+        [Category("Integration")]
         public async Task OnExecuteWithConfigurationWhileRoamingItReConfiguresMonitorsSpecifiedHosts()
         {
             //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);

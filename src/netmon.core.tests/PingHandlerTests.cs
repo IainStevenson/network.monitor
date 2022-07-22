@@ -21,6 +21,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestItSucceeeds()
         {
             PingRequestModel request = _pingRequestModelFactory.Create();
@@ -38,6 +39,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestWithOneMSTimeoutSucceeds()
         {
             PingRequestModel request = _pingRequestModelFactory.Create();
@@ -45,6 +47,7 @@ namespace netmon.core.tests
             Assert.That(response.Response?.Status, Is.EqualTo(IPStatus.Success), "The test was a complete failure");
         }
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestZeroMSTimeoutThrowsException()
         {
             _pingHandlerOptions.Timeout = 0;
