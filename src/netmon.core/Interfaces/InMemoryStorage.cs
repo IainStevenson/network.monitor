@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 
-namespace netmon.core.Handlers
+namespace netmon.core.Interfaces
 {
 
     public class InMemoryStorage
     {
-        private readonly BlockingCollection<PingResponseModel> _storage = new ();
+        private readonly BlockingCollection<PingResponseModel> _storage = new();
 
         public int Count()
         {
@@ -26,7 +26,7 @@ namespace netmon.core.Handlers
         //    return Task.FromResult(results);
         //}
 
-        public Task Store( PingResponseModel item)
+        public Task Store(PingResponseModel item)
         {
             _storage.Add(item);
             return Task.FromResult(0);

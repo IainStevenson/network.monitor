@@ -1,6 +1,7 @@
 ﻿using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
+using netmon.core.Interfaces;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
 using Newtonsoft.Json;
@@ -17,7 +18,7 @@ namespace netmon.core.tests
         private IPingHandler _pingHandler;
         private TraceRouteOrchestratorOptions _traceRouteOrchestratorOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
-        private PingHandlerOptions _pingOptions;
+        private PingHandlerOptions _pingHandlerOptions;
         private PingOrchestratorOptions _pingOrchestratorOptions;
 
 
@@ -26,11 +27,11 @@ namespace netmon.core.tests
         {
             base.Setup();
             // unit setup - need to get more interfaces going and uses mocking.
-            _pingOptions = new PingHandlerOptions();
+            _pingHandlerOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
-            _pingRequestModelFactory = new PingRequestModelFactory();
+            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _hostAddressTypeHandler = new HostAddressTypeHandler();
-            _pingHandler = new PingHandler(_pingOptions);
+            _pingHandler = new PingHandler(_pingHandlerOptions);
             _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
@@ -112,7 +113,6 @@ namespace netmon.core.tests
                 if (_monitorModel != null)
                 {
                     ShowResults(_monitorModel);
-                    _monitorOptions.Roaming = true;
                     var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
                     Assert.That(actual: responses, Is.Not.Empty);
 

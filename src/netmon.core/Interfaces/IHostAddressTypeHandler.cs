@@ -2,7 +2,7 @@
 using netmon.core.Models;
 using System.Net;
 
-namespace netmon.core.Handlers
+namespace netmon.core.Interfaces
 {
     public interface IHostAddressTypeHandler
     {

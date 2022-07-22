@@ -5,12 +5,27 @@ using System.Net.Sockets;
 
 namespace netmon.core.Data
 {
+
+
     /// <summary>
-    /// Lifted from: https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet
+    /// Lifted from answer by 'Mr Wang Next Door' : https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet
     /// </summary>
     [ExcludeFromCodeCoverage]
     public static class IPAddressExtensions
     {
+
+        ///// <summary>
+        ///// Adapted from answer in: https://stackoverflow.com/questions/6803073/get-local-ip-address
+        ///// </summary>
+        ///// <returns></returns>
+
+        //public static IPAddress GetActualLocalIPAddress()
+        //{
+        //    using Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, 0);
+        //    socket.Connect("8.8.8.8", 65530); // the host address does not matter.
+        //    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint; // if its null it does not matter
+        //    return endPoint?.Address ?? IPAddress.Parse("127.0.0.1");
+        //}
 
         /// <summary>
         /// Lifted from: https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet
@@ -29,7 +44,7 @@ namespace netmon.core.Data
             }
 
             // First parse the address of the netmask before the prefix length.
-            var maskAddress = IPAddress.Parse(subnetMask.Substring(0, slashIdx));
+            var maskAddress = IPAddress.Parse(subnetMask.AsSpan(0, slashIdx));
 
             if (maskAddress.AddressFamily != address.AddressFamily)
             { // We got something like an IPV4-Address for an IPv6-Mask. This is not valid.
@@ -37,7 +52,7 @@ namespace netmon.core.Data
             }
 
             // Now find out how long the prefix is.
-            int maskLength = int.Parse(subnetMask.Substring(slashIdx + 1));
+            int maskLength = int.Parse(subnetMask[(slashIdx + 1)..]);
 
             if (maskLength == 0)
             {

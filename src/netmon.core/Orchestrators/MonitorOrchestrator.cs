@@ -1,9 +1,10 @@
 ﻿using netmon.core.Configuration;
-using netmon.core.Data;
-using netmon.core.Handlers;
+using netmon.core.Interfaces;
+using netmon.core.Messaging;
 using netmon.core.Models;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 
 namespace netmon.core.Orchestrators
 {
@@ -29,7 +30,7 @@ namespace netmon.core.Orchestrators
         }
 
 
-        
+
         private void AddValidHosts(MonitorRequestModel monitor, List<PingResponseModel> validHosts)
         {
 
@@ -46,9 +47,13 @@ namespace netmon.core.Orchestrators
             }
 
         }
+
+
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference. Defended due to Status = Success
         public async Task Configure(MonitorRequestModel monitorRequestModel, CancellationToken cancellationToken)
         {
+
             PingResponses tracedRoutes = await _routeOrchestrator.Execute(monitorRequestModel.Destination, cancellationToken);
 
             var validHosts = tracedRoutes.AsOrderedList()
@@ -66,10 +71,8 @@ namespace netmon.core.Orchestrators
             monitorRequestModel.Data = tracedRoutes;
         }
 
-        private void AddFirstAddressAsLocalHostType(MonitorRequestModel monitorRequestModel, List<PingResponseModel> validHosts)
+        private static void AddFirstAddressAsLocalHostType(MonitorRequestModel monitorRequestModel, List<PingResponseModel> validHosts)
         {
-            if (_monitorOptions.Roaming) return;
-            // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
             var firstAddress = validHosts.Select(s => s.Response.Address).FirstOrDefault();
             if (firstAddress != null)
             {
@@ -96,7 +99,10 @@ namespace netmon.core.Orchestrators
         /// <returns>An instance of <see cref="Task"/> delivering an isntance of <see cref="PingResponses"/></returns>
         public async Task<MonitorResponses> Execute(MonitorRequestModel monitorRequestModel, TimeSpan until, CancellationToken cancellationToken)
         {
-            if (!monitorRequestModel.Hosts.Any() || _monitorOptions.Roaming)
+            if (
+               !Dns.GetHostEntry(Dns.GetHostName())
+                       .AddressList.Contains(_monitorOptions.BaseAddress)
+                       )
             {
                 await Configure(monitorRequestModel, cancellationToken);
             }

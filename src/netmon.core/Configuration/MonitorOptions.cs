@@ -5,12 +5,16 @@ using System.Text.Json.Serialization;
 
 namespace netmon.core.Configuration
 {
+    /// <summary>
+    /// The options for monitoring a range of <see cref="IPAddress"/>'s.
+    /// </summary>
     public class MonitorOptions
     {
         /// <summary>
         /// The monitoring target. Defaults to dns.google.com
         /// </summary>
-        [JsonConverter(typeof(IPAddressConverter))] public IPAddress Destination { get; set; } = Defaults.DefaultMonitoringDestination;
+        [JsonConverter(typeof(IPAddressConverter))] 
+        public IPAddress Destination { get; set; } = Defaults.DefaultMonitoringDestination;
         /// <summary>
         /// The interval in milliseconds between consecutive ping requests for any host.
         /// </summary>
@@ -18,12 +22,11 @@ namespace netmon.core.Configuration
         /// <summary>
         /// The interval in milliseconds between consecutive network bandwidth tests.
         /// </summary>
-        public int BandwidthIntereval {  get;set;} = 60000; // every hour
+        public int BandwidthTestIntereval {  get;set;} = 60000; // every hour
 
         /// <summary>
-        /// Declares the session as Roaming. 
-        /// If this has changed from the last monitoring session it invalidates the previous monitor configuration and re-configures using trace route
+        /// Declares the current base address to determine if the next session is roaming or not.
         /// </summary>
-        public bool Roaming { get;  set; }
+        public IPAddress BaseAddress {  get;set; }  = IPAddress.Parse("127.0.0.1");
     }
 }

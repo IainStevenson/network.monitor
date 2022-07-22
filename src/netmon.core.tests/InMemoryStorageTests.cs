@@ -1,5 +1,6 @@
 ﻿using netmon.core.Data;
-using netmon.core.Handlers;
+using netmon.core.Interfaces;
+using netmon.core.Messaging;
 using System.Net;
 
 namespace netmon.core.tests

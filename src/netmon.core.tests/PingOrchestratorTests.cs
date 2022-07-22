@@ -1,6 +1,7 @@
 ﻿using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
+using netmon.core.Interfaces;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
 using Newtonsoft.Json;
@@ -20,7 +21,7 @@ namespace netmon.core.tests
         {
             base.Setup();
             // unit setup
-            _pingRequestModelFactory = new PingRequestModelFactory();
+            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _pingHandlerOptions = new PingHandlerOptions();
             _pingHandler = new PingHandler(_pingHandlerOptions);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };
