@@ -11,8 +11,6 @@
         public MicroGraphCellIndications GetCellIndication(int value, int lineValueLow, int lineValueHigh, bool isDownload)
         {
 
-
-
             var midwayRange = lineValueLow + ((int)(lineValueHigh - lineValueLow) / 2);
 
             MicroGraphCellIndications charIndex;
@@ -27,14 +25,12 @@
             {
                 // value exceeds low -> half char
                 charIndex = isDownload ? MicroGraphCellIndications.HalfIncrementDownload : MicroGraphCellIndications.HalfIncrementUpload;
-
             }
             else
             {
                 // value too low -> null char or zero if this is the lowest value range and its zero
                 charIndex = (lineValueLow == 0 && value == 0) ? MicroGraphCellIndications.Zero : MicroGraphCellIndications.None;
             }
-
 
             return charIndex;
         }
@@ -48,11 +44,10 @@
         public List<List<Tuple<bool, char>>> DrawGraphElements(int startLine, Tuple<List<int>, List<int>> data)
         {
 
-            // Tuple<bool, char[]>[]
-
+           
             var lines = new List<List<Tuple<bool, char>>>();
-
             
+            // 10 lines of 24 plot points which are a boolean and char value.
 
             // this is done in the sequence that might be written to a text stream or be displayed on a screen.
             //0---------------------23                       
@@ -66,8 +61,6 @@
             // :::::::::::::::::::::::
             // o:::::::::::::::::::::o -> last line
 
-            // TODO Abstract out startline to cope with media type
-
             // Y starts from 0 to _yRangeIncrements -1 to allow for text writing.
             for (var valueRangeLine = 0; valueRangeLine < _yRangeIncrements; valueRangeLine++)
             {
@@ -78,15 +71,11 @@
                     var downValue = data.Item1[hourAsColumnValue];
                     var upValue = data.Item2[hourAsColumnValue];
 
-                    // TO DO: abstract this out to cope with media type.
-                    Console.SetCursorPosition(hourAsColumnValue, valueRangeLine + startLine);
-
                     var lineValueHigh = (_yRange - _yRangeIncrements) - (valueRangeLine * _yRangeIncrements) + _yRangeIncrements; // 0 -> 100, 1 -> 90 ...
                     var lineValueLow = lineValueHigh - _yRangeIncrements; // 0 -> 90, 1 -> 80 ...
 
 
                     var downloadIsInThisRange = downValue >= lineValueHigh || downValue >= lineValueLow;
-
                     var uploadIsInThisRange = upValue >= lineValueHigh || upValue >= lineValueLow;
 
                     MicroGraphCellIndications charIndex = MicroGraphCellIndications.None;
@@ -119,17 +108,17 @@
                     }
                     var cellItem = new Tuple<bool, char> (downLoadHasPriority, _indicators[(int)charIndex]);
                     line.Add(cellItem);
-
-                    //ConsoleColor forecolor = downLoadHasPriority ? ConsoleColor.Green : ConsoleColor.Blue;
-                    //Console.ForegroundColor = forecolor;
-                    //Console.Write(_indicators[(int)charIndex]);
                 }
                 lines.Add(line);
             }
             return lines;
         }
 
-
+        /// <summary>
+        /// Provide a pair of lists of random integers containing simulated upload/download speed values 
+        /// in the range 0...100 and 0...50 repsectively.
+        /// </summary>
+        /// <returns></returns>
         public Tuple<List<int>, List<int>> GetRandomTestData()
         {
             Random rnd = new();
