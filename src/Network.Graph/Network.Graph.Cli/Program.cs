@@ -9,13 +9,12 @@
     /// </summary>
     internal class Program
     {
-       private MicroGraphHandler _graphHandler = new MicroGraphHandler();
+        private readonly MicroGraphHandler _graphHandler = new();
 
         public void Execute(string[] args)
         {
 
-            ConsoleColor defaultConsoleForecolor = Console.ForegroundColor;
-            Tuple<List<int>, List<int>> data;
+            ConsoleColor defaultConsoleForecolor = Console.ForegroundColor;           
 
             Console.WriteLine("Press ESC to stop");
             do
@@ -29,9 +28,12 @@
 
                     currentLine++;
 
-                    data = _graphHandler.GetRandomTestData();
+                    Tuple<List<int>, List<int>> data = _graphHandler.GetRandomTestData();
 
-                    _graphHandler.DrawGraphElements(currentLine, data);
+                    List<List<Tuple<bool, char>>> linesOfPlotpoints = _graphHandler.DrawGraphElements(currentLine, data);
+
+
+                    ConsoleHandler.PlotData(currentLine, linesOfPlotpoints);
 
                     ConsoleHandler.ResetLine(defaultConsoleForecolor, returnCursorToColumn, currentLine - 1);
 
@@ -46,7 +48,7 @@
         {
 
             var instance = new Program();
-            instance.Execute(args);          
+            instance.Execute(args);
 
         }
     }

@@ -45,26 +45,33 @@
         /// </summary>
         /// <param name="startLine">The line on which to start the graph.</param>
         /// <param name="data">The data to graph.</param>
-        public void DrawGraphElements(int startLine, Tuple<List<int>, List<int>> data)
+        public List<List<Tuple<bool, char>>> DrawGraphElements(int startLine, Tuple<List<int>, List<int>> data)
         {
+
+            // Tuple<bool, char[]>[]
+
+            var lines = new List<List<Tuple<bool, char>>>();
+
+            
+
             // this is done in the sequence that might be written to a text stream or be displayed on a screen.
-            // 0 -> x+                 0
-            //                         |
-            //          ::           : V
-            //   .  .  ::::  :    :  : y+
+            //0---------------------23                       
+            //          ::           : -> first line
+            //   .  .  ::::  :    :  :
             //   :  :  ::::  :  :::  :
             //  :::::  ::::  :  :::  :
             //  ::::: :::::  : ::::  :
             // :::::::::::::::::::::::
             // :::::::::::::::::::::::
             // :::::::::::::::::::::::
-            // o:::::::::::::::::::::o
+            // o:::::::::::::::::::::o -> last line
 
             // TODO Abstract out startline to cope with media type
 
             // Y starts from 0 to _yRangeIncrements -1 to allow for text writing.
             for (var valueRangeLine = 0; valueRangeLine < _yRangeIncrements; valueRangeLine++)
             {
+                List< Tuple<bool, char>> line =   new List<Tuple<bool, char>>();
                 // X starts from left to allow for text writing.
                 for (var hourAsColumnValue = 0; hourAsColumnValue < _xRange; hourAsColumnValue++)
                 {
@@ -110,13 +117,16 @@
                             charIndex = GetCellIndication(upValue, lineValueLow, lineValueHigh, downLoadHasPriority);
                         }
                     }
+                    var cellItem = new Tuple<bool, char> (downLoadHasPriority, _indicators[(int)charIndex]);
+                    line.Add(cellItem);
 
-                    ConsoleColor forecolor = downLoadHasPriority ? ConsoleColor.Green : ConsoleColor.Blue;
-                    Console.ForegroundColor = forecolor;
-                    Console.Write(_indicators[(int)charIndex]);
+                    //ConsoleColor forecolor = downLoadHasPriority ? ConsoleColor.Green : ConsoleColor.Blue;
+                    //Console.ForegroundColor = forecolor;
+                    //Console.Write(_indicators[(int)charIndex]);
                 }
-
+                lines.Add(line);
             }
+            return lines;
         }
 
 
