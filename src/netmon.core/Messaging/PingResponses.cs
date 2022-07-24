@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
-namespace netmon.core.Data
+namespace netmon.core.Messaging
 {
     /// <summary>
     /// A time and <see cref="IPAddress "/> keyed dictionary of <see cref="PingRequestModel"/> data from completed ping requests.
@@ -19,7 +19,7 @@ namespace netmon.core.Data
         {
             return this
                 .OrderBy(a => a.Value.Start) // order of execution
-                .Select( s=> s.Value).ToList();
+                .Select(s => s.Value).ToList();
         }
     }
 }

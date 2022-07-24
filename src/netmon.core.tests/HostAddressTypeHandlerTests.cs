@@ -1,5 +1,4 @@
-﻿using netmon.core.Data;
-using netmon.core.Handlers;
+﻿using netmon.core.Handlers;
 using netmon.core.Models;
 using System.Net;
 
@@ -24,6 +23,7 @@ namespace netmon.core.tests
         [TestCase("195.68.0.2", HostTypes.Public)]
         [TestCase("216.239.48.217",HostTypes.Public)]
         [TestCase("8.8.8.8", HostTypes.Public)]
+        [Category("Unit")]
         public void OnGetPrivateHostTypeItReturnsTheExepctedType(string address, HostTypes expectation)
         {
             Assert.That(_unit.GetPrivateHostType(IPAddress.Parse(address)), Is.EqualTo(expectation));
@@ -37,6 +37,7 @@ namespace netmon.core.tests
         [TestCase("195.68.0.2", HostTypes.Public)]
         [TestCase("216.239.48.217", HostTypes.Public)]
         [TestCase("8.8.8.8", HostTypes.Public)]
+        [Category("Unit")]
         public void OnGetPublicHostTypeItReturnsTheExepctedType(string address, HostTypes expectation)
         {
             Assert.That(_unit.GetPublicHostType(IPAddress.Parse(address), TestConditions.WorldAddresses), Is.EqualTo(expectation));

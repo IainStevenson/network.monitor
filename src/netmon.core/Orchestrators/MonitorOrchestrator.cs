@@ -1,115 +1,81 @@
-﻿using netmon.core.Configuration;
-using netmon.core.Data;
-using netmon.core.Handlers;
+﻿using netmon.core.Data;
+using netmon.core.Interfaces;
+using netmon.core.Messaging;
 using netmon.core.Models;
-using System.Linq;
 using System.Net;
 
 namespace netmon.core.Orchestrators
 {
     /// <summary>
-    /// Monitor the network according to <see cref="MonitorOptions"/> and <see cref="MonitorRequestModel"/> data. 
-    /// If no model is provided or is empty, then perform a traceroute to the specified default destination option <see cref="IPAddress"/> and use the <see cref="TraceRouteOrchestrator"/>results to create a configuration to use.
-    /// Will ping the route addresses to the destination once every period defined in the configuration to log access and response times.
-    /// Every bandwidth test period the external utility will be called to determine the actual badnwidth avaiable at the time.
+    /// Monitor the network every interval according to the list of <see cref="IPAddress">. 
+    /// Observe the emitted data and store it in the repository for future use.</see>
     /// </summary>
     public class MonitorOrchestrator
     {
-        private readonly MonitorOptions _monitorOptions;
+        //private readonly MonitorOptions _monitorOptions;
         private readonly TraceRouteOrchestrator _routeOrchestrator;
         private readonly PingOrchestrator _pingOrchestrator;
-        private readonly IHostAddressTypeHandler _hostAddressTypeHandler;
-
-        public MonitorOrchestrator(TraceRouteOrchestrator traceRouteOrchestrator, PingOrchestrator pingOrchestrator, MonitorOptions monitorOptions, IHostAddressTypeHandler hostAddressTypeHandler)
+        private readonly IStorage<PingResponseModel> _pingResponseStorage;
+        public MonitorOrchestrator(TraceRouteOrchestrator traceRouteOrchestrator, 
+            PingOrchestrator pingOrchestrator,
+            IStorage<PingResponseModel> pingResponseStorage)
         {
             _routeOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
-            _monitorOptions = monitorOptions;
-            _hostAddressTypeHandler = hostAddressTypeHandler;
+            _pingResponseStorage = pingResponseStorage;
         }
-
-
-        
-        private void AddValidHosts(MonitorRequestModel monitor, List<PingResponseModel> validHosts)
-        {
-
-            foreach (var host in validHosts.Where(w => w.Attempt == 1))
-            {
-                var respdondingAddress = host.Response?.Address;
-                if (respdondingAddress != null)
-                {
-                    if (!monitor.Hosts.ContainsKey(respdondingAddress))
-                    {
-                        monitor.Hosts.Add(respdondingAddress, _hostAddressTypeHandler.GetPrivateHostType(respdondingAddress));
-                    }
-                }
-            }
-
-        }
-#pragma warning disable CS8602 // Dereference of a possibly null reference. Defended due to Status = Success
-        public async Task Configure(MonitorRequestModel monitorRequestModel, CancellationToken cancellationToken)
-        {
-            PingResponses tracedRoutes = await _routeOrchestrator.Execute(monitorRequestModel.Destination, cancellationToken);
-
-            var validHosts = tracedRoutes.AsOrderedList()
-                                        .Where(w => w.Response?.Status == System.Net.NetworkInformation.IPStatus.Success ||
-                                                    w.Response?.Status == System.Net.NetworkInformation.IPStatus.TtlExpired)
-                                        .ToList()
-                                    ;
-
-            AddFirstAddressAsLocalHostType(monitorRequestModel, validHosts);
-
-            AddValidHosts(monitorRequestModel, validHosts);
-
-            MarkLocalHosts(monitorRequestModel);
-
-            monitorRequestModel.Data = tracedRoutes;
-        }
-
-        private void AddFirstAddressAsLocalHostType(MonitorRequestModel monitorRequestModel, List<PingResponseModel> validHosts)
-        {
-            if (_monitorOptions.Roaming) return;
-            // the first address on the list will be your default gateway and is therefore Local (unless you are on a phone or mobile device)
-            var firstAddress = validHosts.Select(s => s.Response.Address).FirstOrDefault();
-            if (firstAddress != null)
-            {
-                if (!monitorRequestModel.LocalHosts.Contains(firstAddress))
-                    monitorRequestModel.LocalHosts.Add(firstAddress);
-            }
-        }
-
-        private static void MarkLocalHosts(MonitorRequestModel monitorRequestModel)
-        {
-            foreach (IPAddress host in monitorRequestModel.LocalHosts)
-            {
-                monitorRequestModel.Hosts[host] = HostTypes.Local;
-            }
-        }
-#pragma warning restore CS8602 // Dereference of a possibly null reference. By now we have a response due to Status = Success
 
         /// <summary>
-        /// Monitor according to the configuration, build configuration as needed. Continue until period or told to stop.
+        /// Continuously ping the addresses until the time has expired.
+        /// would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
         /// </summary>
-        /// <param name="monitorRequestModel">The configuration model to process.</param>
-        /// <param name="until">The time span to continue moitoring over.</param>
+        /// <param name="addressesToMonitor">The addresses to ping.</param>
+        /// <param name="until">The time span to continue monitoring over.</param>
         /// <param name="cancellationToken">The asnyc cacnellaction token for earyl termination.</param>
-        /// <returns>An instance of <see cref="Task"/> delivering an isntance of <see cref="PingResponses"/></returns>
-        public async Task<MonitorResponses> Execute(MonitorRequestModel monitorRequestModel, TimeSpan until, CancellationToken cancellationToken)
+        /// <returns>An instance of <see cref="Task"/> delivering an list of all the <see cref="IPAddresses"/> which were pinged, and that ever responded.</returns>
+        public async Task<List<IPAddress>> Execute(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
-            if (!monitorRequestModel.Hosts.Any() || _monitorOptions.Roaming)
+
+            if (!addressesToMonitor.Any())
             {
-                await Configure(monitorRequestModel, cancellationToken);
+                addressesToMonitor = await GetAddressesToMonitor(Defaults.DefaultMonitoringDestination, cancellationToken);
             }
 
             MonitorResponses responses = new();
 
-            responses.AddRange((await _pingOrchestrator.PingUntil(monitorRequestModel.Hosts.Select(x => x.Key).ToArray(),
+            _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
+
+            responses.AddRange((await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
                                                                      until,
                                                                      cancellationToken))
                                                                      .Select(s => s.Value)
                                                                      .ToList());
 
-            return responses;
+            _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
+            return responses
+                .Where(x => x.Response?.Status == System.Net.NetworkInformation.IPStatus.Success)
+                .Select(s => s.Response?.Address?? IPAddress.Loopback) 
+                .Distinct()
+                .ToList();
+        }
+
+        void StoreResutlsAsTheyComeIn(object? source, PingResponseModelEventArgs? e)
+        {
+            if (e == null ) return;
+
+            _pingResponseStorage.Store(e.Model).Wait();
+        }
+
+        private async Task<List<IPAddress>> GetAddressesToMonitor(IPAddress defaultMonitoringDestination, CancellationToken cancellationToken)
+        {
+            PingResponses tracedRoutes = await _routeOrchestrator.Execute(defaultMonitoringDestination, cancellationToken);
+            var validHosts = tracedRoutes.AsOrderedList()
+                                        .Where(w => w.Response != null && w.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
+                                        .Select(s => s.Response?.Address ?? IPAddress.Loopback)
+                                        .Distinct()
+                                        .ToList();
+
+            return validHosts;
         }
     }
 }

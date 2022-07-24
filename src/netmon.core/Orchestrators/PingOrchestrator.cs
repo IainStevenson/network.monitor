@@ -1,6 +1,7 @@
 ﻿using netmon.core.Configuration;
-using netmon.core.Data;
 using netmon.core.Handlers;
+using netmon.core.Interfaces;
+using netmon.core.Messaging;
 using netmon.core.Models;
 using System.Net;
 
@@ -11,9 +12,9 @@ namespace netmon.core.Orchestrators
     /// </summary>
     public class PingOrchestrator
     {
-        private IPingHandler _pingHandler;
-        private IPingRequestModelFactory _pingRequestModelFactory;
-        private PingOrchestratorOptions _options;
+        private readonly IPingHandler _pingHandler;
+        private readonly IPingRequestModelFactory _pingRequestModelFactory;
+        private readonly PingOrchestratorOptions _options;
 
         public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory, PingOrchestratorOptions options)
         {
@@ -21,6 +22,8 @@ namespace netmon.core.Orchestrators
             _pingRequestModelFactory = pingRequestModelFactory;  
             _options = options;
         }
+
+        public EventHandler<PingResponseModelEventArgs?>? Results ;
 
         public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
@@ -35,7 +38,7 @@ namespace netmon.core.Orchestrators
 
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    var request = _pingRequestModelFactory.Create(_pingHandler.Options);
+                    var request = _pingRequestModelFactory.Create();
                     request.Address = addresses[i];
                     Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
                     parallelTasks.Add(task);
@@ -47,6 +50,7 @@ namespace netmon.core.Orchestrators
                 foreach (var result in results)
                 {
                     responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
+                    Results?.Invoke(this, new PingResponseModelEventArgs(result));
                 }
                 if (!cancellation.IsCancellationRequested)
                 {
@@ -59,5 +63,6 @@ namespace netmon.core.Orchestrators
 
             return responses;
         }
+
     }
 }

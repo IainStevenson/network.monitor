@@ -1,137 +1,81 @@
 ﻿using netmon.core.Configuration;
-using netmon.core.Data;
 using netmon.core.Handlers;
+using netmon.core.Interfaces;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
-using Newtonsoft.Json;
+using NSubstitute;
+using System.Net;
 
 namespace netmon.core.tests
 {
     public class MonitorOrchestratorTests : TestBase<MonitorOrchestrator>
     {
-        private MonitorOptions _monitorOptions;
-        private MonitorRequestModel _monitorModel;
+        //private MonitorOptions _monitorOptions;
         private TraceRouteOrchestrator _traceRouteOrchestrator;
         private PingOrchestrator _pingOrchestrator;
-        private IHostAddressTypeHandler _hostAddressTypeHandler;
         private IPingHandler _pingHandler;
         private TraceRouteOrchestratorOptions _traceRouteOrchestratorOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
-        private PingHandlerOptions _pingOptions;
+        private PingHandlerOptions _pingHandlerOptions;
         private PingOrchestratorOptions _pingOrchestratorOptions;
-
-
+        private IStorage<PingResponseModel> _pingResponseStorage;
+        private readonly List<IPAddress> _monitorLoopbackAddresses = new() { IPAddress.Parse("127.0.0.1") };
+        
         [SetUp]
         public override void Setup()
         {
             base.Setup();
             // unit setup - need to get more interfaces going and uses mocking.
-            _pingOptions = new PingHandlerOptions();
+            _pingHandlerOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
-            _pingRequestModelFactory = new PingRequestModelFactory();
-            _hostAddressTypeHandler = new HostAddressTypeHandler();
-            _pingHandler = new PingHandler(_pingOptions);
+            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
+            _pingHandler = new PingHandler(_pingHandlerOptions);
             _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
-            _monitorModel = new MonitorRequestModel();
-            _monitorOptions = new MonitorOptions();
-            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _monitorOptions, _hostAddressTypeHandler);
-
+            
+            _pingResponseStorage = NSubstitute.Substitute.For<IStorage<PingResponseModel>>();
+            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage);
         }
 
 
 
         [Test]
-        public async Task OnExecuteItAutoConfiguresAndMonitors()
+        [Category("Integration")]
+        public async Task OnExecuteFirstTimeItTracesRouteToDefaultAddressAndMonitorsDiscoveredAddresses()
         {
-            //var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
-            var until = new TimeSpan(0, 0, 2);
             // two seconds is long enough , must keep ratio of until to _pingOrchestratorOptions.MillsecondsBetweenPings as  even seconds to get count
-            _monitorModel = new MonitorRequestModel();
-
-            var multiPingMonitorResponses = await _unit.Execute(_monitorModel, until, _cancellationToken);
+            var until = new TimeSpan(0, 0, 2);
 
 
-            Assert.That(actual: _monitorModel.Hosts, Is.Not.Empty);
-            Assert.That(actual: _monitorModel.LocalHosts, Is.Not.Empty);
-            Assert.IsNotNull(multiPingMonitorResponses);
-            Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
-            var expectedCount = _monitorModel.Hosts.Count *
-                    (int)(until.TotalMilliseconds / _pingOrchestratorOptions.MillisecondsBetweenPings);
+            var multiPingMonitorResponses = await _unit.Execute(new List<IPAddress>(), until, _cancellationToken);
 
-            Assert.That(actual: multiPingMonitorResponses.Count, Is.EqualTo(expectedCount));
-
-            ShowResults(_monitorModel);
             ShowResults(multiPingMonitorResponses);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual: multiPingMonitorResponses, Is.Not.Null);
+                Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
+            });
+
+            _pingResponseStorage.Received((int)(until.TotalSeconds * multiPingMonitorResponses.Count)).Store(Arg.Any<PingResponseModel>()).Wait();
         }
 
         [Test]
-#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
-        public async Task OnExecuteWithConfigurationItMonitorsSpecifiedHosts()
+        [Category("Integration")]
+        public async Task OnExecuteNextTimeItJustMonitorsSpecifiedAddresses()
         {
             //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
             var until = new TimeSpan(0, 0, 2); // two seconds is long enough
-            var monitorJson = File.ReadAllText($@".\MonitorModel.json");
-            if (monitorJson != null)
-            {
-                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
 
-                if (_monitorModel != null)
-                {
-                    ShowResults(_monitorModel);
+            var responses = await _unit.Execute(_monitorLoopbackAddresses, until, _cancellationToken);
 
-                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
-                    Assert.That(actual: responses, Is.Not.Empty);
+            ShowResults(responses);
 
-                    ShowResults(responses);
-                }
-                else
-                {
-                    Assert.Fail("Failed to deserialise the model.");
-                }
-            }
-            else
-            {
-                Assert.Fail("Failed to deserialise the model.");
-            }
+            Assert.That(actual: responses, Is.Not.Empty);
+            _pingResponseStorage.Received(2).Store(Arg.Any<PingResponseModel>()).Wait();
+
         }
-#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
-
-        [Test]
-#pragma warning disable CS8601 // Possible null reference assignment. Defended against below
-        public async Task OnExecuteWithConfigurationWhileRoamingItReConfiguresMonitorsSpecifiedHosts()
-        {
-            //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
-            var until = new TimeSpan(0, 0, 2); // two seconds is long enough
-            var monitorJson = File.ReadAllText($@".\MonitorModel.json");
-            if (monitorJson != null)
-            {
-                _monitorModel = JsonConvert.DeserializeObject<MonitorRequestModel>(monitorJson, _settings);
-
-                if (_monitorModel != null)
-                {
-                    ShowResults(_monitorModel);
-                    _monitorOptions.Roaming = true;
-                    var responses = await _unit.Execute(_monitorModel, until, _cancellationToken);
-                    Assert.That(actual: responses, Is.Not.Empty);
-
-                    Assert.That ( JsonConvert.SerializeObject(_monitorModel,_settings), Is.Not.EqualTo(monitorJson));
-                    ShowResults(responses);
-                }
-                else
-                {
-                    Assert.Fail("Failed to deserialise the model.");
-                }
-            }
-            else
-            {
-                Assert.Fail("Failed to deserialise the model.");
-            }
-        }
-#pragma warning restore CS8601 // Possible null reference assignment. Defended against below
-
-
 
     }
 }

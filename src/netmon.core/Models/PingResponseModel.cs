@@ -1,5 +1,4 @@
-﻿using netmon.core.Data;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.NetworkInformation;
 
 namespace netmon.core.Models
@@ -7,17 +6,38 @@ namespace netmon.core.Models
     [ExcludeFromCodeCoverage]
     public class PingResponseModel
     {
+        /// <summary>
+        /// When it started
+        /// </summary>
         public DateTimeOffset Start { get; internal set; } = DateTimeOffset.MinValue;
+        /// <summary>
+        /// When it finished
+        /// </summary>
         public DateTimeOffset Finish { get; internal set; } = DateTimeOffset.MinValue;
+        /// <summary>
+        /// How long it took.
+        /// </summary>
         public TimeSpan Duration { get { return new TimeSpan(Finish.Ticks - Start.Ticks); } }
-
+        /// <summary>
+        /// What was achieved.
+        /// </summary>
         public PingReply? Response { get; set; }
+        /// <summary>
+        /// Waht was asked for.
+        /// </summary>
         public PingRequestModel Request { get; set; } = new PingRequestModel();
-        public int Hop { get; set; } = 1;
-
-        public int Attempt { get; set; } = 1;
-        public int MaxAttempts { get; set; } = 3;
-        public int Ttl { get; set; } = 0;
-
+        /// <summary>
+        /// The hop number for a Trace route ping
+        /// </summary>
+        public int? Hop { get; set; } 
+        /// <summary>
+        /// The attemtp number for a trace route ping.
+        /// </summary>
+        public int? Attempt { get; set; } 
+        /// <summary>
+        /// The maximum attempts number foa trace route operation
+        /// </summary>
+        public int? MaxAttempts { get; set; }
+        public Exception? Exception { get; set; }
     }
 }

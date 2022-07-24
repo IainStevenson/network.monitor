@@ -1,16 +1,16 @@
-﻿using netmon.core.Data;
-using netmon.core.Handlers;
+﻿using netmon.core.Interfaces;
+using netmon.core.Messaging;
 using System.Net;
 
 namespace netmon.core.tests
 {
-    public class InMemoryStorageTests: TestBase<InMemoryStorage>
+    public class InMemoryStorageTests: TestBase<PingResponseModelInMemoryStorage>
     {
         [SetUp] 
         public override void Setup() 
         { 
             base.Setup();
-            _unit = new InMemoryStorage();
+            _unit = new PingResponseModelInMemoryStorage();
         }
 
         private void AddTestData()
@@ -29,6 +29,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Unit")]
         public void OnStoreItShouldContaiaTheAddedItems()
         {
             Assert.That(_unit.Count, Is.EqualTo(0));            

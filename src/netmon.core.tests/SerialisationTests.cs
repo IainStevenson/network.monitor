@@ -1,6 +1,4 @@
-﻿using netmon.core.Data;
-using netmon.core.Models;
-using netmon.core.Serialisation;
+﻿using netmon.core.Serialisation;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -21,6 +19,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnJsonConvertOfIPAddressItSerialisesBiDirectionally()
         {
             var addressString = "127.0.0.1";
@@ -30,9 +29,7 @@ namespace netmon.core.tests
             Assert.That(json, Is.TypeOf<string>());
 
 
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            IPAddress actual = JsonConvert.DeserializeObject<IPAddress>(json, _settings);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            IPAddress? actual = JsonConvert.DeserializeObject<IPAddress>(json, _settings);
 
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.TypeOf<IPAddress>());
@@ -41,32 +38,26 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnJsonConvertOfMonitorRequestItSerialisesBiDirectionally()
         {
-            MonitorRequestModel request = new()
+            List<IPAddress> request = new()
             {
-                Destination = IPAddress.Parse("8.8.8.8")
+                IPAddress.Parse("8.8.8.8")            ,
+                IPAddress.Parse("192.168.0.1"),
+                IPAddress.Parse("192.168.1.1"),
+                IPAddress.Parse("172.16.0.1")
             };
-            request.LocalHosts.Add(IPAddress.Parse("192.168.0.1"));
-            request.LocalHosts.Add(IPAddress.Parse("192.168.1.1"));
-            request.LocalHosts.Add(IPAddress.Parse("172.16.0.1"));
-            foreach (var host in TestConditions.WorldAddresses)
-            {
-                request.Hosts.Add(host, HostTypes.Public);
-            }
 
             var json = JsonConvert.SerializeObject(request, _settings);
             Assert.That(json, Is.Not.Null);
             Assert.That(json, Is.TypeOf<string>());
 
-
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            MonitorRequestModel actual = JsonConvert.DeserializeObject<MonitorRequestModel>(json, _settings);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            var actual = JsonConvert.DeserializeObject<List<IPAddress>>(json, _settings);
 
             Assert.That(actual, Is.Not.Null);
-            Assert.That(actual, Is.TypeOf<MonitorRequestModel>());
-            Assert.That(actual.Destination, Is.EqualTo(request.Destination));
+            Assert.That(actual, Is.TypeOf<List<IPAddress>>());
+            Assert.That(actual.First(), Is.EqualTo(IPAddress.Parse("8.8.8.8")));
 
         }
 

@@ -1,9 +1,8 @@
 ﻿using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
-using netmon.core.Models;
+using netmon.core.Interfaces;
 using netmon.core.Orchestrators;
-using Newtonsoft.Json;
 using System.Net;
 
 namespace netmon.core.tests
@@ -20,7 +19,7 @@ namespace netmon.core.tests
         {
             base.Setup();
             // unit setup
-            _pingRequestModelFactory = new PingRequestModelFactory();
+            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _pingHandlerOptions = new PingHandlerOptions();
             _pingHandler = new PingHandler(_pingHandlerOptions);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };
@@ -28,6 +27,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestFor2SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 2);
@@ -40,6 +40,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithDefaltLoopbackRequestFor3SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 3);
@@ -51,6 +52,7 @@ namespace netmon.core.tests
         }
 
         [Test]
+        [Category("Integration")]
         public void OnExecuteWithComplexRequestkRequestFor4SecondsItSucceeeds()
         {
             var duration = new TimeSpan(0, 0, 1);

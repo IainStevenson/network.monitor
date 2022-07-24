@@ -1,5 +1,4 @@
-﻿using netmon.core.Data;
-using System.Net;
+﻿using System.Net;
 
 namespace netmon.core.tests
 {
