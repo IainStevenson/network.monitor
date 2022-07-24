@@ -19,13 +19,13 @@ namespace netmon.core.Data
         ///// </summary>
         ///// <returns></returns>
 
-        //public static IPAddress GetActualLocalIPAddress()
-        //{
-        //    using Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, 0);
-        //    socket.Connect("8.8.8.8", 65530); // the host address does not matter.
-        //    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint; // if its null it does not matter
-        //    return endPoint?.Address ?? IPAddress.Parse("127.0.0.1");
-        //}
+        public static IPAddress GetActualLocalIPAddress()
+        {
+            using Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, 0);
+            socket.Connect("8.8.8.8", 65530); // the host address does not matter.
+            IPEndPoint? endPoint = socket.LocalEndPoint as IPEndPoint; // if its null it does not matter
+            return endPoint?.Address ?? IPAddress.Parse("127.0.0.1");
+        }
 
         /// <summary>
         /// Lifted from: https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet

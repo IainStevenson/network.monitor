@@ -23,6 +23,8 @@ namespace netmon.core.Orchestrators
             _options = options;
         }
 
+        public EventHandler<PingResponseModelEventArgs> Results ;
+
         public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
             var pauseTimeBetweenInstances = new TimeSpan( _options.MillisecondsBetweenPings * 10000);
@@ -48,6 +50,7 @@ namespace netmon.core.Orchestrators
                 foreach (var result in results)
                 {
                     responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
+                    Results?.Invoke(this, new PingResponseModelEventArgs(result));
                 }
                 if (!cancellation.IsCancellationRequested)
                 {

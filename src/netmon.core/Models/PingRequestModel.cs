@@ -3,7 +3,6 @@ using netmon.core.Data;
 using netmon.core.Serialisation;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json.Serialization;
 

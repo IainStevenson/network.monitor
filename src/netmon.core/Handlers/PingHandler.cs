@@ -1,5 +1,4 @@
 ﻿using netmon.core.Configuration;
-using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Models;
 using System.Net.NetworkInformation;

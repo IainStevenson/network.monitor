@@ -2,9 +2,7 @@
 using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
-using netmon.core.Models;
 using netmon.core.Orchestrators;
-using Newtonsoft.Json;
 using System.Net;
 
 namespace netmon.core.tests
