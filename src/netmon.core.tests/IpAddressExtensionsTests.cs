@@ -22,7 +22,7 @@ namespace netmon.core.tests
         public void IpV4SubnetMaskMatchesValidIpAddress(string netMask, string ipAddress)
         {
             IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
-            Assert.True(ipAddressObj.IsInSubnet(netMask));
+            Assert.That(ipAddressObj.IsInSubnet(netMask), Is.True);
         }
 
         [Theory]
@@ -36,7 +36,7 @@ namespace netmon.core.tests
         public void IpV4SubnetMaskDoesNotMatchInvalidIpAddress(string netMask, string ipAddress)
         {
             IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
-            Assert.False(ipAddressObj.IsInSubnet(netMask));
+            Assert.That(ipAddressObj.IsInSubnet(netMask), Is.False);
         }
 
         [Theory]
@@ -53,7 +53,7 @@ namespace netmon.core.tests
         public void IpV6SubnetMaskMatchesValidIpAddress(string netMask, string ipAddress)
         {
             IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
-            Assert.True(ipAddressObj.IsInSubnet(netMask));
+            Assert.That(ipAddressObj.IsInSubnet(netMask), Is.True);
         }
 
         [Theory]
@@ -68,7 +68,7 @@ namespace netmon.core.tests
         public void IpV6SubnetMaskDoesNotMatchInvalidIpAddress(string netMask, string ipAddress)
         {
             IPAddress ipAddressObj = IPAddress.Parse(ipAddress);
-            Assert.False(ipAddressObj.IsInSubnet(netMask));
+            Assert.That(ipAddressObj.IsInSubnet(netMask), Is.False);
         }
     }
 }

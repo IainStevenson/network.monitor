@@ -58,7 +58,7 @@ namespace netmon.core.tests
                 Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
             });
 
-            _pingResponseStorage.Received( (int)(until.TotalSeconds * multiPingMonitorResponses.Count())).Store(Arg.Any<PingResponseModel>()).Wait();
+            _pingResponseStorage.Received((int)(until.TotalSeconds * multiPingMonitorResponses.Count)).Store(Arg.Any<PingResponseModel>()).Wait();
         }
 
         [Test]

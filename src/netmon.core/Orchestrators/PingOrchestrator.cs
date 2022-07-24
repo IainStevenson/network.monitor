@@ -23,7 +23,7 @@ namespace netmon.core.Orchestrators
             _options = options;
         }
 
-        public EventHandler<PingResponseModelEventArgs> Results ;
+        public EventHandler<PingResponseModelEventArgs?>? Results ;
 
         public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {

@@ -1,5 +1,4 @@
-﻿using netmon.core.Configuration;
-using netmon.core.Data;
+﻿using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
 using netmon.core.Models;
@@ -60,8 +59,10 @@ namespace netmon.core.Orchestrators
                 .ToList();
         }
 
-        public void StoreResutlsAsTheyComeIn(object source,  PingResponseModelEventArgs e)
+        void StoreResutlsAsTheyComeIn(object? source, PingResponseModelEventArgs? e)
         {
+            if (e == null ) return;
+
             _pingResponseStorage.Store(e.Model).Wait();
         }
 
