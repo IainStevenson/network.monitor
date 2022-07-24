@@ -6,7 +6,7 @@
         public const int _yRange = 100; // 100% divided by 10 increments, values are not raw seepd but % of max.
         public const int _yRangeIncrements = 10; // 10 * 10% increments
 
-        public readonly static char[] _indicators = new char[] { ' ', '_', '|', '.', '|', '.' };
+        public readonly static char[] _indicators = new char[] { ' ', '_', '|', '.', ':', '.' };
 
         public MicroGraphCellIndications GetCellIndication(int value, int lineValueLow, int lineValueHigh, bool isDownload)
         {

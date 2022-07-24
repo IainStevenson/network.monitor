@@ -10,6 +10,7 @@
     internal class Program
     {
         private readonly MicroGraphHandler _graphHandler = new();
+        private readonly ReportHandler _reportHandler = new();
 
         public void Execute(string[] args)
         {
@@ -34,6 +35,8 @@
 
 
                     ConsoleHandler.PlotData(currentLine, linesOfPlotpoints);
+
+                    var report = _reportHandler.PlotData($"{DateTimeOffset.UtcNow:o}", linesOfPlotpoints).ToString();
 
                     ConsoleHandler.ResetLine(defaultConsoleForecolor, returnCursorToColumn, currentLine - 1);
 
