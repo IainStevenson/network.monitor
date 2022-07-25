@@ -13,7 +13,7 @@ namespace netmon.core.tests
             _unit = new PingResponseModelInMemoryStorage();
         }
 
-        private void AddTestData()
+        private void AddWorldAddressesTestData()
         {
             var items = new PingResponses();
             // simualte traceroute response.
@@ -38,17 +38,21 @@ namespace netmon.core.tests
         public void OnStoreItShouldContainTheAddedItems()
         {
             Assert.That(_unit.Count, Is.EqualTo(0));
-            AddTestData();
+            AddWorldAddressesTestData();
             Assert.That(_unit.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
         }
 
 
         [Test]
         [Category("Unit")]
-        public async Task OnRetrieveByAddressItShouldReturnTheItems()
+        public async Task OnRetrieveByAddressItShouldReturnTheMatchingItems()
         {
             Assert.That(_unit.Count, Is.EqualTo(0));
-            AddTestData();
+            AddWorldAddressesTestData();
+            var addresses = new List<IPAddress>() { };
+            addresses.AddRange(TestConditions.WorldAddresses);
+            addresses.AddRange(TestConditions.LocalAddresses);
+
             var actual = await _unit.Retrieve(TestConditions.WorldAddresses);
             Assert.That(actual.ToList(), Has.Count.EqualTo(TestConditions.WorldAddresses.Length));
         }
@@ -59,7 +63,7 @@ namespace netmon.core.tests
         public async Task OnRetrieveByAddressPredicateItShouldReturnTheExactItem()
         {
             Assert.That(_unit.Count, Is.EqualTo(0));
-            AddTestData();
+            AddWorldAddressesTestData();
             var actual = await _unit.Retrieve( (x) => x.Request.Address == TestConditions.WorldAddresses.Last());
             Assert.That(actual.ToList(), Has.Count.EqualTo(1));
             Assert.That(actual.Last().Request.Address, Is.EqualTo(IPAddress.Parse("8.8.8.8")));
