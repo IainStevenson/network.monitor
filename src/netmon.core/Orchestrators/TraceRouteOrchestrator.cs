@@ -50,46 +50,54 @@ namespace netmon.core.Orchestrators
 
                     var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
 
-                    RecordResult(responses, pingResponse);
+                    RecordResultIfNotNull(responses, pingResponse);
 
-                    if (
-                            pingResponse != null
-                            && (
-                                pingResponse?.Response?.Status == IPStatus.TtlExpired
-                                || pingResponse?.Response?.Status == IPStatus.Success
-                                )
-                        )
+                    var reply = ReponseIsOfInterest(pingResponse);
+                    if (reply != null)
                     {
-                        // it responded
-                        var hopAddress = pingResponse.Response.Address;
-                        var exitOnCompletion = pingResponse.Response.Status == IPStatus.Success;
+                        var hopAddress = reply.Address;
+                        var exitOnCompletion = reply.Status == IPStatus.Success;
+
                         for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
                         {
                             if (cancellationToken.IsCancellationRequested) break;
                             pingRequest = _requestModelFactory.Create();
                             pingRequest.Ttl = Defaults.Ttl;
                             pingRequest.Address = hopAddress;
-                            
+
 
                             pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
 
                             SetAttempt(pingResponse, attempt, _options.MaxAttempts, hop);
 
-                            RecordResult(responses, pingResponse);
+                            RecordResultIfNotNull(responses, pingResponse);
                         }
                         if (exitOnCompletion) break;
                     }
-
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
-                    
-                    RecordResult(responses, new PingResponseModel() { Request = pingRequest, Exception = ex});
+
+                    RecordResultIfNotNull(responses, new PingResponseModel() { Request = pingRequest, Exception = ex });
 
                 }
             }
             return responses;
+        }
+
+        private PingReply? ReponseIsOfInterest(PingResponseModel pingResponse)
+        {
+            if (pingResponse != null
+                            && (
+                                pingResponse?.Response?.Status == IPStatus.TtlExpired
+                                || pingResponse?.Response?.Status == IPStatus.Success
+                                )
+                                )
+            {
+                return pingResponse.Response;
+            }
+            return null;
         }
 
         private static void SetAttempt(PingResponseModel pingResponse, int attempt, int maxAttempts, int hop)
@@ -99,8 +107,9 @@ namespace netmon.core.Orchestrators
             pingResponse.MaxAttempts = maxAttempts;
         }
 
-        private static void RecordResult(PingResponses responses, PingResponseModel pingResponse)
+        private static void RecordResultIfNotNull(PingResponses responses, PingResponseModel pingResponse)
         {
+            if (pingResponse == null) return;
             responses.TryAdd(new(pingResponse.Start, pingResponse.Request.Address), pingResponse);
         }
 
