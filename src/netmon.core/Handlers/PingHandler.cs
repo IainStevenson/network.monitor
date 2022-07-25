@@ -12,8 +12,7 @@ namespace netmon.core.Handlers
     public class PingHandler : IPingHandler
     {
         private readonly PingHandlerOptions _pingOptions;
-        public PingHandlerOptions Options {  get {  return  _pingOptions; } }
-
+       
         public PingHandler(PingHandlerOptions pingOptions)     
         {
             _pingOptions = pingOptions;
@@ -23,7 +22,7 @@ namespace netmon.core.Handlers
         /// Asnychronously emit a ping to an address and return the response.
         /// </summary>
         /// <param name="action"></param>
-        /// <returns>An instance of <see cref="Task"/> deliverig an instance of <see cref="PingResponseModel"/></returns>
+        /// <returns>An instance of <see cref="Task"/> delivering an instance of <see cref="PingResponseModel"/></returns>
         public Task<PingResponseModel> Execute(PingRequestModel request, CancellationToken cancellationToken)
         {
             var response = new PingResponseModel();

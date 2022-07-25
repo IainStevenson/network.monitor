@@ -4,11 +4,11 @@ using System.Net;
 
 namespace netmon.core.tests
 {
-    public class InMemoryStorageTests: TestBase<PingResponseModelInMemoryStorage>
+    public class InMemoryStorageTests : TestBase<PingResponseModelInMemoryStorage>
     {
-        [SetUp] 
-        public override void Setup() 
-        { 
+        [SetUp]
+        public override void Setup()
+        {
             base.Setup();
             _unit = new PingResponseModelInMemoryStorage();
         }
@@ -17,10 +17,15 @@ namespace netmon.core.tests
         {
             var items = new PingResponses();
             // simualte traceroute response.
-            foreach(var address in TestConditions.WorldAddresses)
+            List<bool> states = new List<bool>();
+            foreach (var address in TestConditions.WorldAddresses)
             {
-                items.TryAdd(new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address), new Models.PingResponseModel());
+                states.Add(items.TryAdd(
+                      new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
+                      new Models.PingResponseModel() { Request = new Models.PingRequestModel() { Address = address } })
+                    );
             }
+            if (states.Any(a => !a)) return; // fail the test
             // load it into storage as needed.
             foreach (var item in items)
             {
@@ -30,11 +35,35 @@ namespace netmon.core.tests
 
         [Test]
         [Category("Unit")]
-        public void OnStoreItShouldContaiaTheAddedItems()
+        public void OnStoreItShouldContainTheAddedItems()
         {
-            Assert.That(_unit.Count, Is.EqualTo(0));            
+            Assert.That(_unit.Count, Is.EqualTo(0));
             AddTestData();
             Assert.That(_unit.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
         }
+
+
+        [Test]
+        [Category("Unit")]
+        public async Task OnRetrieveByAddressItShouldReturnTheItems()
+        {
+            Assert.That(_unit.Count, Is.EqualTo(0));
+            AddTestData();
+            var actual = await _unit.Retrieve(TestConditions.WorldAddresses);
+            Assert.That(actual.ToList(), Has.Count.EqualTo(TestConditions.WorldAddresses.Length));
+        }
+
+
+        [Test]
+        [Category("Unit")]
+        public async Task OnRetrieveByAddressPredicateItShouldReturnTheExactItem()
+        {
+            Assert.That(_unit.Count, Is.EqualTo(0));
+            AddTestData();
+            var actual = await _unit.Retrieve( (x) => x.Request.Address == TestConditions.WorldAddresses.Last());
+            Assert.That(actual.ToList(), Has.Count.EqualTo(1));
+            Assert.That(actual.Last().Request.Address, Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+        }
+
     }
 }

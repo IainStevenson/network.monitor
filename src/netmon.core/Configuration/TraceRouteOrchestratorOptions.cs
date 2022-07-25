@@ -1,8 +1,11 @@
-﻿namespace netmon.core.Configuration
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace netmon.core.Configuration
 {
     /// <summary>
     /// Operating options for the <see cref="Orchestrators.TraceRouteOrchestrator"/>
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class TraceRouteOrchestratorOptions
     {
         /// <summary>

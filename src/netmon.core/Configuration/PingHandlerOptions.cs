@@ -1,10 +1,12 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.NetworkInformation;
 
 namespace netmon.core.Configuration
 {
     /// <summary>
     /// operating options for the <see cref="Handlers.PingHandler"/>
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class PingHandlerOptions
     {
         /// <summary>

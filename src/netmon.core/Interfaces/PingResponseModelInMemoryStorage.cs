@@ -19,7 +19,7 @@ namespace netmon.core.Interfaces
 
         public Task<IEnumerable<PingResponseModel>> Retrieve(IEnumerable<IPAddress> keys)
         {
-            return Task.FromResult(_storage.Values.Where( w=>keys.Contains(w.Response?.Address)).AsEnumerable());
+            return Task.FromResult(_storage.Values.Where( w=>keys.Contains(w.Request?.Address)).AsEnumerable());
         }
 
         public Task<IEnumerable<PingResponseModel>> Retrieve(Func<PingResponseModel, bool> predicate)

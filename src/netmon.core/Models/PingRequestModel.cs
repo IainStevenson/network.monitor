@@ -16,7 +16,7 @@ namespace netmon.core.Models
         /// The address to ping. Default is the loopback address.
         /// </summary>
         [JsonConverter(typeof(IPAddressConverter))]
-        public IPAddress Address { get; internal set; } = Defaults.LoopbackAddress;
+        public IPAddress Address { get; set; } = Defaults.LoopbackAddress;
 
         public PingHandlerOptions Options { get; set; } = new PingHandlerOptions();
 

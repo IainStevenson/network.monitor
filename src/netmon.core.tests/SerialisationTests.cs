@@ -1,4 +1,5 @@
-﻿using netmon.core.Serialisation;
+﻿using netmon.core.Models;
+using netmon.core.Serialisation;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -58,6 +59,63 @@ namespace netmon.core.tests
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.TypeOf<List<IPAddress>>());
             Assert.That(actual.First(), Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+
+        }
+        [Test]
+        [TestCase("192.168.0.1", HostTypes.Private)]
+        [TestCase("172.16.0.1", HostTypes.Private)]
+        [TestCase("10.0.0.1", HostTypes.Private)]
+        [TestCase("172.27.83.1", HostTypes.Private)]
+        [TestCase("195.68.0.2", HostTypes.Public)]
+        [TestCase("216.239.48.217", HostTypes.Public)]
+        [TestCase("8.8.8.8", HostTypes.Public)]
+        [Category("Unit")]
+        public void OnJsonConvertOfIPAddressAndHostTypeTupleItSerialisesBothWays(string address, HostTypes hostType)
+        {
+            // serialize then deserialize the combined type.
+
+            
+            var  data = new Tuple<IPAddress, HostTypes>(IPAddress.Parse(address), hostType );
+            var json = JsonConvert.SerializeObject(data, _settings);
+            Assert.That(json, Is.Not.Null);
+            Assert.That(json, Is.TypeOf<string>());
+
+
+            Tuple<IPAddress, HostTypes>? actual = JsonConvert.DeserializeObject<Tuple<IPAddress, HostTypes>>(json, _settings);
+
+            Assert.That(actual, Is.Not.Null);
+            Assert.That(actual, Is.TypeOf<Tuple<IPAddress, HostTypes>>());
+            Assert.That(actual.Item1.ToString(), Is.EqualTo(address));
+            Assert.That(actual.Item2, Is.EqualTo(hostType));
+        }
+
+        [Test]
+        [TestCase("192.168.0.1", HostTypes.Private)]
+        [TestCase("172.16.0.1", HostTypes.Private)]
+        [TestCase("10.0.0.1", HostTypes.Private)]
+        [TestCase("172.27.83.1", HostTypes.Private)]
+        [TestCase("195.68.0.2", HostTypes.Public)]
+        [TestCase("216.239.48.217", HostTypes.Public)]
+        [TestCase("8.8.8.8", HostTypes.Public)]
+        [Category("Unit")]
+        public void OnJsonConvertOfIPAddressAndHostTypeTupleDictionaryItSerialisesBothWays(string address, HostTypes hostType)
+        {
+            // serialize then deserialize the combined type.
+
+
+            var data = new Dictionary<IPAddress, HostTypes>() {
+                {IPAddress.Parse(address), hostType }
+            };
+            var json = JsonConvert.SerializeObject(data, _settings);
+            Assert.That(json, Is.Not.Null);
+            Assert.That(json, Is.TypeOf<string>());
+
+
+            Dictionary<IPAddress, HostTypes>? actual = JsonConvert.DeserializeObject<Dictionary<IPAddress, HostTypes>>(json, _settings);
+
+            Assert.That(actual, Is.Not.Null);
+            Assert.That(actual, Is.TypeOf<Dictionary<IPAddress, HostTypes>>());
+            Assert.That(actual, Has.Count.EqualTo(1));
 
         }
 
