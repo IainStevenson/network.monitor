@@ -8,10 +8,15 @@ using System.Net.NetworkInformation;
 
 namespace netmon.core.Orchestrators
 {
+    public interface ITraceRouteOrchestrator
+    {
+        Task<PingResponses> Execute(IPAddress iPAddress, CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// Orchestrates a traceroute using an instance of  <see cref="IPingHandler"/> and obtains raw response data.
     /// </summary>
-    public class TraceRouteOrchestrator
+    public class TraceRouteOrchestrator : ITraceRouteOrchestrator
     {
         private readonly IPingHandler _pingHandler;
         private readonly TraceRouteOrchestratorOptions _options;
@@ -56,7 +61,7 @@ namespace netmon.core.Orchestrators
                     if (reply != null)
                     {
                         var hopAddress = reply.Address;
-                        await GetPingStatisticsForAddress(responses, pingRequest, hop, hopAddress, cancellationToken);
+                        await GetPingStatisticsForAddress(responses, hop, hopAddress, cancellationToken);
                         if (reply.Status == IPStatus.Success) break;
                     }
                 }
@@ -71,13 +76,13 @@ namespace netmon.core.Orchestrators
             return responses;
         }
 
-        private async Task GetPingStatisticsForAddress(PingResponses responses, PingRequestModel pingRequest, int hop, IPAddress hopAddress, CancellationToken cancellationToken)
+        private async Task GetPingStatisticsForAddress(PingResponses responses, int hop, IPAddress hopAddress, CancellationToken cancellationToken)
         {
             for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
-                pingRequest = _requestModelFactory.Create();
+                var pingRequest = _requestModelFactory.Create();
                 pingRequest.Ttl = Defaults.Ttl;
                 pingRequest.Address = hopAddress;
 
@@ -96,7 +101,7 @@ namespace netmon.core.Orchestrators
         /// </summary>
         /// <param name="pingResponse"></param>
         /// <returns></returns>
-        private PingReply? ReponseIsOfInterest(PingResponseModel pingResponse)
+        private static PingReplyModel? ReponseIsOfInterest(PingResponseModel pingResponse)
         {
             if (pingResponse == null) return null;
             if (pingResponse.Response == null) return null;

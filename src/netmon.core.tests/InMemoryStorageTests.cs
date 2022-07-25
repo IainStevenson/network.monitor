@@ -1,5 +1,5 @@
-﻿using netmon.core.Interfaces;
-using netmon.core.Messaging;
+﻿using netmon.core.Messaging;
+using netmon.core.Storage;
 using System.Net;
 
 namespace netmon.core.tests
@@ -17,7 +17,7 @@ namespace netmon.core.tests
         {
             var items = new PingResponses();
             // simualte traceroute response.
-            List<bool> states = new List<bool>();
+            List<bool> states = new();
             foreach (var address in TestConditions.WorldAddresses)
             {
                 states.Add(items.TryAdd(
@@ -65,9 +65,11 @@ namespace netmon.core.tests
             Assert.That(_unit.Count, Is.EqualTo(0));
             AddWorldAddressesTestData();
             var actual = await _unit.Retrieve( (x) => x.Request.Address == TestConditions.WorldAddresses.Last());
-            Assert.That(actual.ToList(), Has.Count.EqualTo(1));
-            Assert.That(actual.Last().Request.Address, Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual.ToList(), Has.Count.EqualTo(1));
+                Assert.That(actual.Last().Request.Address, Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+            });
         }
-
     }
 }

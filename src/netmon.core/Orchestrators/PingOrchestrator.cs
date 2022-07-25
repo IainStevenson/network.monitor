@@ -7,10 +7,16 @@ using System.Net;
 
 namespace netmon.core.Orchestrators
 {
+    public interface IPingOrchestrator
+    {
+        event EventHandler<PingResponseModelEventArgs> Results;
+        Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation);
+    }
+
     /// <summary>
     /// Handles complex ping tasks and recording results via the <see cref="PingHandler"/> and <see cref="PingResponses"/>.
     /// </summary>
-    public class PingOrchestrator
+    public class PingOrchestrator : IPingOrchestrator
     {
         private readonly IPingHandler _pingHandler;
         private readonly IPingRequestModelFactory _pingRequestModelFactory;
@@ -19,15 +25,15 @@ namespace netmon.core.Orchestrators
         public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory, PingOrchestratorOptions options)
         {
             _pingHandler = pingHandler;
-            _pingRequestModelFactory = pingRequestModelFactory;  
+            _pingRequestModelFactory = pingRequestModelFactory;
             _options = options;
         }
 
-        public EventHandler<PingResponseModelEventArgs?>? Results ;
+        public event EventHandler<PingResponseModelEventArgs>? Results;
 
         public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
-            var pauseTimeBetweenInstances = new TimeSpan( _options.MillisecondsBetweenPings * 10000);
+            var pauseTimeBetweenInstances = new TimeSpan(_options.MillisecondsBetweenPings * 10000);
             var end = DateTimeOffset.UtcNow.Add(until);
             var responses = new PingResponses();
 

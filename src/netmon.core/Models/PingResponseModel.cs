@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.NetworkInformation;
 
 namespace netmon.core.Models
 {
+
     [ExcludeFromCodeCoverage]
     public class PingResponseModel
     {
@@ -21,7 +21,7 @@ namespace netmon.core.Models
         /// <summary>
         /// What was achieved.
         /// </summary>
-        public PingReply? Response { get; set; }
+        public PingReplyModel? Response { get; set; }
         /// <summary>
         /// Waht was asked for.
         /// </summary>
@@ -29,11 +29,11 @@ namespace netmon.core.Models
         /// <summary>
         /// The hop number for a Trace route ping
         /// </summary>
-        public int? Hop { get; set; } 
+        public int? Hop { get; set; }
         /// <summary>
         /// The attemtp number for a trace route ping.
         /// </summary>
-        public int? Attempt { get; set; } 
+        public int? Attempt { get; set; }
         /// <summary>
         /// The maximum attempts number foa trace route operation
         /// </summary>
