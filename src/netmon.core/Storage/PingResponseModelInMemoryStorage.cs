@@ -1,8 +1,9 @@
-﻿using netmon.core.Models;
+﻿using netmon.core.Interfaces;
+using netmon.core.Models;
 using System.Collections.Concurrent;
 using System.Net;
 
-namespace netmon.core.Interfaces
+namespace netmon.core.Storage
 {
     /// <summary>
     /// Implements and in memory store of <see cref="PingRequestModel"/>. 
@@ -19,7 +20,7 @@ namespace netmon.core.Interfaces
 
         public Task<IEnumerable<PingResponseModel>> Retrieve(IEnumerable<IPAddress> keys)
         {
-            return Task.FromResult(_storage.Values.Where( w=>keys.Contains(w.Response?.Address)).AsEnumerable());
+            return Task.FromResult(_storage.Values.Where(w => keys.Contains(w.Request?.Address)).AsEnumerable());
         }
 
         public Task<IEnumerable<PingResponseModel>> Retrieve(Func<PingResponseModel, bool> predicate)

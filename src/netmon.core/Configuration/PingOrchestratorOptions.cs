@@ -1,5 +1,8 @@
-﻿namespace netmon.core.Configuration
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace netmon.core.Configuration
 {
+    [ExcludeFromCodeCoverage]
     public class PingOrchestratorOptions
     {
         /// <summary>

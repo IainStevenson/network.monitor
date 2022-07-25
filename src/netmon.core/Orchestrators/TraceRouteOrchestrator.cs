@@ -8,10 +8,15 @@ using System.Net.NetworkInformation;
 
 namespace netmon.core.Orchestrators
 {
+    public interface ITraceRouteOrchestrator
+    {
+        Task<PingResponses> Execute(IPAddress iPAddress, CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// Orchestrates a traceroute using an instance of  <see cref="IPingHandler"/> and obtains raw response data.
     /// </summary>
-    public class TraceRouteOrchestrator
+    public class TraceRouteOrchestrator : ITraceRouteOrchestrator
     {
         private readonly IPingHandler _pingHandler;
         private readonly TraceRouteOrchestratorOptions _options;
@@ -50,46 +55,58 @@ namespace netmon.core.Orchestrators
 
                     var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
 
-                    RecordResult(responses, pingResponse);
+                    RecordResultIfNotNull(responses, pingResponse);
 
-                    if (
-                            pingResponse != null
-                            && (
-                                pingResponse?.Response?.Status == IPStatus.TtlExpired
-                                || pingResponse?.Response?.Status == IPStatus.Success
-                                )
-                        )
+                    var reply = ReponseIsOfInterest(pingResponse);
+                    if (reply != null)
                     {
-                        // it responded
-                        var hopAddress = pingResponse.Response.Address;
-                        var exitOnCompletion = pingResponse.Response.Status == IPStatus.Success;
-                        for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
-                        {
-                            if (cancellationToken.IsCancellationRequested) break;
-                            pingRequest = _requestModelFactory.Create();
-                            pingRequest.Ttl = Defaults.Ttl;
-                            pingRequest.Address = hopAddress;
-                            
-
-                            pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
-
-                            SetAttempt(pingResponse, attempt, _options.MaxAttempts, hop);
-
-                            RecordResult(responses, pingResponse);
-                        }
-                        if (exitOnCompletion) break;
+                        var hopAddress = reply.Address;
+                        await GetPingStatisticsForAddress(responses, hop, hopAddress, cancellationToken);
+                        if (reply.Status == IPStatus.Success) break;
                     }
-
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
-                    
-                    RecordResult(responses, new PingResponseModel() { Request = pingRequest, Exception = ex});
+
+                    RecordResultIfNotNull(responses, new PingResponseModel() { Request = pingRequest, Exception = ex });
 
                 }
             }
             return responses;
+        }
+
+        private async Task GetPingStatisticsForAddress(PingResponses responses, int hop, IPAddress hopAddress, CancellationToken cancellationToken)
+        {
+            for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
+            {
+                if (cancellationToken.IsCancellationRequested) break;
+
+                var pingRequest = _requestModelFactory.Create();
+                pingRequest.Ttl = Defaults.Ttl;
+                pingRequest.Address = hopAddress;
+
+
+                var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
+
+                SetAttempt(pingResponse, attempt, _options.MaxAttempts, hop);
+
+                RecordResultIfNotNull(responses, pingResponse);
+            }
+
+        }
+
+        /// <summary>
+        /// Return the orchestrator response reply from the ping, if it exists, and if it is either TtlExpired or Success status.
+        /// </summary>
+        /// <param name="pingResponse"></param>
+        /// <returns></returns>
+        private static PingReplyModel? ReponseIsOfInterest(PingResponseModel pingResponse)
+        {
+            if (pingResponse == null) return null;
+            if (pingResponse.Response == null) return null;
+            if (pingResponse.Response.Status != IPStatus.TtlExpired && pingResponse.Response.Status != IPStatus.Success) return null;
+            return pingResponse.Response;
         }
 
         private static void SetAttempt(PingResponseModel pingResponse, int attempt, int maxAttempts, int hop)
@@ -99,8 +116,9 @@ namespace netmon.core.Orchestrators
             pingResponse.MaxAttempts = maxAttempts;
         }
 
-        private static void RecordResult(PingResponses responses, PingResponseModel pingResponse)
+        private static void RecordResultIfNotNull(PingResponses responses, PingResponseModel pingResponse)
         {
+            if (pingResponse == null) return;
             responses.TryAdd(new(pingResponse.Start, pingResponse.Request.Address), pingResponse);
         }
 

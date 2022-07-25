@@ -13,62 +13,86 @@ namespace netmon.core.Orchestrators
     public class MonitorOrchestrator
     {
         //private readonly MonitorOptions _monitorOptions;
-        private readonly TraceRouteOrchestrator _routeOrchestrator;
-        private readonly PingOrchestrator _pingOrchestrator;
+        private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
+        private readonly IPingOrchestrator _pingOrchestrator;
         private readonly IStorage<PingResponseModel> _pingResponseStorage;
-        public MonitorOrchestrator(TraceRouteOrchestrator traceRouteOrchestrator, 
-            PingOrchestrator pingOrchestrator,
+
+        public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
+            IPingOrchestrator pingOrchestrator,
             IStorage<PingResponseModel> pingResponseStorage)
         {
-            _routeOrchestrator = traceRouteOrchestrator;
+            _traceRouteOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
             _pingResponseStorage = pingResponseStorage;
         }
 
         /// <summary>
         /// Continuously ping the addresses until the time has expired.
-        /// would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+        /// 
         /// </summary>
         /// <param name="addressesToMonitor">The addresses to ping.</param>
-        /// <param name="until">The time span to continue monitoring over.</param>
+        /// <param name="until">The time span to continue monitoring over. 
+        /// should use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
+        /// </param>
+        /// <param name="pingOnly">Only works when addresses are supplied. If true then will not peform a trace on the supplied addresses first and then monitor all of them, returning the complete list.</param>
         /// <param name="cancellationToken">The asnyc cacnellaction token for earyl termination.</param>
         /// <returns>An instance of <see cref="Task"/> delivering an list of all the <see cref="IPAddresses"/> which were pinged, and that ever responded.</returns>
-        public async Task<List<IPAddress>> Execute(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        public async Task<List<IPAddress>> Execute(List<IPAddress> addressesToMonitor, TimeSpan until, bool pingOnly, CancellationToken cancellationToken)
         {
 
-            if (!addressesToMonitor.Any())
-            {
-                addressesToMonitor = await GetAddressesToMonitor(Defaults.DefaultMonitoringDestination, cancellationToken);
-            }
+            addressesToMonitor = await ValidateAddresses(addressesToMonitor, pingOnly, cancellationToken);
 
             MonitorResponses responses = new();
 
             _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
 
-            responses.AddRange((await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
+            var pingResults = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
                                                                      until,
-                                                                     cancellationToken))
-                                                                     .Select(s => s.Value)
-                                                                     .ToList());
+                                                                     cancellationToken);
+
+            responses.AddRange(pingResults.Select(s => s.Value).ToList());
 
             _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
             return responses
                 .Where(x => x.Response?.Status == System.Net.NetworkInformation.IPStatus.Success)
-                .Select(s => s.Response?.Address?? IPAddress.Loopback) 
+                .Select(s => s.Response?.Address ?? IPAddress.Loopback)
                 .Distinct()
                 .ToList();
         }
 
+        private async Task<List<IPAddress>> ValidateAddresses(List<IPAddress> addressesToMonitor, bool skipTrace, CancellationToken cancellationToken)
+        {
+
+
+            List<IPAddress> discoveredAddresses = new();
+
+            if (!addressesToMonitor.Any())
+            {
+                discoveredAddresses = await GetAddressesToMonitorFromTraceRoute(Defaults.DefaultMonitoringDestination, cancellationToken);
+            }
+            else if (!skipTrace)
+            {
+                List<IPAddress> tracedAddresses = new();
+                foreach (var address in addressesToMonitor)
+                {
+                    var routeaddresses = await GetAddressesToMonitorFromTraceRoute(address, cancellationToken);
+                    tracedAddresses.AddRange(routeaddresses);
+                }
+                discoveredAddresses.AddRange(tracedAddresses);
+            }
+            return discoveredAddresses.Distinct().ToList();
+        }
+
         void StoreResutlsAsTheyComeIn(object? source, PingResponseModelEventArgs? e)
         {
-            if (e == null ) return;
+            if (e == null) return;
 
             _pingResponseStorage.Store(e.Model).Wait();
         }
 
-        private async Task<List<IPAddress>> GetAddressesToMonitor(IPAddress defaultMonitoringDestination, CancellationToken cancellationToken)
+        private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress defaultMonitoringDestination, CancellationToken cancellationToken)
         {
-            PingResponses tracedRoutes = await _routeOrchestrator.Execute(defaultMonitoringDestination, cancellationToken);
+            PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(defaultMonitoringDestination, cancellationToken);
             var validHosts = tracedRoutes.AsOrderedList()
                                         .Where(w => w.Response != null && w.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
                                         .Select(s => s.Response?.Address ?? IPAddress.Loopback)
