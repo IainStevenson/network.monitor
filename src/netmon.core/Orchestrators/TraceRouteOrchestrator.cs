@@ -56,23 +56,8 @@ namespace netmon.core.Orchestrators
                     if (reply != null)
                     {
                         var hopAddress = reply.Address;
-                        var exitOnCompletion = reply.Status == IPStatus.Success;
-
-                        for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
-                        {
-                            if (cancellationToken.IsCancellationRequested) break;
-                            pingRequest = _requestModelFactory.Create();
-                            pingRequest.Ttl = Defaults.Ttl;
-                            pingRequest.Address = hopAddress;
-
-
-                            pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
-
-                            SetAttempt(pingResponse, attempt, _options.MaxAttempts, hop);
-
-                            RecordResultIfNotNull(responses, pingResponse);
-                        }
-                        if (exitOnCompletion) break;
+                        await GetPingStatisticsForAddress(responses, pingRequest, hop, hopAddress, cancellationToken);
+                        if (reply.Status == IPStatus.Success) break;
                     }
                 }
                 catch (Exception ex)
@@ -86,18 +71,37 @@ namespace netmon.core.Orchestrators
             return responses;
         }
 
+        private async Task GetPingStatisticsForAddress(PingResponses responses, PingRequestModel pingRequest, int hop, IPAddress hopAddress, CancellationToken cancellationToken)
+        {
+            for (var attempt = 1; attempt <= _options.MaxAttempts; attempt++)
+            {
+                if (cancellationToken.IsCancellationRequested) break;
+
+                pingRequest = _requestModelFactory.Create();
+                pingRequest.Ttl = Defaults.Ttl;
+                pingRequest.Address = hopAddress;
+
+
+                var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
+
+                SetAttempt(pingResponse, attempt, _options.MaxAttempts, hop);
+
+                RecordResultIfNotNull(responses, pingResponse);
+            }
+
+        }
+
+        /// <summary>
+        /// Return the orchestrator response reply from the ping, if it exists, and if it is either TtlExpired or Success status.
+        /// </summary>
+        /// <param name="pingResponse"></param>
+        /// <returns></returns>
         private PingReply? ReponseIsOfInterest(PingResponseModel pingResponse)
         {
-            if (pingResponse != null
-                            && (
-                                pingResponse?.Response?.Status == IPStatus.TtlExpired
-                                || pingResponse?.Response?.Status == IPStatus.Success
-                                )
-                                )
-            {
-                return pingResponse.Response;
-            }
-            return null;
+            if (pingResponse == null) return null;
+            if (pingResponse.Response == null) return null;
+            if (pingResponse.Response.Status != IPStatus.TtlExpired && pingResponse.Response.Status != IPStatus.Success) return null;
+            return pingResponse.Response;
         }
 
         private static void SetAttempt(PingResponseModel pingResponse, int attempt, int maxAttempts, int hop)
