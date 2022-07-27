@@ -13,6 +13,9 @@ Uses PING and trace route techniques and can call out to external code such as t
 
 `Performance` is determined optionally by regularly performing ookla speed tests to grab actual bandwidth statistics. The frequency of this is once per hour at the same time (xx:30) each hour so as to ensure 'hour of the day' based histogram values for statistical reports. This being a large data consuming event its recommended you adjust this period to suit your data plan. I use 20 minutes for 3 times an hour on an unlimited data plan. This consumes <= 72 * ~150Mb  == 10.8 Gb of data per day!
 
+Deployable in two containers, 1 for capture .net core CLI, and 1 for storage (MongoDb). Analysis and reporting can then bedone from the CLI on any host that can access the storage container.
+
+
 # Limitations
 
 Initially works only on IPV4 addresses. IPV6 will follow. Many elements of the code handle 1PV6 addresses already but as I dont have that capability here (my ISP is IPV4 only) I can't test it out.

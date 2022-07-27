@@ -10,7 +10,7 @@ namespace netmon.core.Orchestrators
     /// Monitor the network every interval according to the list of <see cref="IPAddress">. 
     /// Observe the emitted data and store it in the repository for future use.</see>
     /// </summary>
-    public class MonitorOrchestrator
+    public class MonitorOrchestrator : IMonitorOrchestrator
     {
         //private readonly MonitorOptions _monitorOptions;
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
