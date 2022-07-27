@@ -7,6 +7,9 @@ using netmon.core.Orchestrators;
 using netmon.core.Storage;
 using System.Net;
 
+/// <summary>
+/// Inspired by : https://stackoverflow.com/questions/5891538/listen-for-key-press-in-net-console-app
+/// </summary>
 public static class Program
 {
 
