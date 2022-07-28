@@ -1,4 +1,5 @@
-﻿using netmon.core.Data;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
 using netmon.core.Models;
@@ -16,14 +17,17 @@ namespace netmon.core.Orchestrators
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
         private readonly IPingOrchestrator _pingOrchestrator;
         private readonly IStorage<PingResponseModel> _pingResponseStorage;
+        private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
             IPingOrchestrator pingOrchestrator,
-            IStorage<PingResponseModel> pingResponseStorage)
+            IStorage<PingResponseModel> pingResponseStorage,
+            ILogger<MonitorOrchestrator> logger)
         {
             _traceRouteOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
             _pingResponseStorage = pingResponseStorage;
+            _logger = logger;
         }
 
         /// <summary>
@@ -62,15 +66,18 @@ namespace netmon.core.Orchestrators
 
         private async Task<List<IPAddress>> ValidateAddresses(List<IPAddress> addressesToMonitor, bool skipTrace, CancellationToken cancellationToken)
         {
-
+            _logger.LogTrace("Validating [{count}] addresses", addressesToMonitor.Count);
 
             List<IPAddress> discoveredAddresses = new();
 
             if (!addressesToMonitor.Any())
             {
-                discoveredAddresses = await GetAddressesToMonitorFromTraceRoute(Defaults.DefaultMonitoringDestination, cancellationToken);
+                //discoveredAddresses = await GetAddressesToMonitorFromTraceRoute(Defaults.DefaultMonitoringDestination, cancellationToken);
+                _logger.LogTrace("Adding default monitor address {addressesToMonitor}", addressesToMonitor);
+                addressesToMonitor.Add(Defaults.DefaultMonitoringDestination);
             }
-            else if (!skipTrace)
+            
+            if (!skipTrace)
             {
                 List<IPAddress> tracedAddresses = new();
                 foreach (var address in addressesToMonitor)
@@ -90,9 +97,10 @@ namespace netmon.core.Orchestrators
             _pingResponseStorage.Store(e.Model).Wait();
         }
 
-        private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress defaultMonitoringDestination, CancellationToken cancellationToken)
+        private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress addressToTrace, CancellationToken cancellationToken)
         {
-            PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(defaultMonitoringDestination, cancellationToken);
+            
+            PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(addressToTrace, cancellationToken);
             var validHosts = tracedRoutes.AsOrderedList()
                                         .Where(w => w.Response != null && w.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
                                         .Select(s => s.Response?.Address ?? IPAddress.Loopback)

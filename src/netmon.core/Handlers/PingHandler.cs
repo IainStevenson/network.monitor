@@ -1,4 +1,5 @@
-﻿using netmon.core.Configuration;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Configuration;
 using netmon.core.Interfaces;
 using netmon.core.Models;
 using System.Net.NetworkInformation;
@@ -12,10 +13,12 @@ namespace netmon.core.Handlers
     public class PingHandler : IPingHandler
     {
         private readonly PingHandlerOptions _pingOptions;
+        private readonly ILogger<PingHandler> _logger;
 
-        public PingHandler(PingHandlerOptions pingOptions)
+        public PingHandler(PingHandlerOptions pingOptions, ILogger<PingHandler> logger)
         {
             _pingOptions = pingOptions;
+            _logger = logger;
         }
 
         /// <summary>
@@ -40,7 +43,7 @@ namespace netmon.core.Handlers
                     };
 
 
-                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING request  {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Ttl}");
+                    _logger.LogTrace($"{nameof(PingHandler)}.{nameof(Execute)} PING request  {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Ttl}");
 
                     response.Start = DateTimeOffset.UtcNow;
                     
@@ -62,7 +65,7 @@ namespace netmon.core.Handlers
                             Status = reply.Status
                         };
                     }
-                    System.Diagnostics.Trace.WriteLine($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration.TotalMilliseconds} ms, Status {response.Response?.Status},  TTL {response.Response?.Options?.Ttl}");
+                    _logger.LogTrace($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration.TotalMilliseconds} ms, Status {response.Response?.Status},  TTL {response.Response?.Options?.Ttl}");
 
 
                 }

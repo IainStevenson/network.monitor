@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
@@ -23,6 +24,9 @@ namespace netmon.core.tests
         private PingHandlerOptions _pingHandlerOptions;
         private PingOrchestratorOptions _pingOrchestratorOptions;
         private IStorage<PingResponseModel> _pingResponseStorage;
+        private ILogger<PingHandler> _pingLogger;
+        private ILogger<MonitorOrchestrator> _monitorOrchestratorLogger;
+        private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
         private readonly List<IPAddress> _monitorLoopbackAddresses = new() { IPAddress.Parse("127.0.0.1") };
         private readonly TimeSpan _testUntil = new(0, 0, 2); //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
 
@@ -34,12 +38,19 @@ namespace netmon.core.tests
             _pingHandlerOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
-            _pingHandler = new PingHandler(_pingHandlerOptions);
-            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, _traceRouteOrchestratorOptions, _pingRequestModelFactory);
+            _pingLogger = Substitute.For<ILogger<PingHandler>>();
+            _pingHandler = new PingHandler(_pingHandlerOptions, _pingLogger);
+            _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
+            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, 
+                _traceRouteOrchestratorOptions, 
+                _pingRequestModelFactory, 
+                _traceRouteOrchestratorLogger);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
             _pingResponseStorage = NSubstitute.Substitute.For<IStorage<PingResponseModel>>();
-            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage);
+
+            _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
+            _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage, _monitorOrchestratorLogger);
         }
 
 
@@ -64,7 +75,7 @@ namespace netmon.core.tests
                 ); // add address to event data?
 
 
-            return new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage);
+            return new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage, _monitorOrchestratorLogger);
         }
 
 
@@ -228,7 +239,7 @@ namespace netmon.core.tests
 
       
 
-        private (PingResponses, PingResponses) PrepeareTestData(List<IPAddress> testAddresses)
+        private static (PingResponses, PingResponses) PrepeareTestData(List<IPAddress> testAddresses)
         {
             var testTraceRouteResponses = new PingResponses();
             var testPingResponses = new PingResponses();
@@ -239,10 +250,10 @@ namespace netmon.core.tests
             }
             foreach (var address in testAddresses)
             {
-                PingReplyModel pingReply = new PingReplyModel()
+                PingReplyModel pingReply = new()
                 {
                     Address = address,
-                    Buffer = new byte[] { },
+                    Buffer = Array.Empty<byte>(),
                     Options = new PingOptions(),
                     RoundtripTime = 1,
                     Status = IPStatus.Success

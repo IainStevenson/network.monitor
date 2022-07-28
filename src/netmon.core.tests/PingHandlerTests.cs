@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Logging;
 using netmon.core.Configuration;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
 using netmon.core.Models;
+using NSubstitute;
 using System.Net.NetworkInformation;
 
 namespace netmon.core.tests
@@ -10,6 +12,7 @@ namespace netmon.core.tests
     {
         private PingHandlerOptions _pingHandlerOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
+        private ILogger<PingHandler> _pingHandlerLogger;
 
         [SetUp]
         public override void Setup()
@@ -17,7 +20,8 @@ namespace netmon.core.tests
             base.Setup();
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _pingHandlerOptions = new PingHandlerOptions();
-            _unit = new PingHandler(_pingHandlerOptions);
+            _pingHandlerLogger = Substitute.For<ILogger<PingHandler>>();
+            _unit = new PingHandler(_pingHandlerOptions, _pingHandlerLogger);
         }
 
         [Test]

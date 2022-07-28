@@ -1,4 +1,5 @@
-﻿using netmon.core.Configuration;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
@@ -8,10 +9,6 @@ using System.Net.NetworkInformation;
 
 namespace netmon.core.Orchestrators
 {
-    public interface ITraceRouteOrchestrator
-    {
-        Task<PingResponses> Execute(IPAddress iPAddress, CancellationToken cancellationToken);
-    }
 
     /// <summary>
     /// Orchestrates a traceroute using an instance of  <see cref="IPingHandler"/> and obtains raw response data.
@@ -21,12 +18,15 @@ namespace netmon.core.Orchestrators
         private readonly IPingHandler _pingHandler;
         private readonly TraceRouteOrchestratorOptions _options;
         private readonly IPingRequestModelFactory _requestModelFactory;
+        private readonly ILogger<TraceRouteOrchestrator> _logger;
 
-        public TraceRouteOrchestrator(IPingHandler pingHandler, TraceRouteOrchestratorOptions options, IPingRequestModelFactory requestModelFactory)
+        public TraceRouteOrchestrator(IPingHandler pingHandler, TraceRouteOrchestratorOptions options, IPingRequestModelFactory requestModelFactory,
+            ILogger<TraceRouteOrchestrator> logger)
         {
             _pingHandler = pingHandler;
             _options = options;
             _requestModelFactory = requestModelFactory;
+            _logger=logger;
         }
 
         /// <summary>
@@ -40,6 +40,8 @@ namespace netmon.core.Orchestrators
         /// <returns></returns>
         public async Task<PingResponses> Execute(IPAddress iPAddress, CancellationToken cancellationToken)
         {
+            _logger.LogTrace("Tracing route to {iPAddress}", iPAddress);
+
             var responses = new PingResponses();
 
             for (var hop = 1; hop <= _options.MaxHops; hop++)
@@ -67,7 +69,7 @@ namespace netmon.core.Orchestrators
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Trace.WriteLine($"{nameof(TraceRouteOrchestrator)}.{nameof(Execute)} Exception encountered and ignored: {ex.Message}");
+                    _logger.LogError("{handler}{method} Exception encountered and ignored: {message}", nameof(TraceRouteOrchestrator), nameof(Execute) , ex.Message);
 
                     RecordResultIfNotNull(responses, new PingResponseModel() { Request = pingRequest, Exception = ex });
 

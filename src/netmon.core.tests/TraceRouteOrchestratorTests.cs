@@ -1,4 +1,5 @@
-﻿using netmon.core.Configuration;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
@@ -15,6 +16,8 @@ namespace netmon.core.tests
         private IPingHandler _pingHandler;       
         private IPingRequestModelFactory _pingRequestModelFactory;
         private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
+        private ILogger<PingHandler> _pingHandlerLogger;
+        private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
 
         [SetUp]
         public override void Setup()
@@ -22,11 +25,12 @@ namespace netmon.core.tests
             base.Setup();
             // unit setup
             _pingHandlerOptions = new PingHandlerOptions();
-            _pingHandler = new PingHandler(_pingHandlerOptions);
+            _pingHandlerLogger = Substitute.For<ILogger<PingHandler>>();
+            _pingHandler = new PingHandler(_pingHandlerOptions, _pingHandlerLogger);
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _traceRouteHandlerOptions = new TraceRouteOrchestratorOptions();
-
-            _unit = new TraceRouteOrchestrator(_pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory);
+            _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
+            _unit = new TraceRouteOrchestrator(_pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory, _traceRouteOrchestratorLogger);
 
             
         }
@@ -100,7 +104,7 @@ namespace netmon.core.tests
             pingHandler.Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>())
                         .Returns(Task.FromException<PingResponseModel>(new PingException("some fake error")));
         
-            _unit = new TraceRouteOrchestrator(pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory);
+            _unit = new TraceRouteOrchestrator(pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory, _traceRouteOrchestratorLogger);
 
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
             
