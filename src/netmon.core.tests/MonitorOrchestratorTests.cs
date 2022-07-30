@@ -47,7 +47,7 @@ namespace netmon.core.tests
                 _traceRouteOrchestratorLogger);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
-            _pingResponseStorage = NSubstitute.Substitute.For<IStorage<PingResponseModel>>();
+            _pingResponseStorage = Substitute.For<IStorage<PingResponseModel>>();
 
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
             _unit = new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage, _monitorOrchestratorLogger);

@@ -18,12 +18,21 @@ namespace netmon.cli
     /// </summary>
     public class Program
     {
-
-        private static CancellationTokenSource? _cancellationTokenSource;
-        private static IMonitorOrchestrator? _monitorOrchestrator;
-        private static ILogger<Program>? _logger;
+        private const string Message = "{Severity} Log Thread Id {Id}";
+        private static readonly CancellationTokenSource? _cancellationTokenSource;
+        private static readonly IMonitorOrchestrator? _monitorOrchestrator;
+        private static readonly ILogger<Program>? _logger;
         static void Main(string[] args)
         {
+            var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+
+            var configuration = new ConfigurationBuilder()
+                             .SetBasePath(Directory.GetCurrentDirectory())
+                             .AddJsonFile($"appSettings.json")
+                             .AddJsonFile($"appSettings{environmentName}.json",true,true);
+
+            var config = configuration.Build();
+
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder
@@ -38,7 +47,7 @@ namespace netmon.cli
             });
             ILogger logger = loggerFactory.CreateLogger<Program>();
             Task.Run(() => LogMessages(logger)).Wait();
-            Console.ReadLine();
+            Console.ReadKey();
         }
 
         private static void LogMessages(ILogger logger)
@@ -53,29 +62,20 @@ namespace netmon.cli
         }
         private static void LogLowMessages(ILogger logger)
         {
-            logger.LogTrace("Trace Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
-            logger.LogDebug("Debug Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
+            logger.LogTrace(Message, "Trace", Environment.CurrentManagedThreadId);
+            logger.LogDebug(Message, "Debug", Environment.CurrentManagedThreadId);
 
         }
 
         private static void LogHighMessages(ILogger logger)
         {
-            logger.LogInformation("Info Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
-            logger.LogWarning("Warning Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
-            logger.LogError("Error Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
-            logger.LogCritical("Critical Log Thread Id {0}", System.Threading.Thread.CurrentThread.ManagedThreadId);
+            logger.LogInformation(Message, "Info", Environment.CurrentManagedThreadId);
+            logger.LogWarning(Message, "Warning", Environment.CurrentManagedThreadId);
+            logger.LogError(Message, "Error", Environment.CurrentManagedThreadId);
+            logger.LogCritical(Message, "Critical", Environment.CurrentManagedThreadId);
         }
 
-        //static void Main(string[] args)
 
-        //{
-
-
-        //    var configuration = new ConfigurationBuilder()
-        //                     .SetBasePath(Directory.GetCurrentDirectory())
-        //                     .AddJsonFile($"appsettings.json");
-
-        //    var config = configuration.Build();
 
         //    var serviceProvider = new ServiceCollection()
         //               .AddLogging(configure =>

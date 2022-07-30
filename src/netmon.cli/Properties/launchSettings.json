@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "netmon.cli": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Devlopement"
+      }
+    }
+  }
+}
