@@ -18,10 +18,10 @@ namespace netmon.cli
     /// </summary>
     public class Program
     {
-        private const string Message = "{Severity} Log Thread Id {Id}";
-        private static CancellationTokenSource? _cancellationTokenSource;
+        //private const string Message = "{Severity} Log Thread Id {Id}";
+        private static readonly CancellationTokenSource _cancellationTokenSource;
         private static IMonitorOrchestrator? _monitorOrchestrator;
-        private static ServiceProvider _serviceProvider;
+        private static readonly ServiceProvider _serviceProvider;
 
         private static ILogger<Program>? _logger;
 
@@ -55,7 +55,7 @@ namespace netmon.cli
         /// <summary>
         /// Provides the necessary configuration builder
         /// </summary>
-        /// <param name="environmentName">Optionally includes configuration fot he specified environment.</param>
+        /// <param name="environmentName">Optionally includes configuration for the specified environment.</param>
         /// <returns></returns>
         private static IConfigurationBuilder BootstrapConfiguration(string environmentName)
         {
@@ -66,7 +66,7 @@ namespace netmon.cli
         }
 
         /// <summary>
-        /// Sets up all the application modules in teh Dependency ibjection container.
+        /// Sets up all the application modules in the Dependency injection container.
         /// </summary>
         /// <param name="config">Uses the configuration to assist in setup.</param>
         /// <returns></returns>
@@ -101,7 +101,7 @@ namespace netmon.cli
                            .AddSingleton(provider => {
                                return new PingResponseModelTextSummaryStorage(new DirectoryInfo(Environment.CurrentDirectory));
                            })
-                           .AddSingleton(
+                           .AddSingleton<IPingResponseModelStorageOrchestrator>(
                                 (provider) =>
                                 {
                                     return new PingResponseModelStorageOrchestrator(

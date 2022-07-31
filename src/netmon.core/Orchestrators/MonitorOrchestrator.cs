@@ -16,18 +16,21 @@ namespace netmon.core.Orchestrators
         //private readonly MonitorOptions _monitorOptions;
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
         private readonly IPingOrchestrator _pingOrchestrator;
-        private readonly IStorage<PingResponseModel> _pingResponseStorage;
+       // private readonly IStorage<PingResponseModel> _pingResponseStorage;
+       private readonly IPingResponseModelStorageOrchestrator  _pingResponseModelStorageOrchestrator;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
             IPingOrchestrator pingOrchestrator,
-            IStorage<PingResponseModel> pingResponseStorage,
-            ILogger<MonitorOrchestrator> logger)
+         //   IStorage<PingResponseModel> pingResponseStorage,
+         IPingResponseModelStorageOrchestrator pingResponseModelStorageOrchestrator,
+        ILogger<MonitorOrchestrator> logger)
         {
             _traceRouteOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
-            _pingResponseStorage = pingResponseStorage;
-            _logger = logger;
+           // _pingResponseStorage = pingResponseStorage;
+           _pingResponseModelStorageOrchestrator = pingResponseModelStorageOrchestrator;
+        _logger = logger;
         }
 
         /// <summary>
@@ -98,7 +101,7 @@ namespace netmon.core.Orchestrators
         {
             if (e == null) return;
 
-            _pingResponseStorage.Store(e.Model).Wait();
+            _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
         }
 
         private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress addressToTrace, CancellationToken cancellationToken)
