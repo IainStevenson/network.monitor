@@ -2,7 +2,7 @@
   "profiles": {
     "netmon.cli": {
       "commandName": "Project",
-      "commandLineArgs": "--addresses=8.8.8.8,192.168.0.1,192.168.1.1 --pingOnly=true",
+      "commandLineArgs": "", //--addresses=8.8.8.8,192.168.0.1,192.168.1.1 --pingOnly=true
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Devlopement"
       }

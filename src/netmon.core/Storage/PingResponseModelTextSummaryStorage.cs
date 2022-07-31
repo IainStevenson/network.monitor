@@ -27,9 +27,12 @@ namespace netmon.core.Storage
                 var rtt = item.Response?.RoundtripTime ?? -1;
                 var summaryReport = new StringBuilder();
 
-                summaryReport.Append($"{timestamp.Replace(":", "-")}\t{item.Request.Address}\t{item.Response?.Buffer?.Length ?? 0}\t{rtt}\t{item.Response?.Options?.Ttl ?? 0}\n");
+                summaryReport.Append($"{timestamp.Replace(":", "-")}\t{item.Request.Address}\t{item.Response?.Buffer?.Length ?? 0}\t{rtt}\t{item.Response?.Options?.Ttl ?? 0}");
+                
+                using FileStream fs = new(sumaryfileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                using StreamWriter sw = new(fs);
+                sw.WriteLine(summaryReport.ToString());
 
-                File.AppendAllText(sumaryfileName, summaryReport.ToString());
             });
         }
     }

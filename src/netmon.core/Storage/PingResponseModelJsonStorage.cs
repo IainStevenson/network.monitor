@@ -29,17 +29,10 @@ namespace netmon.core.Storage
         {
             var timestamp = $"{item.Start:o}";
             var itemfileName = $"{_storageFolder.FullName}\\{timestamp.Replace(":", "-")}-{item.Request.Address}.json";
-            var sumaryfileName = $"{_storageFolder.FullName}\\{item.Request.Address}-summary.txt";
             await Task.Run(() =>
             {
                 var data = JsonConvert.SerializeObject(item, _settings);
                 File.WriteAllText(itemfileName, data);
-                var rtt = item.Response?.RoundtripTime ?? -1;
-                var summaryReport = new StringBuilder();
-
-                summaryReport.Append($"{timestamp.Replace(":", "-")}\t{item.Request.Address}\t{item.Response?.Buffer?.Length ?? 0}\t{rtt}\t{item.Response?.Options?.Ttl ?? 0}\n");
-
-                File.AppendAllText(sumaryfileName, summaryReport.ToString());
             });
         }
     }

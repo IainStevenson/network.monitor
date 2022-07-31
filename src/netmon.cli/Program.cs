@@ -20,7 +20,7 @@ namespace netmon.cli
     {
         //private const string Message = "{Severity} Log Thread Id {Id}";
         private static readonly CancellationTokenSource _cancellationTokenSource;
-        private static IMonitorOrchestrator? _monitorOrchestrator;
+        private static readonly IMonitorOrchestrator _monitorOrchestrator;
         private static readonly ServiceProvider _serviceProvider;
 
         private static ILogger<Program>? _logger;
@@ -42,6 +42,7 @@ namespace netmon.cli
             _logger = _serviceProvider.GetRequiredService<ILogger<Program>>();
 
             _cancellationTokenSource = _serviceProvider.GetRequiredService<CancellationTokenSource>();
+            _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
 
             Console.CancelKeyPress += (sender, e) =>
                                     {
@@ -95,19 +96,20 @@ namespace netmon.cli
                            .AddTransient<IPingHandler, PingHandler>()
                            .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
                            .AddSingleton<IPingOrchestrator, PingOrchestrator>()
-                           .AddSingleton(provider => {
+                           .AddSingleton<IStorage<PingResponseModel>>(provider =>
+                           {
                                return new PingResponseModelJsonStorage(new DirectoryInfo(Environment.CurrentDirectory));
                            })
-                           .AddSingleton(provider => {
+                           .AddSingleton<IStorage<PingResponseModel>>(provider =>
+                           {
                                return new PingResponseModelTextSummaryStorage(new DirectoryInfo(Environment.CurrentDirectory));
                            })
                            .AddSingleton<IPingResponseModelStorageOrchestrator>(
                                 (provider) =>
                                 {
-                                    return new PingResponseModelStorageOrchestrator(
-                                         provider.GetServices<IStorage<PingResponseModel>>(),
-                                         provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>()
-                                        );
+                                    var respositories = provider.GetServices<IStorage<PingResponseModel>>();
+                                    var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
+                                    return new PingResponseModelStorageOrchestrator(respositories, logger);
                                 })
                            .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
                            .BuildServiceProvider();
@@ -115,22 +117,20 @@ namespace netmon.cli
 
         static void Main(string[] args)
         {
-            _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
 
             var argumentsHandler = new ArgumentsHandler(args);
 
-            TimeSpan until = new TimeSpan(DateTime.UtcNow.AddYears(10).Ticks);
+            TimeSpan until = new TimeSpan(DateTime.UtcNow.AddHours(24).Ticks);
 
             Task busyTask = new Task(BusyIndicator);
+
             Task monitorKeys = new Task(ReadKeys);
 
-
             Task monitorTask = new Task(async () => await _monitorOrchestrator.Execute(argumentsHandler.Addresses,
-                until, argumentsHandler.PingOnly,
-                _cancellationTokenSource.Token));
+                                                                        until, argumentsHandler.PingOnly,
+                                                                        _cancellationTokenSource.Token));
 
             var tasks = new Task[] { busyTask, monitorKeys, monitorTask };
-
 
             foreach (var task in tasks)
             {
