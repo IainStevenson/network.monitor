@@ -122,15 +122,15 @@ namespace netmon.cli
 
             TimeSpan until = new TimeSpan(DateTime.UtcNow.AddHours(24).Ticks);
 
-            Task busyTask = new Task(BusyIndicator);
+            //Task busyTask = new Task(BusyIndicator);
 
-            Task monitorKeys = new Task(ReadKeys);
+            //Task monitorKeys = new Task(ReadKeys);
 
             Task monitorTask = new Task(async () => await _monitorOrchestrator.Execute(argumentsHandler.Addresses,
                                                                         until, argumentsHandler.PingOnly,
                                                                         _cancellationTokenSource.Token));
 
-            var tasks = new Task[] { busyTask, monitorKeys, monitorTask };
+            var tasks = new Task[] {   monitorTask }; //monitorKeys,busyTask,
 
             foreach (var task in tasks)
             {
@@ -139,7 +139,7 @@ namespace netmon.cli
 
             Task.WaitAll(tasks);
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
 
         private static void BusyIndicator()
