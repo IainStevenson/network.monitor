@@ -54,19 +54,25 @@ namespace netmon.core.tests
         }
 
 
-        private MonitorOrchestrator CreateIsolatedUnit(PingResponses testTraceRouteResponses, PingResponses testPingResponses)
+        private MonitorOrchestrator CreateIsolatedUnit(PingResponses traceRouteResponses, PingResponses pingResponses)
         {
             _traceRouteOrchestrator = Substitute.For<ITraceRouteOrchestrator>();
             _pingOrchestrator = Substitute.For<IPingOrchestrator>();
 
-            _traceRouteOrchestrator.Execute(Arg.Any<IPAddress>(), Arg.Any<CancellationToken>()).Returns(testTraceRouteResponses);
-            _pingOrchestrator.PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>()).Returns(testPingResponses);
+            _traceRouteOrchestrator
+                .Execute(Arg.Any<IPAddress>(), Arg.Any<CancellationToken>())
+                .Returns(traceRouteResponses);
+            _pingOrchestrator
+                .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>())
+                .Returns(pingResponses);
 
-            _pingOrchestrator.Results += (sender, args) => _pingResponseStorage.Store(args.Model); // call through to the mocked storage
+            //_pingOrchestrator.Results += (sender, args) => 
+            //        _pingResponseStorage.Store(args.Model); // call through to the mocked storage
 
             // now make sure the event is raised...when the mocked method is called
 
             _pingOrchestrator.When(it => it.PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>()))
+
             .Do(doit =>
                     _pingOrchestrator.Results +=
                     Raise.Event<EventHandler<PingResponseModelEventArgs>>(
@@ -75,7 +81,11 @@ namespace netmon.core.tests
                 ); // add address to event data?
 
 
-            return new MonitorOrchestrator(_traceRouteOrchestrator, _pingOrchestrator, _pingResponseStorage, _monitorOrchestratorLogger);
+            return new MonitorOrchestrator(
+                    _traceRouteOrchestrator, 
+                    _pingOrchestrator, 
+                    _pingResponseStorage, 
+                    _monitorOrchestratorLogger);
         }
 
 
@@ -128,47 +138,55 @@ namespace netmon.core.tests
         //// Call with list of addresses , false -> traces routes to and then monitors all discover hops of all addresses
         [Test]
         [Category("Unit")]
-        public async Task OnExecuteWithNoAddressesNotPingOnlyItWillTraceRouteToTheDefaultAddressAndMonitor()
+        public async Task OnExecuteWithNoAddressesAllowingTraceRouteItWillTraceRouteToTheDefaultAddressAndThenMonitorAllOfTheDiscoveredAddresses()
         {
 
-            var testAddresses = new List<IPAddress>(); // no addresses defined
-            PingResponses testTraceRouteResponses;
-            PingResponses testPingResponses;
-            (testTraceRouteResponses, testPingResponses) = PrepeareTestData(testAddresses);
+            var requestedAddresses = new List<IPAddress>(); // no addresses defined
 
-            _unit = CreateIsolatedUnit(testTraceRouteResponses, testPingResponses);
+            PingResponses responsesFromTraceRoute;
+            PingResponses responsesFromPingUntil;
+            (responsesFromTraceRoute, responsesFromPingUntil) = PrepeareTestData(requestedAddresses);
+            requestedAddresses.Clear(); // because PrepareTestData correctly Adds the default monitor address if empty.
 
-            testAddresses = new List<IPAddress>();
-            var pingOnly = false;
+            _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
-            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(testTraceRouteResponses);
+            var pingOnly = false; // allow traceroute behaviour
 
-            var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
+            var responses = await _unit.Execute(requestedAddresses, _testUntil, pingOnly, _cancellationToken);
 
             ShowResults(responses);
 
-            // assert traceroute
-            await _traceRouteOrchestrator.Received(1).Execute(Defaults.DefaultMonitoringDestination, _cancellationToken);
-            // assert monitor
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
-            await _pingResponseStorage.Received(2).Store(Arg.Any<PingResponseModel>());
-        }
+            // assert traceroute called for default trace/monitor address
+            await _traceRouteOrchestrator
+                    .Received(1)
+                    .Execute(Defaults.DefaultMonitoringDestination, _cancellationToken);
 
+            // assert monitor
+            await _pingOrchestrator.Received(1)
+                    .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+
+            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
+            /// its just 1 per ping request
+            await _pingResponseStorage.Received(NumberofStorageCalls)
+                    .Store(Arg.Any<PingResponseModel>());
+
+        }
+        private const int NumberofStorageCalls = 1;
         [Test]
         [Category("Unit")]
-        public async Task OnExecuteWithOneAddressNotPingOnlyItWillTraceToThatAddressAndMonitor()
+        public async Task OnExecuteWithOneAddressRequestingTraceRouteItWillTraceToThatAddressAndMonitor()
         {
 
             var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.4.4") }; // one addresses defined
-            PingResponses testTraceRouteResponses;
-            PingResponses testPingResponses;
-            (testTraceRouteResponses, testPingResponses) = PrepeareTestData(testAddresses);
+            PingResponses responsesFromTraceRoute;
+            PingResponses responsesFromPingUntil;
+            (responsesFromTraceRoute, responsesFromPingUntil) = PrepeareTestData(testAddresses);
 
-            _unit = CreateIsolatedUnit(testTraceRouteResponses, testPingResponses);
+            _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
             var pingOnly = false;
 
-            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(testTraceRouteResponses);
+            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
             var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
 
@@ -176,73 +194,91 @@ namespace netmon.core.tests
             // assert traceroute
             await _traceRouteOrchestrator.Received(1).Execute(IPAddress.Parse("8.8.4.4"), _cancellationToken);
             // assert monitor
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
-            await _pingResponseStorage.Received(2).Store(Arg.Any<PingResponseModel>());
+            await _pingOrchestrator.Received(responsesFromTraceRoute.Count).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
+            /// its just 1 per ping request
+            await _pingResponseStorage.Received(NumberofStorageCalls)
+                    .Store(Arg.Any<PingResponseModel>());
+
         }
 
         [Test]
         [Category("Unit")]
-        public async Task OnExecuteWithNoTwoAddressNotPingOnlyItWillTraceToThoseAddressesAndMonitor()
+        public async Task OnExecuteWithTwoAddressRequestingTraceRouteItWillTraceToThoseAddressesAndMonitor()
         {
 
-            var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.8.8"), IPAddress.Parse("8.8.4.4") }; // one addresses defined
-            PingResponses testTraceRouteResponses;
-            PingResponses testPingResponses;
-            (testTraceRouteResponses, testPingResponses) = PrepeareTestData(testAddresses);
+            var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.8.8"), IPAddress.Parse("8.8.4.4") }; 
+            PingResponses responsesFromTraceRoute;
+            PingResponses responsesFromPingUntil;
+            (responsesFromTraceRoute, responsesFromPingUntil) = PrepeareTestData(testAddresses);
 
-            _unit = CreateIsolatedUnit(testTraceRouteResponses, testPingResponses);
+            _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
             var pingOnly = false;
 
-            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(testTraceRouteResponses);
+            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
             var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
 
             ShowResults(responses);
+            
             // assert traceroute to both addresses
-            await _traceRouteOrchestrator.Received(testAddresses.Count).Execute(Arg.Any<IPAddress>(), _cancellationToken);
-            // assert monitor both address from resi;ts
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            await _traceRouteOrchestrator.Received(testAddresses.Count)
+                .Execute(Arg.Any<IPAddress>(), _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until its just 1 per address
-            await _pingResponseStorage.Received(testAddresses.Count).Store(Arg.Any<PingResponseModel>());
+            // assert monitor both address from results
+            await _pingOrchestrator.Received(1)
+                .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+
+            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
+            /// its just 1 per ping request
+            await _pingResponseStorage.Received(1)
+                    .Store(Arg.Any<PingResponseModel>());
         }
         [Test]
         [Category("Unit")]
-        public async Task OnExecuteWithNoTwoAddressPingOnlyItJustMonitors()
+        public async Task OnExecuteWithTwoAddressPreventingTraceRouteItJustMonitors()
         {
 
             var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.8.8"), IPAddress.Parse("8.8.4.4") }; // one addresses defined
-            PingResponses testTraceRouteResponses;
-            PingResponses testPingResponses;
-            (testTraceRouteResponses, testPingResponses) = PrepeareTestData(testAddresses);
+            PingResponses responsesFromTraceRoute;
+            PingResponses responsesFromPingUntil;
+            (responsesFromTraceRoute, responsesFromPingUntil) = PrepeareTestData(testAddresses);
 
-            _unit = CreateIsolatedUnit(testTraceRouteResponses, testPingResponses);
+            _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
             var pingOnly = true;
 
-            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(testTraceRouteResponses);
+            _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
             var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
 
             ShowResults(responses);
             // assert traceroute to both addresses
             await _traceRouteOrchestrator.Received(0).Execute(Arg.Any<IPAddress>(), _cancellationToken);
-            // assert monitor both address from resi;ts
+            // assert monitor both address from results
             await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until its just 1 per address
-            await _pingResponseStorage.Received(testAddresses.Count).Store(Arg.Any<PingResponseModel>());
+            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
+            /// its just 1 per ping request
+            await _pingResponseStorage.Received(NumberofStorageCalls)
+                    .Store(Arg.Any<PingResponseModel>());
+
         }
 
 
 
-      
+
+        /// <summary>
+        /// Return a pair of matched test <see cref="PingResponses"/> to simualte target addresses as all being hop 1 addresses. will addd default monitoring address if no addresses sepcified as per the code behaviour.
+        /// </summary>
+        /// <param name="testAddresses">The addreses to simulate</param>
+        /// <returns>matched pair of test <see cref="PingResponses"/></returns>
 
         private static (PingResponses, PingResponses) PrepeareTestData(List<IPAddress> testAddresses)
         {
-            var testTraceRouteResponses = new PingResponses();
-            var testPingResponses = new PingResponses();
+            var responsesFromTraceRoute = new PingResponses();
+            var responsesFromPingUntil = new PingResponses();
 
             if (testAddresses.Count == 0)
             {
@@ -259,7 +295,7 @@ namespace netmon.core.tests
                     Status = IPStatus.Success
                 }; ;
 
-                testTraceRouteResponses.TryAdd(
+                responsesFromTraceRoute.TryAdd(
                         new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
                         new PingResponseModel()
                         {
@@ -267,7 +303,7 @@ namespace netmon.core.tests
                         ,
                             Response = pingReply
                         }); ;
-                testPingResponses.TryAdd(
+                responsesFromPingUntil.TryAdd(
                         new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
                         new PingResponseModel()
                         {
@@ -275,9 +311,9 @@ namespace netmon.core.tests
                         ,
                             Response = pingReply
                         });
-            } // simualte target addresses as all being hop 1 addresses
+            } // 
 
-            return (testTraceRouteResponses, testPingResponses);
+            return (responsesFromTraceRoute, responsesFromPingUntil);
         }
 
     }

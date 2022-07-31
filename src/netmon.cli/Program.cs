@@ -19,148 +19,128 @@ namespace netmon.cli
     public class Program
     {
         private const string Message = "{Severity} Log Thread Id {Id}";
-        private static readonly CancellationTokenSource? _cancellationTokenSource;
-        private static readonly IMonitorOrchestrator? _monitorOrchestrator;
-        private static readonly ILogger<Program>? _logger;
-        static void Main(string[] args)
+        private static CancellationTokenSource? _cancellationTokenSource;
+        private static IMonitorOrchestrator? _monitorOrchestrator;
+        private static ServiceProvider _serviceProvider;
+
+        private static ILogger<Program>? _logger;
+
+
+        /// <summary>
+        /// Constructs the console application.
+        /// </summary>
+        static Program()
         {
             var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
 
-            var configuration = new ConfigurationBuilder()
-                             .SetBasePath(Directory.GetCurrentDirectory())
-                             .AddJsonFile($"appSettings.json")
-                             .AddJsonFile($"appSettings{environmentName}.json",true,true);
+            var configuration = BootstrapConfiguration(environmentName);
 
             var config = configuration.Build();
 
-            using var loggerFactory = LoggerFactory.Create(builder =>
+            _serviceProvider = BootstrapApplication(config);
+
+            _logger = _serviceProvider.GetRequiredService<ILogger<Program>>();
+
+            _cancellationTokenSource = _serviceProvider.GetRequiredService<CancellationTokenSource>();
+
+            Console.CancelKeyPress += (sender, e) =>
+                                    {
+                                        _cancellationTokenSource.Cancel();   // cancel token
+                                        Console.WriteLine("Exiting...");
+                                        Environment.Exit(0);
+                                    };
+
+        }
+
+        /// <summary>
+        /// Provides the necessary configuration builder
+        /// </summary>
+        /// <param name="environmentName">Optionally includes configuration fot he specified environment.</param>
+        /// <returns></returns>
+        private static IConfigurationBuilder BootstrapConfiguration(string environmentName)
+        {
+            return new ConfigurationBuilder()
+                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .AddJsonFile($"appSettings.json", false, true) // must have
+                            .AddJsonFile($"appSettings{environmentName}.json", true, true); // could have
+        }
+
+        /// <summary>
+        /// Sets up all the application modules in teh Dependency ibjection container.
+        /// </summary>
+        /// <param name="config">Uses the configuration to assist in setup.</param>
+        /// <returns></returns>
+        private static ServiceProvider BootstrapApplication(IConfigurationRoot config)
+        {
+            return new ServiceCollection()
+                           .AddLogging(configure =>
+                           {
+                               configure.AddConfiguration(config);
+
+                               configure.AddSimpleConsole(options =>
+                               {
+                                   options.ColorBehavior = LoggerColorBehavior.Enabled;
+                                   options.SingleLine = true;
+                                   options.IncludeScopes = false;
+                                   options.UseUtcTimestamp = true;
+
+                               });
+                           }
+                           )
+                           .AddSingleton<CancellationTokenSource>()
+                           .AddSingleton<PingHandlerOptions>() // the defaults are good here
+                           .AddSingleton<TraceRouteOrchestratorOptions>()// the defaults are good here
+                           .AddSingleton<PingOrchestratorOptions>() // the defaults are good here
+                           .AddSingleton<IPingRequestModelFactory, PingRequestModelFactory>()
+                           .AddTransient<IPingHandler, PingHandler>()
+                           .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
+                           .AddSingleton<IPingOrchestrator, PingOrchestrator>()
+                           .AddSingleton(provider => {
+                               return new PingResponseModelJsonStorage(new DirectoryInfo(Environment.CurrentDirectory));
+                           })
+                           .AddSingleton(provider => {
+                               return new PingResponseModelTextSummaryStorage(new DirectoryInfo(Environment.CurrentDirectory));
+                           })
+                           .AddSingleton(
+                                (provider) =>
+                                {
+                                    return new PingResponseModelStorageOrchestrator(
+                                         provider.GetServices<IStorage<PingResponseModel>>(),
+                                         provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>()
+                                        );
+                                })
+                           .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
+                           .BuildServiceProvider();
+        }
+
+        static void Main(string[] args)
+        {
+            _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
+
+            var argumentsHandler = new ArgumentsHandler(args);
+
+            TimeSpan until = new TimeSpan(DateTime.UtcNow.AddYears(10).Ticks);
+
+            Task busyTask = new Task(BusyIndicator);
+            Task monitorKeys = new Task(ReadKeys);
+
+
+            Task monitorTask = new Task(async () => await _monitorOrchestrator.Execute(argumentsHandler.Addresses,
+                until, argumentsHandler.PingOnly,
+                _cancellationTokenSource.Token));
+
+            var tasks = new Task[] { busyTask, monitorKeys, monitorTask };
+
+
+            foreach (var task in tasks)
             {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("netmon", LogLevel.Trace)
-                    //.AddFilter("netmon.cli.Program", LogLevel.Trace)
-                    .AddSimpleConsole(config =>
-                    {
-                        config.SingleLine = true;
-                    });
-            });
-            ILogger logger = loggerFactory.CreateLogger<Program>();
-            Task.Run(() => LogMessages(logger)).Wait();
+                task.Start();
+            }
+
+            Task.WaitAll(tasks);
+
             Console.ReadKey();
         }
-
-        private static void LogMessages(ILogger logger)
-        {
-            List<Task> tasks = new List<Task>() {
-            Task.Run(() => LogLowMessages(logger)),
-            Task.Run(() => LogHighMessages(logger))
-        };
-
-            Task.WaitAll(tasks.ToArray());
-
-        }
-        private static void LogLowMessages(ILogger logger)
-        {
-            logger.LogTrace(Message, "Trace", Environment.CurrentManagedThreadId);
-            logger.LogDebug(Message, "Debug", Environment.CurrentManagedThreadId);
-
-        }
-
-        private static void LogHighMessages(ILogger logger)
-        {
-            logger.LogInformation(Message, "Info", Environment.CurrentManagedThreadId);
-            logger.LogWarning(Message, "Warning", Environment.CurrentManagedThreadId);
-            logger.LogError(Message, "Error", Environment.CurrentManagedThreadId);
-            logger.LogCritical(Message, "Critical", Environment.CurrentManagedThreadId);
-        }
-
-
-
-        //    var serviceProvider = new ServiceCollection()
-        //               .AddLogging(configure =>
-        //                   {
-        //                       configure.AddConfiguration(config);
-
-        //                       configure.AddSimpleConsole(options =>
-        //                       {
-        //                           options.ColorBehavior = LoggerColorBehavior.Enabled;
-        //                           options.SingleLine = true;
-        //                           options.IncludeScopes = false;
-        //                           options.UseUtcTimestamp = true;
-
-        //                       });
-
-
-        //                       //configure.AddTraceSource("netmon.cli");
-
-        //                   }
-        //               )
-        //               .AddSingleton<PingHandlerOptions>() // the defaults are good here
-        //               .AddSingleton<TraceRouteOrchestratorOptions>()// the defaults are good here
-        //               .AddSingleton<PingOrchestratorOptions>() // the defaults are good here
-        //               .AddSingleton<IPingRequestModelFactory, PingRequestModelFactory>()
-        //               .AddTransient<IPingHandler, PingHandler>()
-        //               .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
-        //               .AddSingleton<IPingOrchestrator, PingOrchestrator>()
-        //               .AddSingleton<IStorage<PingResponseModel>, PingResponseModelInMemoryStorage>()
-        //               .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
-        //               .AddSingleton<CancellationTokenSource>()
-        //               .BuildServiceProvider();
-
-
-        //    var arguments = args.ToList();
-
-        //    _logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-        //    _logger.LogInformation("Starting application");
-        //    try
-        //    {
-
-
-
-        //        _cancellationTokenSource = serviceProvider.GetRequiredService<CancellationTokenSource>();
-        //        _monitorOrchestrator = serviceProvider.GetRequiredService<IMonitorOrchestrator>();
-
-        //        Console.CancelKeyPress += (sender, e) =>
-        //        {
-        //            // cancel token
-        //            _cancellationTokenSource.Cancel();
-        //            Console.WriteLine("Exiting...");
-        //            Environment.Exit(0);
-        //        };
-
-        //        _logger.LogInformation("Press ESC to Exit");
-
-
-        //        var taskKeys = new Task(ReadKeys);
-        //        taskKeys.Start();
-
-        //        //var taskProcessFiles = new Task(ProcessFiles);
-        //        //taskProcessFiles.Start();
-
-        //        var taskBusy = new Task(BusyIndicator);
-        //        var taskMonitor = new Task(async () => await _monitorOrchestrator.Execute(new List<IPAddress>(),
-        //                                        new TimeSpan(99, 23, 59, 59, 999),
-        //                                        false,
-        //                                        _cancellationTokenSource.Token));
-
-        //        taskBusy.Start(); // on its own thread 
-        //        taskMonitor.Start(); // on its own thread - and other generated threads
-
-
-        //        var tasks = new[] { taskMonitor, taskKeys };
-
-        //        Task.WaitAll(tasks);
-        //        _logger.LogInformation("Tasks {status} .", (_cancellationTokenSource.IsCancellationRequested ? "cancelled" : "completed"));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError("Application Exception: {message}", ex.Message);
-        //    }
-        //    _logger.LogInformation("Program complete.");
-        //}
-
-
 
         private static void BusyIndicator()
         {
@@ -209,35 +189,4 @@ namespace netmon.cli
         }
     }
 
-    internal class ConsoleBusyIndicator
-    {
-        int _currentBusySymbol;
-
-        public char[] BusySymbols { get; set; }
-
-        public ConsoleBusyIndicator()
-        {
-            BusySymbols = new[] { '|', '/', '-', '\\' };
-        }
-        public void UpdateProgress()
-        {
-            while (true)
-            {
-                Thread.Sleep(100);
-                var originalX = Console.CursorLeft;
-                var originalY = Console.CursorTop;
-
-                Console.Write(BusySymbols[_currentBusySymbol]);
-
-                _currentBusySymbol++;
-
-                if (_currentBusySymbol == BusySymbols.Length)
-                {
-                    _currentBusySymbol = 0;
-                }
-
-                Console.SetCursorPosition(originalX, originalY);
-            }
-        }
-    }
 }

@@ -5,6 +5,7 @@ using System.Net;
 
 namespace netmon.core.Storage
 {
+
     /// <summary>
     /// Implements and in memory store of <see cref="PingRequestModel"/>. 
     /// Stores the resusts of pings of target addresses.
