@@ -10,7 +10,8 @@ namespace netmon.core.Storage
     {
         private readonly DirectoryInfo _storageFolder;
         private readonly JsonSerializerSettings _settings;
-        public PingResponseModelJsonStorage(DirectoryInfo storageFolder)
+        private readonly string _storageSystemFolderDelimiter; 
+        public PingResponseModelJsonStorage(DirectoryInfo storageFolder, string storageSystemFolderDelimiter)
         {
             _storageFolder = storageFolder;
             _settings = new JsonSerializerSettings();
@@ -18,6 +19,7 @@ namespace netmon.core.Storage
             _settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             _settings.Converters.Add(new HostAdddresAndTypeConverter());
             _settings.Formatting = Formatting.Indented;
+            _storageSystemFolderDelimiter = storageSystemFolderDelimiter;
         }
 
         public int Count()
@@ -28,7 +30,7 @@ namespace netmon.core.Storage
         public async Task Store(PingResponseModel item)
         {
             var timestamp = $"{item.Start:o}";
-            var itemfileName = $"{_storageFolder.FullName}\\{timestamp.Replace(":", "-")}-{item.Request.Address}.json";
+            var itemfileName = $@"{_storageFolder.FullName}{_storageSystemFolderDelimiter}{timestamp.Replace(":", "-")}-{item.Request.Address}.json";
             await Task.Run(() =>
             {
                 var data = JsonConvert.SerializeObject(item, _settings);

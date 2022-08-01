@@ -39,7 +39,17 @@ namespace netmon.cli
                             .AddJsonFile($"appSettings.json", false, true) // must have
                             .AddJsonFile($"appSettings{environmentName}.json", true, true); // could have
         }
-
+        private static DirectoryInfo EnsureStorageDirectoryExits(string folderDelimiter)
+        {
+            var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var path = $"{commonDataFolder}{folderDelimiter}netmon";
+            var storageDirectory = new DirectoryInfo(path);
+            if (!storageDirectory.Exists)
+            {
+                storageDirectory.Create();
+            }
+            return storageDirectory;
+        }
         /// <summary>
         /// Sets up all the application modules in the Dependency injection container.
         /// </summary>
@@ -47,6 +57,10 @@ namespace netmon.cli
         /// <returns></returns>
         private static ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot config)
         {
+
+            var folderDelimiter = Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\";
+            var storageDirectory = EnsureStorageDirectoryExits(folderDelimiter);
+
             services.AddLogging(configure =>
                     {
                         configure.AddConfiguration(config);
@@ -70,11 +84,11 @@ namespace netmon.cli
                     .AddSingleton<IPingOrchestrator, PingOrchestrator>()
                     .AddSingleton<IStorage<PingResponseModel>>(provider =>
                     {
-                        return new PingResponseModelJsonStorage(new DirectoryInfo(Environment.CurrentDirectory));
+                        return new PingResponseModelJsonStorage(storageDirectory, folderDelimiter);
                     })
                     .AddSingleton<IStorage<PingResponseModel>>(provider =>
                     {
-                        return new PingResponseModelTextSummaryStorage(new DirectoryInfo(Environment.CurrentDirectory));
+                        return new PingResponseModelTextSummaryStorage(storageDirectory, folderDelimiter);
                     })
                     .AddSingleton<IPingResponseModelStorageOrchestrator>(
                         (provider) =>
@@ -101,14 +115,14 @@ namespace netmon.cli
                                                      );
 
             _ = await _monitorOrchestrator.Execute(_argumentsHandler.Addresses,
-                                                    _argumentsHandler.Until, 
-                                                    _argumentsHandler.PingOnly, 
+                                                    _argumentsHandler.Until,
+                                                    _argumentsHandler.PingOnly,
                                                     cancellationToken);
 
-            
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000, cancellationToken);
             }
         }
 
