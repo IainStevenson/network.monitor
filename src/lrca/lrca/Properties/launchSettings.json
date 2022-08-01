@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "lrca": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -7,6 +7,10 @@ namespace netmon.cli
     {
         public List<IPAddress> Addresses { get; private set; } = new List<IPAddress> { Defaults.DefaultMonitoringDestination };
         public bool PingOnly { get; private set; } = false;
+
+        public TimeSpan Until { get;set; } = new (DateTimeOffset.UtcNow.AddDays(7).Ticks);
+
+
         /// <summary>
         /// --addresses=8.8.8.8,192,168,0,1,192,168,1,1 --pingOnly=true
         /// </summary>
