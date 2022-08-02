@@ -114,6 +114,12 @@ namespace netmon.cli
                                                     _argumentsHandler.PingOnly
                                                      );
 
+
+            var canUseRawSockets = RawSocketPermissions.CanUseRawSockets(System.Net.Sockets.AddressFamily.InterNetwork);
+
+
+            _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
+
             _ = await _monitorOrchestrator.Execute(_argumentsHandler.Addresses,
                                                     _argumentsHandler.Until,
                                                     _argumentsHandler.PingOnly,

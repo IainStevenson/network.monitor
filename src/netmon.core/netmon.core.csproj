@@ -4,11 +4,14 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Data\IPVAddressRangeAttribute.cs" />
     <Compile Remove="Data\ISPV4AddressRanges.cs" />
+    <Compile Remove="Handlers\PingReply.cs" />
+    <Compile Remove="Handlers\PseudoPing.cs" />
   </ItemGroup>
 
   <ItemGroup>

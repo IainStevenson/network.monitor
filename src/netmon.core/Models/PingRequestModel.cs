@@ -12,6 +12,7 @@ namespace netmon.core.Models
     [ExcludeFromCodeCoverage]
     public class PingRequestModel
     {
+       
         /// <summary>
         /// The address to ping. Default is the loopback address.
         /// </summary>
@@ -23,20 +24,12 @@ namespace netmon.core.Models
         /// <summary>
         /// The data buffer to send. Which is 32 bytes long.
         /// </summary>
-        public static byte[] Buffer
-        {
-            get
-            {
-                string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                byte[] buffer = Encoding.ASCII.GetBytes(data);
-                return buffer;
-            }
-        }
+        public byte[] Buffer { get; set; } = Defaults.RandomBuffer;
         /// <summary>
         /// The time to live for this request. 
         /// When set to less than the default this is to facilitate a traceroute operation.
         /// </summary>
-        public int Ttl { get;  set; } = 128;
+        public int Ttl { get; set; } = 128;
     }
 
 }

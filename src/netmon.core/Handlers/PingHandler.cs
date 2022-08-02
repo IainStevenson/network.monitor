@@ -49,7 +49,7 @@ namespace netmon.core.Handlers
                     
                     PingReply reply = pingSender.Send(request.Address,
                                                         _pingOptions.Timeout,
-                                                        PingRequestModel.Buffer,
+                                                        request.Buffer,
                                                         pingOptions);
 
                     response.Finish = DateTimeOffset.UtcNow;
