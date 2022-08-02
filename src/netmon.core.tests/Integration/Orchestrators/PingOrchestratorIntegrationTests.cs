@@ -7,9 +7,9 @@ using netmon.core.Orchestrators;
 using NSubstitute;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Orchestrators
 {
-    public class PingOrchestratorTests : TestBase<PingOrchestrator>
+    public class PingOrchestratorIntegrationTests : TestBase<PingOrchestrator>
     {
         private IPingHandler _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
@@ -17,6 +17,9 @@ namespace netmon.core.tests
         private IPingRequestModelFactory _pingRequestModelFactory;
         private PingOrchestratorOptions _pingOrchestratorOptions;
 
+        /// <summary>
+        /// To DO: Remove all mocks
+        /// </summary>
         [SetUp]
         public override void Setup()
         {

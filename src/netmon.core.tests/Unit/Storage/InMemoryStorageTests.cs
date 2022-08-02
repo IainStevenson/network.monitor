@@ -2,7 +2,7 @@
 using netmon.core.Storage;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Storage
 {
     public class InMemoryStorageTests : TestBase<PingResponseModelInMemoryStorage>
     {
@@ -64,7 +64,7 @@ namespace netmon.core.tests
         {
             Assert.That(_unit.Count, Is.EqualTo(0));
             AddWorldAddressesTestData();
-            var actual = await _unit.Retrieve( (x) => x.Request.Address == TestConditions.WorldAddresses.Last());
+            var actual = await _unit.Retrieve((x) => x.Request.Address == TestConditions.WorldAddresses.Last());
             Assert.Multiple(() =>
             {
                 Assert.That(actual.ToList(), Has.Count.EqualTo(1));

@@ -3,7 +3,7 @@ using netmon.core.Serialisation;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Unit
 {
     public class SerialisationTests
     {
@@ -74,8 +74,8 @@ namespace netmon.core.tests
         {
             // serialize then deserialize the combined type.
 
-            
-            var  data = new Tuple<IPAddress, HostTypes>(IPAddress.Parse(address), hostType );
+
+            var data = new Tuple<IPAddress, HostTypes>(IPAddress.Parse(address), hostType);
             var json = JsonConvert.SerializeObject(data, _settings);
             Assert.That(json, Is.Not.Null);
             Assert.That(json, Is.TypeOf<string>());

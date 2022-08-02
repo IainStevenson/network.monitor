@@ -8,17 +8,20 @@ using netmon.core.Orchestrators;
 using NSubstitute;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Orchestrators
 {
-    public class TraceRouteOrchestratorTests : TestBase<TraceRouteOrchestrator>
+    public class TraceRouteOrchestratorIntegrationTests : TestBase<TraceRouteOrchestrator>
     {
         private PingHandlerOptions _pingHandlerOptions;
-        private IPingHandler _pingHandler;       
+        private IPingHandler _pingHandler;
         private IPingRequestModelFactory _pingRequestModelFactory;
         private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
         private ILogger<PingHandler> _pingHandlerLogger;
         private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
 
+        /// <summary>
+        /// To DO: Remove all mocks
+        /// </summary>
         [SetUp]
         public override void Setup()
         {
@@ -32,7 +35,7 @@ namespace netmon.core.tests
             _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
             _unit = new TraceRouteOrchestrator(_pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory, _traceRouteOrchestratorLogger);
 
-            
+
         }
 
         [Test]
@@ -58,9 +61,9 @@ namespace netmon.core.tests
         public void OnExecuteToLoopbackAddressWhenCancelledReturnsFewerResponses()
         {
             _cancellationTokenSource.Cancel();
-            
+
             var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
-            
+
             Assert.That(actual: responses, Has.Count.LessThan(4));
 
             ShowResults(responses);
@@ -85,38 +88,8 @@ namespace netmon.core.tests
                     .Count(); ;
 
             var expectedCount = numberOfResponsesWhichWhereHopDiscovery + numberOfResponsesWhichWhereHopAnalysis;
-            
+
             Assert.That(actual: responses, Has.Count.EqualTo(expectedCount));
         }
-
-
-
-
-        /// <summary>
-        /// using Mocked ping handler to emit exception types
-        /// </summary>
-        [Test]
-        [Category("Unit")]
-        public void OnExecuteToLoopbackOnPingExceptionReturnsResultsWithoutResponses()
-        {
-            var pingHandler = Substitute.For<IPingHandler>();
-
-            pingHandler.Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>())
-                        .Returns(Task.FromException<PingResponseModel>(new PingException("some fake error")));
-        
-            _unit = new TraceRouteOrchestrator(pingHandler, _traceRouteHandlerOptions, _pingRequestModelFactory, _traceRouteOrchestratorLogger);
-
-            var responses = _unit.Execute(Defaults.LoopbackAddress, _cancellationToken).Result;
-            
-            ShowResults(responses);
-
-            pingHandler.Received(_traceRouteHandlerOptions.MaxHops).Execute(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>());
-            Assert.That(actual: responses, Has.Count.EqualTo(1));
-            Assert.That(actual: responses.Where(x=>x.Value.Request != null & x.Value.Response == null).ToList(), Has.Count.EqualTo(1));
-
-
-
-        }
-
     }
 }

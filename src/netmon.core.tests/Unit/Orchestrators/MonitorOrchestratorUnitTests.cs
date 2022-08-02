@@ -10,9 +10,9 @@ using NSubstitute;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Orchestrators
 {
-    public class MonitorOrchestratorTests : TestBase<MonitorOrchestrator>
+    public class MonitorOrchestratorUnitTests : TestBase<MonitorOrchestrator>
     {
         //private MonitorOptions _monitorOptions;
         private ITraceRouteOrchestrator _traceRouteOrchestrator;
@@ -29,6 +29,9 @@ namespace netmon.core.tests
         private readonly List<IPAddress> _monitorLoopbackAddresses = new() { IPAddress.Parse("127.0.0.1") };
         private readonly TimeSpan _testUntil = new(0, 0, 2); //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
 
+        /// <summary>
+        /// TODO: Mock out all deppendencies
+        /// </summary>
         [SetUp]
         public override void Setup()
         {
@@ -40,9 +43,9 @@ namespace netmon.core.tests
             _pingLogger = Substitute.For<ILogger<PingHandler>>();
             _pingHandler = new PingHandler(_pingHandlerOptions, _pingLogger);
             _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
-            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler, 
-                _traceRouteOrchestratorOptions, 
-                _pingRequestModelFactory, 
+            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler,
+                _traceRouteOrchestratorOptions,
+                _pingRequestModelFactory,
                 _traceRouteOrchestratorLogger);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
@@ -51,9 +54,9 @@ namespace netmon.core.tests
 
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
             _unit = new MonitorOrchestrator(
-                _traceRouteOrchestrator, 
-                _pingOrchestrator, 
-                _pingResponseModelStorageOrchestrator, 
+                _traceRouteOrchestrator,
+                _pingOrchestrator,
+                _pingResponseModelStorageOrchestrator,
                 _monitorOrchestratorLogger);
         }
 
@@ -86,54 +89,14 @@ namespace netmon.core.tests
 
 
             return new MonitorOrchestrator(
-                    _traceRouteOrchestrator, 
-                    _pingOrchestrator, 
-                    _pingResponseModelStorageOrchestrator, 
+                    _traceRouteOrchestrator,
+                    _pingOrchestrator,
+                    _pingResponseModelStorageOrchestrator,
                     _monitorOrchestratorLogger);
         }
 
 
-        [Test]
-        [Category("Integration")]
-        public async Task OnExecuteFirstTimeItTracesRouteToDefaultAddressAndMonitorsDiscoveredAddresses()
-        {
-            // two seconds is long enough , must keep ratio of until to _pingOrchestratorOptions.MillsecondsBetweenPings as  even seconds to get count
-            var until = new TimeSpan(0, 0, 2);
-
-
-            // trap the mock storage resutls here and display them in the test output.
-            PingResponses storedResponses = new();
-            _pingResponseModelStorageOrchestrator.When(it => it.Store(Arg.Any<PingResponseModel>()))
-                .Do(doit => storedResponses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(doit.Arg<PingResponseModel>().Start, doit.Arg<PingResponseModel>().Request.Address), doit.Arg<PingResponseModel>()));
-
-            var multiPingMonitorResponses = await _unit.Execute(new List<IPAddress>(), _testUntil, false, _cancellationToken);
-
-            ShowResults(multiPingMonitorResponses);
-            ShowResults(storedResponses);
-
-            
-            Assert.Multiple(() =>
-            {
-                Assert.That(actual: multiPingMonitorResponses, Is.Not.Null);
-                Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
-            });
-
-            _pingResponseModelStorageOrchestrator.Received((int)(until.TotalSeconds * multiPingMonitorResponses.Count)).Store(Arg.Any<PingResponseModel>()).Wait();
-        }
-
-        [Test]
-        [Category("Integration")]
-        public async Task OnExecuteNextTimeItJustMonitorsSpecifiedAddresses()
-        {
-
-            var responses = await _unit.Execute(_monitorLoopbackAddresses, _testUntil, false, _cancellationToken);
-
-            ShowResults(responses);
-
-            Assert.That(actual: responses, Is.Not.Empty);
-            _pingResponseModelStorageOrchestrator.Received(2).Store(Arg.Any<PingResponseModel>()).Wait();
-
-        }
+        
 
         //// unit tests
         //// Call with empty list , true|false -> traces routes to default address and monitors all discovered hops
@@ -211,7 +174,7 @@ namespace netmon.core.tests
         public async Task OnExecuteWithTwoAddressRequestingTraceRouteItWillTraceToThoseAddressesAndMonitor()
         {
 
-            var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.8.8"), IPAddress.Parse("8.8.4.4") }; 
+            var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.8.8"), IPAddress.Parse("8.8.4.4") };
             PingResponses responsesFromTraceRoute;
             PingResponses responsesFromPingUntil;
             (responsesFromTraceRoute, responsesFromPingUntil) = PrepeareTestData(testAddresses);
@@ -225,7 +188,7 @@ namespace netmon.core.tests
             var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
 
             ShowResults(responses);
-            
+
             // assert traceroute to both addresses
             await _traceRouteOrchestrator.Received(testAddresses.Count)
                 .Execute(Arg.Any<IPAddress>(), _cancellationToken);

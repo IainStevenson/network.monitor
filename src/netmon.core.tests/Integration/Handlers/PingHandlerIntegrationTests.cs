@@ -6,9 +6,9 @@ using netmon.core.Models;
 using NSubstitute;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Handlers
 {
-    public class PingHandlerTests: TestBase<PingHandler>
+    public class PingHandlerIntegrationTests : TestBase<PingHandler>
     {
         private PingHandlerOptions _pingHandlerOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
@@ -29,7 +29,7 @@ namespace netmon.core.tests
         public void OnExecuteWithDefaltLoopbackRequestItSucceeeds()
         {
             PingRequestModel request = _pingRequestModelFactory.Create();
-            PingResponseModel response = _unit.Execute(  request, _cancellationToken ).Result;
+            PingResponseModel response = _unit.Execute(request, _cancellationToken).Result;
             Assert.Multiple(() =>
             {
                 Assert.That(response.Response?.Status, Is.EqualTo(IPStatus.Success), "The test was a complete failure");
