@@ -10,6 +10,8 @@
   <ItemGroup>
     <Compile Remove="Data\IPVAddressRangeAttribute.cs" />
     <Compile Remove="Data\ISPV4AddressRanges.cs" />
+    <Compile Remove="Handlers\IcmpV4MessageConstants.cs" />
+    <Compile Remove="Handlers\IcmpV6MessageConstants.cs" />
     <Compile Remove="Handlers\PingReply.cs" />
     <Compile Remove="Handlers\PseudoPing.cs" />
   </ItemGroup>
