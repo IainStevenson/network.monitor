@@ -2,7 +2,7 @@
 using netmon.core.Interfaces;
 using netmon.core.Models;
 
-namespace netmon.core.Storage
+namespace netmon.core.Orchestrators
 {
     /// <summary>
     /// Handles a variety of storage options for <see cref="PingResponseModel"/>.

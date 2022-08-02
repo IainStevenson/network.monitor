@@ -1,11 +1,10 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Net.NetworkInformation;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 
 namespace netmon.core.Handlers
 {
-    
+
+    [ExcludeFromCodeCoverage( Justification = "Temporary code whilst getting fix for ping problems in linux with low TTL")]
     public static class RawSocketPermissions
     {
         private static readonly Lazy<bool> s_canUseRawIPv4Sockets = new(() => CheckRawSocketPermissions(AddressFamily.InterNetwork));

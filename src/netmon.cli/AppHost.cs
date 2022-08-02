@@ -108,17 +108,16 @@ namespace netmon.cli
         public async Task StartAsync(CancellationToken cancellationToken)
         {
 
+            //"Temporary code whilst getting fix for ping problems in linux with low TTL"
+            var canUseRawSockets = RawSocketPermissions.CanUseRawSockets(System.Net.Sockets.AddressFamily.InterNetwork);
+            _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
+
             _logger.LogTrace("Monitoring... {addresses} {until} {pingOnly}",
                                                     _argumentsHandler.Addresses,
                                                     _argumentsHandler.Until,
                                                     _argumentsHandler.PingOnly
                                                      );
 
-
-            var canUseRawSockets = RawSocketPermissions.CanUseRawSockets(System.Net.Sockets.AddressFamily.InterNetwork);
-
-
-            _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
 
             _ = await _monitorOrchestrator.Execute(_argumentsHandler.Addresses,
                                                     _argumentsHandler.Until,
