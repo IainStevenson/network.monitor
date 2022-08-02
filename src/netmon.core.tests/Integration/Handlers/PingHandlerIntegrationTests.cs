@@ -1,15 +1,18 @@
+using Microsoft.Extensions.Logging;
 using netmon.core.Configuration;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
 using netmon.core.Models;
+using NSubstitute;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Handlers
 {
-    public class PingHandlerTests: TestBase<PingHandler>
+    public class PingHandlerIntegrationTests : TestBase<PingHandler>
     {
         private PingHandlerOptions _pingHandlerOptions;
         private IPingRequestModelFactory _pingRequestModelFactory;
+        private ILogger<PingHandler> _pingHandlerLogger;
 
         [SetUp]
         public override void Setup()
@@ -17,7 +20,8 @@ namespace netmon.core.tests
             base.Setup();
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _pingHandlerOptions = new PingHandlerOptions();
-            _unit = new PingHandler(_pingHandlerOptions);
+            _pingHandlerLogger = Substitute.For<ILogger<PingHandler>>();
+            _unit = new PingHandler(_pingHandlerOptions, _pingHandlerLogger);
         }
 
         [Test]
@@ -25,7 +29,7 @@ namespace netmon.core.tests
         public void OnExecuteWithDefaltLoopbackRequestItSucceeeds()
         {
             PingRequestModel request = _pingRequestModelFactory.Create();
-            PingResponseModel response = _unit.Execute(  request, _cancellationToken ).Result;
+            PingResponseModel response = _unit.Execute(request, _cancellationToken).Result;
             Assert.Multiple(() =>
             {
                 Assert.That(response.Response?.Status, Is.EqualTo(IPStatus.Success), "The test was a complete failure");

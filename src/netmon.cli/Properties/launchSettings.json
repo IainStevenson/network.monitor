@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "netmon.cli": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Devlopement"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "DockerfileRunArguments": "--network=host"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 ﻿using netmon.core.Data;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Unit
 {
     /// <summary>
     /// Lifted from: https://stackoverflow.com/questions/1499269/how-to-check-if-an-ip-address-is-within-a-particular-subnet

@@ -1,19 +1,25 @@
-﻿using netmon.core.Configuration;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
 using netmon.core.Orchestrators;
+using NSubstitute;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Integration.Orchestrators
 {
-    public class PingOrchestratorTests : TestBase<PingOrchestrator>
+    public class PingOrchestratorIntegrationTests : TestBase<PingOrchestrator>
     {
         private IPingHandler _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
+        private ILogger<PingHandler> _pingHandlerLogger;
         private IPingRequestModelFactory _pingRequestModelFactory;
         private PingOrchestratorOptions _pingOrchestratorOptions;
 
+        /// <summary>
+        /// To DO: Remove all mocks
+        /// </summary>
         [SetUp]
         public override void Setup()
         {
@@ -21,7 +27,8 @@ namespace netmon.core.tests
             // unit setup
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _pingHandlerOptions = new PingHandlerOptions();
-            _pingHandler = new PingHandler(_pingHandlerOptions);
+            _pingHandlerLogger = Substitute.For<ILogger<PingHandler>>();
+            _pingHandler = new PingHandler(_pingHandlerOptions, _pingHandlerLogger);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };
             _unit = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
         }

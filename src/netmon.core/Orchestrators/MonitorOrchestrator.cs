@@ -1,4 +1,5 @@
-﻿using netmon.core.Data;
+﻿using Microsoft.Extensions.Logging;
+using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
 using netmon.core.Models;
@@ -10,20 +11,26 @@ namespace netmon.core.Orchestrators
     /// Monitor the network every interval according to the list of <see cref="IPAddress">. 
     /// Observe the emitted data and store it in the repository for future use.</see>
     /// </summary>
-    public class MonitorOrchestrator
+    public class MonitorOrchestrator : IMonitorOrchestrator
     {
         //private readonly MonitorOptions _monitorOptions;
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
         private readonly IPingOrchestrator _pingOrchestrator;
-        private readonly IStorage<PingResponseModel> _pingResponseStorage;
+       // private readonly IStorage<PingResponseModel> _pingResponseStorage;
+       private readonly IPingResponseModelStorageOrchestrator  _pingResponseModelStorageOrchestrator;
+        private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
             IPingOrchestrator pingOrchestrator,
-            IStorage<PingResponseModel> pingResponseStorage)
+         //   IStorage<PingResponseModel> pingResponseStorage,
+         IPingResponseModelStorageOrchestrator pingResponseModelStorageOrchestrator,
+        ILogger<MonitorOrchestrator> logger)
         {
             _traceRouteOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
-            _pingResponseStorage = pingResponseStorage;
+           // _pingResponseStorage = pingResponseStorage;
+           _pingResponseModelStorageOrchestrator = pingResponseModelStorageOrchestrator;
+        _logger = logger;
         }
 
         /// <summary>
@@ -60,39 +67,47 @@ namespace netmon.core.Orchestrators
                 .ToList();
         }
 
-        private async Task<List<IPAddress>> ValidateAddresses(List<IPAddress> addressesToMonitor, bool skipTrace, CancellationToken cancellationToken)
+        private async Task<List<IPAddress>> ValidateAddresses(List<IPAddress> requestedAddresses, bool pingOnly, CancellationToken cancellationToken)
         {
 
 
-            List<IPAddress> discoveredAddresses = new();
+            _logger.LogTrace("Validating [{count}] addresses", requestedAddresses.Count);
+
+            var addressesToMonitor = requestedAddresses.Distinct().ToArray().ToList();
+
 
             if (!addressesToMonitor.Any())
             {
-                discoveredAddresses = await GetAddressesToMonitorFromTraceRoute(Defaults.DefaultMonitoringDestination, cancellationToken);
+                _logger.LogTrace("No addresses specified, initialising to default monitoring address {address}", Defaults.DefaultMonitoringDestination);
+                addressesToMonitor = await GetAddressesToMonitorFromTraceRoute(Defaults.DefaultMonitoringDestination, cancellationToken);
             }
-            else if (!skipTrace)
+            else if (!pingOnly)
             {
+                _logger.LogTrace("Tracing route to specified addresses {count}", addressesToMonitor.Count);
                 List<IPAddress> tracedAddresses = new();
                 foreach (var address in addressesToMonitor)
                 {
                     var routeaddresses = await GetAddressesToMonitorFromTraceRoute(address, cancellationToken);
                     tracedAddresses.AddRange(routeaddresses);
                 }
-                discoveredAddresses.AddRange(tracedAddresses);
+                addressesToMonitor.AddRange(tracedAddresses);
+                addressesToMonitor = addressesToMonitor.Distinct().ToList();
             }
-            return discoveredAddresses.Distinct().ToList();
+
+            return addressesToMonitor;
         }
 
         void StoreResutlsAsTheyComeIn(object? source, PingResponseModelEventArgs? e)
         {
             if (e == null) return;
 
-            _pingResponseStorage.Store(e.Model).Wait();
+            _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
         }
 
-        private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress defaultMonitoringDestination, CancellationToken cancellationToken)
+        private async Task<List<IPAddress>> GetAddressesToMonitorFromTraceRoute(IPAddress addressToTrace, CancellationToken cancellationToken)
         {
-            PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(defaultMonitoringDestination, cancellationToken);
+
+            PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(addressToTrace, cancellationToken);
             var validHosts = tracedRoutes.AsOrderedList()
                                         .Where(w => w.Response != null && w.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
                                         .Select(s => s.Response?.Address ?? IPAddress.Loopback)

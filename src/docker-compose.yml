@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  netmon.cli:
+    image: ${DOCKER_REGISTRY-}netmoncli
+    build:
+      context: .
+      dockerfile: netmon.cli/Dockerfile

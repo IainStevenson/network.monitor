@@ -7,11 +7,6 @@ using System.Net;
 
 namespace netmon.core.Orchestrators
 {
-    public interface IPingOrchestrator
-    {
-        event EventHandler<PingResponseModelEventArgs> Results;
-        Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation);
-    }
 
     /// <summary>
     /// Handles complex ping tasks and recording results via the <see cref="PingHandler"/> and <see cref="PingResponses"/>.

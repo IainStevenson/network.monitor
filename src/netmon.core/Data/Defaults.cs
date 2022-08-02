@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text;
 
 namespace netmon.core.Data
 {
@@ -30,5 +31,18 @@ namespace netmon.core.Data
         /// </summary>
         public readonly static IPAddress DefaultMonitoringDestination = IPAddress.Parse("8.8.8.8");
 
+
+        /// <summary>
+        /// The data buffer to send. Which is 32 bytes long.
+        /// </summary>
+        public static byte[] RandomBuffer
+        {
+            get
+            {
+                string data = Guid.NewGuid().ToString().Replace("-", ""); ;
+                byte[] buffer = Encoding.ASCII.GetBytes(data);
+                return buffer;
+            }
+        }
     }
 }

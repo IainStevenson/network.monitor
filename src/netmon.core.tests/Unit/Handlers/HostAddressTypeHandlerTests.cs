@@ -2,7 +2,7 @@
 using netmon.core.Models;
 using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.core.tests.Unit.Handlers
 {
     public class HostAddressTypeHandlerTests
     {
@@ -21,7 +21,7 @@ namespace netmon.core.tests
         [TestCase("10.0.0.1", HostTypes.Private)]
         [TestCase("172.27.83.1", HostTypes.Private)]
         [TestCase("195.68.0.2", HostTypes.Public)]
-        [TestCase("216.239.48.217",HostTypes.Public)]
+        [TestCase("216.239.48.217", HostTypes.Public)]
         [TestCase("8.8.8.8", HostTypes.Public)]
         [Category("Unit")]
         public void OnGetPrivateHostTypeItReturnsTheExepctedType(string address, HostTypes expectation)
