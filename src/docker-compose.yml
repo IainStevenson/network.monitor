@@ -6,3 +6,5 @@ services:
     build:
       context: .
       dockerfile: netmon.cli/Dockerfile
+    volumes:
+        - ${APPDATA}/netmon/data:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
