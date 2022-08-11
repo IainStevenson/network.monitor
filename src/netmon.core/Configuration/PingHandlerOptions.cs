@@ -17,7 +17,7 @@ namespace netmon.core.Configuration
         /// <summary>
         /// Millseconds allowed for a response from each router, before a Status of <see cref="IPStatus.TimedOut"/> occurs.
         /// </summary>
-        public int Timeout { get; set; } = 1000;
+        public int Timeout { get; set; } = 5000;
 
     }
 }
