@@ -119,9 +119,9 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             var pingOnly = false; // allow traceroute behaviour
 
-            var responses = await _unit.Execute(requestedAddresses, _testUntil, pingOnly, _cancellationToken);
+            await _unit.Execute(MonitorModes.TraceRouteThenPing, requestedAddresses, _testUntil,  _cancellationToken);
 
-            ShowResults(responses);
+            //ShowResults(responses);
 
             // assert traceroute called for default trace/monitor address
             await _traceRouteOrchestrator
@@ -155,9 +155,9 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
+            await _unit.Execute(MonitorModes.TraceRouteThenPing, testAddresses, _testUntil,  _cancellationToken);
 
-            ShowResults(responses);
+            //ShowResults(responses);
             // assert traceroute
             await _traceRouteOrchestrator.Received(1).Execute(IPAddress.Parse("8.8.4.4"), _cancellationToken);
             // assert monitor
@@ -181,13 +181,11 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
-            var pingOnly = false;
-
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
+            await _unit.Execute(MonitorModes.TraceRouteThenPing, testAddresses, _testUntil, _cancellationToken);
 
-            ShowResults(responses);
+            //ShowResults(responses);
 
             // assert traceroute to both addresses
             await _traceRouteOrchestrator.Received(testAddresses.Count)
@@ -214,13 +212,12 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
-            var pingOnly = true;
-
+            
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            var responses = await _unit.Execute(testAddresses, _testUntil, pingOnly, _cancellationToken);
+            await _unit.Execute(MonitorModes.PingOnly, testAddresses, _testUntil,  _cancellationToken);
 
-            ShowResults(responses);
+            //ShowResults(responses);
             // assert traceroute to both addresses
             await _traceRouteOrchestrator.Received(0).Execute(Arg.Any<IPAddress>(), _cancellationToken);
             // assert monitor both address from results

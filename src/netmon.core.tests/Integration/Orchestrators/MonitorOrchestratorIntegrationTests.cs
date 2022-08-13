@@ -72,22 +72,25 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             // trap the mock storage resutls here and display them in the test output.
             PingResponses storedResponses = new();
+
             _pingResponseModelStorageOrchestrator.When(it => it.Store(Arg.Any<PingResponseModel>()))
-                .Do(doit => storedResponses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(doit.Arg<PingResponseModel>().Start, doit.Arg<PingResponseModel>().Request.Address), doit.Arg<PingResponseModel>()));
+                .Do(doit => 
+                    storedResponses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(
+                        doit.Arg<PingResponseModel>().Start, doit.Arg<PingResponseModel>().Request.Address), doit.Arg<PingResponseModel>()));
 
-            var multiPingMonitorResponses = await _unit.Execute(new List<IPAddress>(), _testUntil, false, _cancellationToken);
+            await _unit.Execute(MonitorModes.TraceRouteThenPing, new List<IPAddress>(), _testUntil, _cancellationToken);
 
-            ShowResults(multiPingMonitorResponses);
+            //ShowResults(multiPingMonitorResponses);
             ShowResults(storedResponses);
 
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(actual: multiPingMonitorResponses, Is.Not.Null);
-                Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
-            });
+            //Assert.Multiple(() =>
+            //{
+            //    Assert.That(actual: multiPingMonitorResponses, Is.Not.Null);
+            //    Assert.That(actual: multiPingMonitorResponses, Is.Not.Empty);
+            //});
 
-            _pingResponseModelStorageOrchestrator.Received((int)(until.TotalSeconds * multiPingMonitorResponses.Count)).Store(Arg.Any<PingResponseModel>()).Wait();
+            _pingResponseModelStorageOrchestrator.Received((int)(storedResponses.Count())).Store(Arg.Any<PingResponseModel>()).Wait();
         }
 
         [Test]
@@ -95,11 +98,11 @@ namespace netmon.core.tests.Integration.Orchestrators
         public async Task OnExecuteNextTimeItJustMonitorsSpecifiedAddresses()
         {
 
-            var responses = await _unit.Execute(_monitorLoopbackAddresses, _testUntil, false, _cancellationToken);
+            await _unit.Execute(MonitorModes.PingOnly, _monitorLoopbackAddresses, _testUntil,  _cancellationToken);
 
-            ShowResults(responses);
+            //ShowResults(responses);
 
-            Assert.That(actual: responses, Is.Not.Empty);
+            //Assert.That(actual: responses, Is.Not.Empty);
             _pingResponseModelStorageOrchestrator.Received(2).Store(Arg.Any<PingResponseModel>()).Wait();
 
         }

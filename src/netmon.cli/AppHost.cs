@@ -17,12 +17,12 @@ namespace netmon.cli
         private readonly ServiceProvider _serviceProvider;
         private readonly ILogger<AppHost> _logger;
         private readonly IMonitorOrchestrator _monitorOrchestrator;
-        private readonly ArgumentsHandler _argumentsHandler;
-        public AppHost(IServiceCollection services, IHostEnvironment environment, ArgumentsHandler argumentsHandler)
+        private readonly AppOptions _options;
+        public AppHost(IServiceCollection services, IHostEnvironment environment, AppOptions options)
         {
             var config = BootstrapConfiguration(environment.EnvironmentName).Build();
             _serviceProvider = BootstrapApplication(services, config);
-            _argumentsHandler = argumentsHandler;
+            _options = options;
             _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
             _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
         }
@@ -39,11 +39,16 @@ namespace netmon.cli
                             .AddJsonFile($"appSettings.json", false, true) // must have
                             .AddJsonFile($"appSettings{environmentName}.json", true, true); // could have
         }
-        private static DirectoryInfo EnsureStorageDirectoryExits(string folderDelimiter)
+        private static DirectoryInfo EnsureStorageDirectoryExits(string folderDelimiter, string outputPath)
         {
-            var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var path = $"{commonDataFolder}{folderDelimiter}netmon";
-            var storageDirectory = new DirectoryInfo(path);
+            
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                outputPath = $"{commonDataFolder}{folderDelimiter}netmon";
+
+            }
+            var storageDirectory = new DirectoryInfo(outputPath);
             if (!storageDirectory.Exists)
             {
                 storageDirectory.Create();
@@ -55,11 +60,13 @@ namespace netmon.cli
         /// </summary>
         /// <param name="config">Uses the configuration to assist in setup.</param>
         /// <returns></returns>
-        private static ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot config)
+        private ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot config)
         {
 
+
+
             var folderDelimiter = Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\";
-            var storageDirectory = EnsureStorageDirectoryExits(folderDelimiter);
+            var storageDirectory = EnsureStorageDirectoryExits(folderDelimiter, _options.OutputPath);
 
             services.AddLogging(configure =>
                     {
@@ -113,15 +120,15 @@ namespace netmon.cli
             _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
 
             _logger.LogTrace("Monitoring... {addresses} {until} {mode}",
-                                                    _argumentsHandler.Addresses,
-                                                    _argumentsHandler.Until,
-                                                    _argumentsHandler.Mode
+                                                    _options.Addresses,
+                                                    _options.Until,
+                                                    _options.Mode
                                                      );
 
 
-            await _monitorOrchestrator.Execute(_argumentsHandler.Mode,
-                                                    _argumentsHandler.Addresses,
-                                                    _argumentsHandler.Until,
+            await _monitorOrchestrator.Execute(_options.Mode,
+                                                    _options.Addresses,
+                                                    _options.Until,
                                                     cancellationToken);
 
 
