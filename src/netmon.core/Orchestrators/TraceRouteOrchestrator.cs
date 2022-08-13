@@ -20,6 +20,8 @@ namespace netmon.core.Orchestrators
         private readonly IPingRequestModelFactory _requestModelFactory;
         private readonly ILogger<TraceRouteOrchestrator> _logger;
 
+        public event EventHandler<PingResponseModelEventArgs>? Results;
+
         public TraceRouteOrchestrator(IPingHandler pingHandler, TraceRouteOrchestratorOptions options, IPingRequestModelFactory requestModelFactory,
             ILogger<TraceRouteOrchestrator> logger)
         {
@@ -57,6 +59,7 @@ namespace netmon.core.Orchestrators
 
                     var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
 
+                    
                     RecordResultIfNotNull(responses, pingResponse);
 
                     var reply = ReponseIsOfInterest(pingResponse);
@@ -118,9 +121,11 @@ namespace netmon.core.Orchestrators
             pingResponse.MaxAttempts = maxAttempts;
         }
 
-        private static void RecordResultIfNotNull(PingResponses responses, PingResponseModel pingResponse)
+        private void RecordResultIfNotNull(PingResponses responses, PingResponseModel pingResponse)
         {
             if (pingResponse == null) return;
+            Results?.Invoke(this, new PingResponseModelEventArgs(pingResponse));
+
             responses.TryAdd(new(pingResponse.Start, pingResponse.Request.Address), pingResponse);
         }
 

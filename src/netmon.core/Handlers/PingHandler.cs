@@ -21,6 +21,7 @@ namespace netmon.core.Handlers
             _logger = logger;
         }
 
+
         /// <summary>
         /// Asnychronously emit a ping to an address and return the response.
         /// </summary>
@@ -43,7 +44,9 @@ namespace netmon.core.Handlers
                     };
 
 
-                    _logger.LogTrace($"{nameof(PingHandler)}.{nameof(Execute)} PING request  {request.Address}, Timeout: {_pingOptions.Timeout}, TTL {request.Ttl}");
+                    _logger.LogTrace(
+                        "{class}.{method} PING request  {address}, Timeout: {timeout}, TTL {timetolive}", 
+                        nameof(PingHandler), nameof(Execute), request.Address, _pingOptions.Timeout, request.Ttl);
 
                     response.Start = DateTimeOffset.UtcNow;
                     
@@ -65,7 +68,8 @@ namespace netmon.core.Handlers
                             Status = reply.Status
                         };
                     }
-                    _logger.LogTrace($"{nameof(PingHandler)}.{nameof(Execute)} PING response {response.Duration.TotalMilliseconds} ms, Status {response.Response?.Status},  TTL {response.Response?.Options?.Ttl}");
+                    _logger.LogTrace("{class}.{method} PING response {duration} ms, Status {status},  TTL {timetolive}", 
+                        nameof(PingHandler), nameof(Execute), response.Duration.TotalMilliseconds, response.Response?.Status, response.Response?.Options?.Ttl);
 
 
                 }

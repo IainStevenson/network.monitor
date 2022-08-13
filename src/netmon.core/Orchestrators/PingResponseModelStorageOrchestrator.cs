@@ -21,7 +21,7 @@ namespace netmon.core.Orchestrators
         }
         public Task Store(PingResponseModel item)
         {
-            _logger.LogTrace("Storing item {start} {address}", item.Start, item.Request.Address.ToString());
+            _logger.LogTrace("Storing item {start} {address} {response}", item.Start, item.Request.Address.ToString(), item.Response?.RoundtripTime??0);
             var tasks = _repositories.Select(async (repository) => await repository.Store(item)).ToArray();
             Task.WaitAll(tasks);
             return Task.FromResult(0);

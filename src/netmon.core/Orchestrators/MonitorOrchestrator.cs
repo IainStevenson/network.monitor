@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
@@ -16,8 +17,8 @@ namespace netmon.core.Orchestrators
         //private readonly MonitorOptions _monitorOptions;
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
         private readonly IPingOrchestrator _pingOrchestrator;
-       // private readonly IStorage<PingResponseModel> _pingResponseStorage;
-       private readonly IPingResponseModelStorageOrchestrator  _pingResponseModelStorageOrchestrator;
+        // private readonly IStorage<PingResponseModel> _pingResponseStorage;
+        private readonly IPingResponseModelStorageOrchestrator _pingResponseModelStorageOrchestrator;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
@@ -28,9 +29,9 @@ namespace netmon.core.Orchestrators
         {
             _traceRouteOrchestrator = traceRouteOrchestrator;
             _pingOrchestrator = pingOrchestrator;
-           // _pingResponseStorage = pingResponseStorage;
-           _pingResponseModelStorageOrchestrator = pingResponseModelStorageOrchestrator;
-        _logger = logger;
+            // _pingResponseStorage = pingResponseStorage;
+            _pingResponseModelStorageOrchestrator = pingResponseModelStorageOrchestrator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -44,32 +45,50 @@ namespace netmon.core.Orchestrators
         /// <param name="pingOnly">Only works when addresses are supplied. If true then will not peform a trace on the supplied addresses first and then monitor all of them, returning the complete list.</param>
         /// <param name="cancellationToken">The asnyc cacnellaction token for earyl termination.</param>
         /// <returns>An instance of <see cref="Task"/> delivering an list of all the <see cref="IPAddresses"/> which were pinged, and that ever responded.</returns>
-        public async Task<List<IPAddress>> Execute(List<IPAddress> addressesToMonitor, TimeSpan until, bool pingOnly, CancellationToken cancellationToken)
-        {
+        public async Task Execute(MonitorModes mode, List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        {            
+            
+            switch (mode)// TODO: Write an OO way of doing this to remove the switch
+            {
+                case MonitorModes.TraceRoute:
+                    _traceRouteOrchestrator.Results += StoreResutlsAsTheyComeIn;
 
-            addressesToMonitor = await ValidateAddresses(addressesToMonitor, pingOnly, cancellationToken);
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        _ = await ValidateAddressesByTraceRoute(addressesToMonitor, false, cancellationToken);
+                    }
+                    _traceRouteOrchestrator.Results -= StoreResutlsAsTheyComeIn;
 
-            MonitorResponses responses = new();
+                    break;
+                case MonitorModes.TraceRouteThenPing:
 
-            _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
+                    _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
 
-            var pingResults = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
-                                                                     until,
-                                                                     cancellationToken);
+                    addressesToMonitor = await ValidateAddressesByTraceRoute(addressesToMonitor, false, cancellationToken);
 
-            responses.AddRange(pingResults.Select(s => s.Value).ToList());
+                    _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
+                                                         until,
+                                                         cancellationToken);
 
-            _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
-            return responses
-                .Where(x => x.Response?.Status == System.Net.NetworkInformation.IPStatus.Success)
-                .Select(s => s.Response?.Address ?? IPAddress.Loopback)
-                .Distinct()
-                .ToList();
+                    _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
+
+
+                    break;
+                case MonitorModes.PingOnly:
+                    _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
+
+                    _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
+                                                         until,
+                                                         cancellationToken);
+                    _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
+
+                    break;
+            }
+           
         }
 
-        private async Task<List<IPAddress>> ValidateAddresses(List<IPAddress> requestedAddresses, bool pingOnly, CancellationToken cancellationToken)
+        private async Task<List<IPAddress>> ValidateAddressesByTraceRoute(List<IPAddress> requestedAddresses, bool pingOnly, CancellationToken cancellationToken)
         {
-
 
             _logger.LogTrace("Validating [{count}] addresses", requestedAddresses.Count);
 
@@ -108,6 +127,7 @@ namespace netmon.core.Orchestrators
         {
 
             PingResponses tracedRoutes = await _traceRouteOrchestrator.Execute(addressToTrace, cancellationToken);
+
             var validHosts = tracedRoutes.AsOrderedList()
                                         .Where(w => w.Response != null && w.Response.Status == System.Net.NetworkInformation.IPStatus.Success)
                                         .Select(s => s.Response?.Address ?? IPAddress.Loopback)

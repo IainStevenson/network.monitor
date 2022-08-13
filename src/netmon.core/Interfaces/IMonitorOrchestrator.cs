@@ -1,9 +1,10 @@
-﻿using System.Net;
+﻿using netmon.core.Configuration;
+using System.Net;
 
 namespace netmon.core.Interfaces
 {
     public interface IMonitorOrchestrator
     {
-        Task<List<IPAddress>> Execute(List<IPAddress> addressesToMonitor, TimeSpan until, bool pingOnly, CancellationToken cancellationToken);
+        Task Execute(MonitorModes mode, List<IPAddress> addressesToMonitor, TimeSpan until,  CancellationToken cancellationToken);
     }
 }
