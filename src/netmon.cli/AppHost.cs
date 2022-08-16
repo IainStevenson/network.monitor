@@ -20,11 +20,11 @@ namespace netmon.cli
         private readonly AppOptions _options;
         public AppHost(IServiceCollection services, IHostEnvironment environment, AppOptions options)
         {
+            _options = options;
             var config = BootstrapConfiguration(environment.EnvironmentName).Build();
             _serviceProvider = BootstrapApplication(services, config);
-            _options = options;
-            _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
             _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
+            _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
         }
 
         /// <summary>
