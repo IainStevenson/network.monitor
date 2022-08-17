@@ -2,6 +2,7 @@
   "profiles": {
     "netmon.cli": {
       "commandName": "Project",
+      "commandLineArgs": "--addreses=8.8.8.8,212.118.241.33",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Devlopement"
       }

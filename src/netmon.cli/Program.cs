@@ -11,7 +11,9 @@ namespace netmon.cli
         {
 
             var options = new AppOptions();
+            
             options.FromArguments(args);    
+            
             Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) => {
                     services.AddSingleton(options);

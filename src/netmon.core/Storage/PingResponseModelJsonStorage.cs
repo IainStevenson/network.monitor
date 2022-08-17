@@ -6,12 +6,12 @@ using System.Text;
 
 namespace netmon.core.Storage
 {
-    public class PingResponseModelJsonStorage : IStorage<PingResponseModel>
+    public class PingResponseModelJsonFileStorage : IStorage<PingResponseModel>
     {
         private readonly DirectoryInfo _storageFolder;
         private readonly JsonSerializerSettings _settings;
         private readonly string _storageSystemFolderDelimiter; 
-        public PingResponseModelJsonStorage(DirectoryInfo storageFolder, string storageSystemFolderDelimiter)
+        public PingResponseModelJsonFileStorage(DirectoryInfo storageFolder, string storageSystemFolderDelimiter)
         {
             _storageFolder = storageFolder;
             _settings = new JsonSerializerSettings();

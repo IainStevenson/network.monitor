@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\netmon.cli.shared\netmon.cli.shared.csproj" />
     <ProjectReference Include="..\netmon.core\netmon.core.csproj" />
   </ItemGroup>
 

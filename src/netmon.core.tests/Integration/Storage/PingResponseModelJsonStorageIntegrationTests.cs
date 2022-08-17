@@ -4,7 +4,7 @@ using System.Net;
 
 namespace netmon.core.tests.Integration.Storage
 {
-    public class PingResponseModelJsonStorageIntegrationTests : TestBase<PingResponseModelJsonStorage>
+    public class PingResponseModelJsonStorageIntegrationTests : TestBase<PingResponseModelJsonFileStorage>
     {
         private DirectoryInfo _testFolder;
         private const string _storageFolderDelimiter = "\\";
@@ -17,7 +17,7 @@ namespace netmon.core.tests.Integration.Storage
             {
                 _testFolder.Create();
             }
-            _unit = new PingResponseModelJsonStorage(_testFolder, _storageFolderDelimiter);
+            _unit = new PingResponseModelJsonFileStorage(_testFolder, _storageFolderDelimiter);
         }
 
         private void AddWorldAddressesTestData()

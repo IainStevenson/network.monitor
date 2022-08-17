@@ -39,22 +39,7 @@ namespace netmon.cli
                             .AddJsonFile($"appSettings.json", false, true) // must have
                             .AddJsonFile($"appSettings{environmentName}.json", true, true); // could have
         }
-        private static DirectoryInfo EnsureStorageDirectoryExits(string folderDelimiter, string outputPath)
-        {
-            
-            if (string.IsNullOrWhiteSpace(outputPath))
-            {
-                var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-                outputPath = $"{commonDataFolder}{folderDelimiter}netmon";
-
-            }
-            var storageDirectory = new DirectoryInfo(outputPath);
-            if (!storageDirectory.Exists)
-            {
-                storageDirectory.Create();
-            }
-            return storageDirectory;
-        }
+       
         /// <summary>
         /// Sets up all the application modules in the Dependency injection container.
         /// </summary>
@@ -63,10 +48,8 @@ namespace netmon.cli
         private ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot config)
         {
 
-
-
-            var folderDelimiter = Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\";
-            var storageDirectory = EnsureStorageDirectoryExits(folderDelimiter, _options.OutputPath);
+            var storageDirectory = new DirectoryInfo(_options.OutputPath);
+            if (!storageDirectory.Exists) throw new ArgumentException("OutputPath");
 
             services.AddLogging(configure =>
                     {
@@ -91,11 +74,11 @@ namespace netmon.cli
                     .AddSingleton<IPingOrchestrator, PingOrchestrator>()
                     .AddSingleton<IStorage<PingResponseModel>>(provider =>
                     {
-                        return new PingResponseModelJsonStorage(storageDirectory, folderDelimiter);
+                        return new PingResponseModelJsonFileStorage(storageDirectory, _options.FolderDelimiter);
                     })
                     .AddSingleton<IStorage<PingResponseModel>>(provider =>
                     {
-                        return new PingResponseModelTextSummaryStorage(storageDirectory, folderDelimiter);
+                        return new PingResponseModelTextSummaryStorage(storageDirectory, _options.FolderDelimiter);
                     })
                     .AddSingleton<IPingResponseModelStorageOrchestrator>(
                         (provider) =>

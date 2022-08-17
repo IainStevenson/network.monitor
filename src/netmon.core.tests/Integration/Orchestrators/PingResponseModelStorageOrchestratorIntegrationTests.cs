@@ -26,7 +26,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             }
             _respositories = new List<IStorage<PingResponseModel>>()
             {
-                { new PingResponseModelJsonStorage(_testFolder, _storageFolderDelimiter) },
+                { new PingResponseModelJsonFileStorage(_testFolder, _storageFolderDelimiter) },
                 { new PingResponseModelTextSummaryStorage(_testFolder, _storageFolderDelimiter) }
              };
             _logger = Substitute.For<ILogger<PingResponseModelStorageOrchestrator>>();
