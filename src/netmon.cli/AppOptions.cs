@@ -7,11 +7,9 @@ namespace netmon.cli
     public class AppOptions
     {
 
-        //TODO: Folder to store output
         //TODO: Time between pings
         //TODO: PING Timeout
-        //
-
+        
         public AppOptions()
         {
 
