@@ -1,6 +1,7 @@
 ﻿using netmon.core.Interfaces;
 using netmon.core.Models;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace netmon.core.Storage
 {
@@ -36,10 +37,19 @@ namespace netmon.core.Storage
             }
             return Task.FromResult(0);
         }
-
+        //[DebuggerStepThrough]
         public Task<string> GetFileDataAsync(string fullFileName)
         {
-            return Task.FromResult(File.ReadAllText(fullFileName));
+            try
+            {
+                return Task.FromResult(File.ReadAllText(fullFileName));
+            }
+            catch
+            {
+
+
+            }
+            return Task.FromResult(String.Empty);
         }
 
         public Task<IEnumerable<FileInfo>> GetFileInformationAsync(string pattern)

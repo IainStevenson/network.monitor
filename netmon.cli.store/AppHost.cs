@@ -121,10 +121,9 @@ internal class AppHost : IHostedService
     {
 
 
-        _logger.LogTrace("Monitoring... {addresses} {until} {mode}",
-                                                _options.Addresses,
-                                                _options.Until,
-                                                _options.Mode
+        _logger.LogTrace("Moving Files from .. {path} to {connection}",
+                                                _options.OutputPath,
+                                                _options.StorageService.ConnectionString
                                                  );
         
         while (!cancellationToken.IsCancellationRequested) // until cancelled

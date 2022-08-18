@@ -55,37 +55,38 @@ namespace netmon.core.Orchestrators
 
 
 
-            while (!cancellationToken.IsCancellationRequested)
+            List<FileInfo> filesFound = new List<FileInfo>();
+            var jsonFileRepository = jsonRepository as IFileSystemQuery;
+            if (jsonFileRepository != null)
             {
-                List<FileInfo> filesFound = new List<FileInfo>();
-
-                var jsonFileRepository = jsonRepository as IFileSystemQuery;
-                if (jsonFileRepository != null)
+                filesFound = (await jsonFileRepository.GetFileInformationAsync("*.json")).ToList();
+                _logger.LogTrace("Found {count} files to process", filesFound.Count);
+                foreach (var file in filesFound)
                 {
-                    filesFound = (await jsonFileRepository.GetFileInformationAsync("*.json")).ToList();
-                    foreach (var file in filesFound)
+                    //while (!cancellationToken.IsCancellationRequested)
                     {
                         PingResponseModel? item = null;
 
                         var guidValue = file.Name.Split('.').First()
                             .Split('-').Last(); // before extension, end of name, older files are not translatable to Guid so the new class will create one on deeserlialisation                    
 
-                        if (Guid.TryParse(guidValue, out Guid fileItemId))
+                        try
                         {
-                            item = await jsonRepository.RetrieveAsync(fileItemId);
-                        }
-                        else
-                        {
-                            var json = await jsonFileRepository.GetFileDataAsync(file.FullName);
-                            item = JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings);
-                        }
-
-                        if (item != null)
-                        {
-
-                            await objectRepository.StoreAsync(item);
-                            try
+                            if (Guid.TryParse(guidValue, out Guid fileItemId))
                             {
+                                item = await jsonRepository.RetrieveAsync(fileItemId);
+                            }
+                            else
+                            {
+                                var json = await jsonFileRepository.GetFileDataAsync(file.FullName);
+                                if (!string.IsNullOrEmpty(json))
+                                    item = JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings);
+                            }
+
+                            if (item != null)
+                            {
+
+                                await objectRepository.StoreAsync(item);
                                 if (fileItemId == Guid.Empty)
                                 {
                                     await jsonFileRepository.DeleteFileAsync(file.FullName);
@@ -94,19 +95,16 @@ namespace netmon.core.Orchestrators
                                 {
                                     await jsonRepository.DeleteAsync(fileItemId);
                                 }
-
+                                _logger.LogTrace("Processed {name} ", file.FullName);
                             }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError("An exception has occured during a response file data move {itemId}: {message}", item.Id, ex.Message);
-                            }
-
                         }
-
+                        catch (Exception ex)
+                        {
+                            _logger.LogError("An exception has occured during a response file data move {name}: {message}", file.Name, ex.Message);
+                        }
                     }
+                    if (cancellationToken.IsCancellationRequested) break;
                 }
-
-
             }
         }
     }
