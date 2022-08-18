@@ -56,7 +56,7 @@ namespace netmon.cli
             BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
             {
                 cm.AutoMap();
-                cm.MapIdMember(c => c.Id);
+                //cm.MapIdMember(c => c.Id);
                 cm.SetIgnoreExtraElements(true);
             }); 
             
