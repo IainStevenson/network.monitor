@@ -3,12 +3,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using MongoDB.Bson.Serialization;
 using netmon.core.Configuration;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
+using netmon.core.Serialisation;
 using netmon.core.Storage;
+using Newtonsoft.Json;
 
 namespace netmon.cli
 {
@@ -17,11 +20,12 @@ namespace netmon.cli
         private readonly ServiceProvider _serviceProvider;
         private readonly ILogger<AppHost> _logger;
         private readonly IMonitorOrchestrator _monitorOrchestrator;
-        private readonly AppOptions _options;
-        public AppHost(IServiceCollection services, IHostEnvironment environment, AppOptions options)
+        private AppOptions _options;
+
+        public AppHost(IServiceCollection services, IHostEnvironment environment, string[] args)
         {
-            _options = options;
-            var config = BootstrapConfiguration(environment.EnvironmentName).Build();
+            _options = new AppOptions();
+            var config = BootstrapConfiguration(environment.EnvironmentName, args).Build();
             _serviceProvider = BootstrapApplication(services, config);
             _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
             _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
@@ -32,28 +36,38 @@ namespace netmon.cli
         /// </summary>
         /// <param name="environmentName">Optionally includes configuration for the specified environment.</param>
         /// <returns></returns>
-        private static IConfigurationBuilder BootstrapConfiguration(string environmentName)
+        private static IConfigurationBuilder BootstrapConfiguration(string environmentName, string[] args)
         {
             return new ConfigurationBuilder()
                             .SetBasePath(Directory.GetCurrentDirectory())
                             .AddJsonFile($"appSettings.json", false, true) // must have
-                            .AddJsonFile($"appSettings{environmentName}.json", true, true); // could have
+                            .AddJsonFile($"appSettings{environmentName}.json", true, true)
+                            .AddCommandLine(args)
+                            ;
         }
-       
+
         /// <summary>
         /// Sets up all the application modules in the Dependency injection container.
         /// </summary>
-        /// <param name="config">Uses the configuration to assist in setup.</param>
+        /// <param name="configurationRoot">Uses the configuration to assist in setup.</param>
         /// <returns></returns>
-        private ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot config)
+        private ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot configurationRoot)
         {
+            BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapIdMember(c => c.Id);
+                cm.SetIgnoreExtraElements(true);
+            }); 
+            
+            _options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
 
             var storageDirectory = new DirectoryInfo(_options.OutputPath);
             if (!storageDirectory.Exists) throw new ArgumentException("OutputPath");
 
             services.AddLogging(configure =>
                     {
-                        configure.AddConfiguration(config);
+                        configure.AddConfiguration(configurationRoot);
 
                         configure.AddSimpleConsole(options =>
                         {
@@ -72,18 +86,28 @@ namespace netmon.cli
                     .AddTransient<IPingHandler, PingHandler>()
                     .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
                     .AddSingleton<IPingOrchestrator, PingOrchestrator>()
-                    .AddSingleton<IStorage<PingResponseModel>>(provider =>
+                    .AddSingleton<JsonSerializerSettings>( x=>
                     {
-                        return new PingResponseModelJsonFileStorage(storageDirectory, _options.FolderDelimiter);
+                        var settings = new JsonSerializerSettings();
+                        settings.Converters.Add(new IPAddressConverter());
+                        settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                        settings.Converters.Add(new HostAdddresAndTypeConverter());
+                        settings.Formatting = Formatting.Indented;
+                        return settings;
+
                     })
-                    .AddSingleton<IStorage<PingResponseModel>>(provider =>
+                    .AddSingleton<IRepository>(provider =>
                     {
-                        return new PingResponseModelTextSummaryStorage(storageDirectory, _options.FolderDelimiter);
+                        return new PingResponseModelJsonRepository(storageDirectory, provider.GetRequiredService<JsonSerializerSettings>(), _options.FolderDelimiter);
                     })
-                    .AddSingleton<IPingResponseModelStorageOrchestrator>(
+                    .AddSingleton<IRepository>(provider =>
+                    {
+                        return new PingResponseModelTextSummaryRepository(storageDirectory, _options.FolderDelimiter);
+                    })
+                    .AddSingleton<IStorageOrchestrator<PingResponseModel>>(
                         (provider) =>
                         {
-                            var respositories = provider.GetServices<IStorage<PingResponseModel>>();
+                            var respositories = provider.GetServices<IRepository>(); // get em all
                             var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
                             return new PingResponseModelStorageOrchestrator(respositories, logger);
                         })
@@ -110,7 +134,7 @@ namespace netmon.cli
 
 
             await _monitorOrchestrator.Execute(_options.Mode,
-                                                    _options.Addresses,
+                                                    _options.IPAddresses,
                                                     _options.Until,
                                                     cancellationToken);
 

@@ -21,7 +21,7 @@ namespace netmon.core.tests.Integration.Orchestrators
         private IPingRequestModelFactory _pingRequestModelFactory;
         private PingHandlerOptions _pingHandlerOptions;
         private PingOrchestratorOptions _pingOrchestratorOptions;
-        private IPingResponseModelStorageOrchestrator _pingResponseModelStorageOrchestrator;
+        private IStorageOrchestrator<PingResponseModel> _pingResponseModelStorageOrchestrator;
         private ILogger<PingHandler> _pingLogger;
         private ILogger<MonitorOrchestrator> _monitorOrchestratorLogger;
         private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
@@ -50,7 +50,7 @@ namespace netmon.core.tests.Integration.Orchestrators
                 _traceRouteOrchestratorLogger);
             _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
-            _pingResponseModelStorageOrchestrator = Substitute.For<IPingResponseModelStorageOrchestrator>();// for the moment mock out the storage.
+            _pingResponseModelStorageOrchestrator = Substitute.For<IStorageOrchestrator<PingResponseModel>>();// for the moment mock out the storage.
 
 
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();

@@ -18,13 +18,13 @@ namespace netmon.core.Orchestrators
         private readonly ITraceRouteOrchestrator _traceRouteOrchestrator;
         private readonly IPingOrchestrator _pingOrchestrator;
         // private readonly IStorage<PingResponseModel> _pingResponseStorage;
-        private readonly IPingResponseModelStorageOrchestrator _pingResponseModelStorageOrchestrator;
+        private readonly IStorageOrchestrator<PingResponseModel> _pingResponseModelStorageOrchestrator;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(ITraceRouteOrchestrator traceRouteOrchestrator,
             IPingOrchestrator pingOrchestrator,
          //   IStorage<PingResponseModel> pingResponseStorage,
-         IPingResponseModelStorageOrchestrator pingResponseModelStorageOrchestrator,
+         IStorageOrchestrator<PingResponseModel> pingResponseModelStorageOrchestrator,
         ILogger<MonitorOrchestrator> logger)
         {
             _traceRouteOrchestrator = traceRouteOrchestrator;

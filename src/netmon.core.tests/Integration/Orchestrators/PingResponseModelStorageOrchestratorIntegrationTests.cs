@@ -11,7 +11,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 {
     public class PingResponseModelStorageOrchestratorIntegrationTests : TestBase<PingResponseModelStorageOrchestrator>
     {
-        private List<IStorage<PingResponseModel>> _respositories;
+        private List<IRepository> _respositories;
         private ILogger<PingResponseModelStorageOrchestrator> _logger;
         private DirectoryInfo _testFolder;
         private const string _storageFolderDelimiter = "\\";
@@ -24,13 +24,13 @@ namespace netmon.core.tests.Integration.Orchestrators
             {
                 _testFolder.Create();
             }
-            _respositories = new List<IStorage<PingResponseModel>>()
+            _respositories = new List<IRepository>()
             {
-                { new PingResponseModelJsonFileStorage(_testFolder, _storageFolderDelimiter) },
-                { new PingResponseModelTextSummaryStorage(_testFolder, _storageFolderDelimiter) }
+                { new PingResponseModelJsonRepository(_testFolder,_settings, _storageFolderDelimiter) },
+                { new PingResponseModelTextSummaryRepository(_testFolder, _storageFolderDelimiter) }
              };
             _logger = Substitute.For<ILogger<PingResponseModelStorageOrchestrator>>();
-            _unit = new PingResponseModelStorageOrchestrator(_respositories, _logger);
+            _unit = new PingResponseModelStorageOrchestrator(_respositories, _logger, _settings);
         }
 
         private void AddWorldAddressesTestData()
@@ -57,19 +57,22 @@ namespace netmon.core.tests.Integration.Orchestrators
         [Category("Integration")]
         public void OnStoreItShouldContainTheAddedItems()
         {
-            foreach(var respository in _respositories)
+            foreach (IFileSystemQuery respository in _respositories)
             {
-                Assert.That(respository.Count, Is.EqualTo(0));
+                var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
+                Assert.That(respository.GetFileInformationAsync(pattern).Count, Is.EqualTo(0));
             }
             AddWorldAddressesTestData();
 
-            foreach (var respository in _respositories)
+            foreach (IFileSystemQuery respository in _respositories)
             {
-                
-                Assert.That(respository.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
+                var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
+
+
+                Assert.That(respository.GetFileInformationAsync(pattern).Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
             }
 
-            
+
         }
     }
 }

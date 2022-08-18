@@ -4,9 +4,10 @@ using System.Net;
 
 namespace netmon.core.tests.Integration.Storage
 {
-    public class PingResponseModelTextSummaryStorageIntegrationTests : TestBase<PingResponseModelTextSummaryStorage>
+    public class PingResponseModelTextSummaryStorageIntegrationTests : TestBase<PingResponseModelTextSummaryRepository>
     {
         private DirectoryInfo _testFolder;
+        private PingResponses _TestData = new();
         private const string _storageFolderDelimiter = "\\"; [SetUp]
         public override void Setup()
         {
@@ -16,36 +17,36 @@ namespace netmon.core.tests.Integration.Storage
             {
                 _testFolder.Create();
             }
-            _unit = new PingResponseModelTextSummaryStorage(_testFolder, _storageFolderDelimiter);
+            _unit = new PingResponseModelTextSummaryRepository(_testFolder, _storageFolderDelimiter);
         }
 
         private void AddWorldAddressesTestData()
         {
-            var items = new PingResponses();
-            // simualte traceroute response.
+            _TestData = new PingResponses();
+            // simulate traceroute response.
             List<bool> states = new();
             foreach (var address in TestConditions.WorldAddresses)
             {
-                states.Add(items.TryAdd(
+                states.Add(_TestData.TryAdd(
                       new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
                       new Models.PingResponseModel() { Request = new Models.PingRequestModel() { Address = address } })
                     );
             }
             if (states.Any(a => !a)) return; // fail the test
             // load it into storage as needed.
-            foreach (var item in items)
+            foreach (var item in _TestData)
             {
-                _unit.Store(item.Value).Wait();
+                _unit.StoreAsync(item.Value).Wait();
             }
         }
 
         [Test]
         [Category("Integration")]
-        public void OnStoreItShouldContainTheAddedItems()
+        public void OnStoreItShouldContainTheAddedItemsAsync()
         {
-            Assert.That(_unit.Count, Is.EqualTo(0));
-            AddWorldAddressesTestData();
-            Assert.That(_unit.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
+            Assert.DoesNotThrow(() => AddWorldAddressesTestData());
+
+
         }
 
     }

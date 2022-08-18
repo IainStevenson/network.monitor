@@ -10,15 +10,12 @@ namespace netmon.cli
         static void Main(string[] args)
         {
 
-            var options = new AppOptions();
             
-            options.FromArguments(args);    
             
             Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) => {
-                    services.AddSingleton(options);
                     services.AddHostedService<AppHost>( (provider) => {
-                        return new AppHost(services,context.HostingEnvironment, options);
+                        return new AppHost(services,context.HostingEnvironment, args);
                     });
                 })
                 .Build()

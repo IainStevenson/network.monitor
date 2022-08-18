@@ -1,4 +1,5 @@
-﻿using netmon.core.Models;
+﻿using netmon.core.Data;
+using netmon.core.Models;
 using netmon.core.Serialisation;
 using Newtonsoft.Json;
 using System.Net;
@@ -58,7 +59,10 @@ namespace netmon.core.tests.Unit
 
             Assert.That(actual, Is.Not.Null);
             Assert.That(actual, Is.TypeOf<List<IPAddress>>());
-            Assert.That(actual.First(), Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+            Assert.That(actual.Skip(0).First(), Is.EqualTo(IPAddress.Parse("8.8.8.8")));
+            Assert.That(actual.Skip(1).First(), Is.EqualTo(IPAddress.Parse("192.168.0.1")));
+            Assert.That(actual.Skip(2).First(), Is.EqualTo(IPAddress.Parse("192.168.1.1")));
+            Assert.That(actual.Skip(3).First(), Is.EqualTo(IPAddress.Parse("172.16.0.1")));
 
         }
         [Test]

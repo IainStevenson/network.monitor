@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "netmon.cli.store": {
+      "commandName": "Project",
+      "commandLineArgs": "--outputPath=D:\\\\netmon --addresses=8.8.8.8,212.118.241.33"
+    }
+  }
+}

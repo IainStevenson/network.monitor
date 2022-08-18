@@ -2,8 +2,10 @@
 
 namespace netmon.core.Interfaces
 {
-    public interface IPingResponseModelStorageOrchestrator
+    public interface IStorageOrchestrator<T>
     {
-        Task Store(PingResponseModel item);
+        Task Store(T item);
+
+        Task MoveFilesToObjectStorage(CancellationToken cancellationToken);
     }
 }

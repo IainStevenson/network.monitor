@@ -1,4 +1,6 @@
-﻿using netmon.core.Configuration;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Serialisation;
 using System.Diagnostics.CodeAnalysis;
