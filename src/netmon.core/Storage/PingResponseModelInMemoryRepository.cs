@@ -36,7 +36,7 @@ namespace netmon.core.Storage
         {
             if (_storage.ContainsKey(id))
             {
-                Task.FromResult(_storage[id]);
+                return Task.FromResult(_storage[id]);
             }
             return Task.FromResult(null as PingResponseModel);
         }

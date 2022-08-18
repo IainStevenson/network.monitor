@@ -57,19 +57,19 @@ namespace netmon.core.tests.Integration.Orchestrators
         [Category("Integration")]
         public void OnStoreItShouldContainTheAddedItems()
         {
-            foreach (IFileSystemQuery respository in _respositories)
+            foreach (IFileSystemQuery respository in _respositories.Where( w=> w.GetType().IsAssignableTo(typeof(IFileSystemQuery))))
             {
                 var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
-                Assert.That(respository.GetFileInformationAsync(pattern).Count, Is.EqualTo(0));
+                Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(0));
             }
             AddWorldAddressesTestData();
 
-            foreach (IFileSystemQuery respository in _respositories)
+            foreach (IFileSystemQuery respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemQuery))))
             {
                 var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
 
 
-                Assert.That(respository.GetFileInformationAsync(pattern).Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
+                Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
             }
 
 

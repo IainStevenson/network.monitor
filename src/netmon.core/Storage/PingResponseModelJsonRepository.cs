@@ -60,11 +60,11 @@ namespace netmon.core.Storage
         public Task<PingResponseModel?> RetrieveAsync(Guid id)
         {
             PingResponseModel? response = null;
-            var itemfileName = $@"{_storageFolder.FullName}{_storageSystemFolderDelimiter}*-*-{id}.json";
+            var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
             if (filesFound.Any())
             {
-                response = JsonConvert.DeserializeObject<PingResponseModel>(File.ReadAllText(filesFound.First().FullName));
+                response = JsonConvert.DeserializeObject<PingResponseModel>(File.ReadAllText(filesFound.First().FullName), _settings);
             }
 
             return Task.FromResult(response);

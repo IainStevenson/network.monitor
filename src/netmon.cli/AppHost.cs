@@ -109,7 +109,7 @@ namespace netmon.cli
                         {
                             var respositories = provider.GetServices<IRepository>(); // get em all
                             var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
-                            return new PingResponseModelStorageOrchestrator(respositories, logger);
+                            return new PingResponseModelStorageOrchestrator(respositories, logger, provider.GetRequiredService<JsonSerializerSettings>());
                         })
                     .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
                     ;
