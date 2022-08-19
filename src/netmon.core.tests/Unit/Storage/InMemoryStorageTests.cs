@@ -1,12 +1,14 @@
-﻿using netmon.core.Messaging;
+﻿using MongoDB.Driver;
+using netmon.core.Messaging;
 using netmon.core.Storage;
 using System.Net;
 
 namespace netmon.core.tests.Integration.Storage
 {
+    [TestFixture]
     public class InMemoryStorageTests : TestBase<PingResponseModelInMemoryRepository>
     {
-        private  PingResponses _TestData = new();
+        private PingResponses _TestData = new();
         [SetUp]
         public override void Setup()
         {
@@ -38,20 +40,20 @@ namespace netmon.core.tests.Integration.Storage
         [Category("Unit")]
         public async Task OnStoreItShouldContainTheAddedItems()
         {
-            
+
             AddWorldAddressesTestData();
 
-            foreach(var item in _TestData)
+            foreach (var item in _TestData)
             {
                 var response = await _unit.RetrieveAsync(item.Value.Id);
                 Assert.That(response, Is.Not.Null);
                 Assert.That(response.Id, Is.EqualTo(item.Value.Id));
             }
 
-            
+
         }
 
 
-       
+
     }
 }

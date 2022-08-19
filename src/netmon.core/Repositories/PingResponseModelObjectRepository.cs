@@ -1,7 +1,6 @@
 ﻿using netmon.core.Models;
 using MongoDB.Driver;
 using netmon.core.Interfaces.Repositories;
-using MongoDB.Bson;
 
 namespace netmon.core.Storage
 {
@@ -22,19 +21,16 @@ namespace netmon.core.Storage
 
         public async Task StoreAsync(PingResponseModel item)
         {
-            var exists = await _collection.FindAsync<PingResponseModel>(new ExpressionFilterDefinition<PingResponseModel>(i => i.Id == item.Id));
+            var filter = new ExpressionFilterDefinition<PingResponseModel>(i => i.Id == item.Id);
 
-            if (exists.Current.Any())
+            var options = new ReplaceOptions
             {
-                await _collection.ReplaceOneAsync(r => r.Id == item.Id, item);
-            }
-            else
-            {
-                await _collection.InsertOneAsync(item, new InsertOneOptions
-                {
-                    BypassDocumentValidation = _byPassDocumentValidation
-                });
-            }
+                BypassDocumentValidation = _byPassDocumentValidation,
+                IsUpsert = true,
+            };
+
+            await  _collection.ReplaceOneAsync(filter, item, options);
+
 
         }
     }
