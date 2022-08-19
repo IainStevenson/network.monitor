@@ -15,24 +15,20 @@ using Newtonsoft.Json;
 
 internal class AppHost : IHostedService
 {
-    //private IServiceCollection _services;
-    //private IHostEnvironment _hostingEnvironment;
     private readonly ServiceProvider _serviceProvider;
     private AppOptions _options;
     private readonly ILogger<AppHost> _logger;
-    
-    private readonly IStorageOrchestrator<PingResponseModel> _storageOrchestrator;
-
-
+    private readonly IRestorageOrchestrator<PingResponseModel> _storageOrchestrator;
     public AppHost(IServiceCollection services, IHostEnvironment hostingEnvironment, string[] args)
     {
         _options = new();
         var configurationRoot = BootstrapConfiguration(hostingEnvironment.EnvironmentName, args).Build();
         _serviceProvider = BootstrapApplication(services, configurationRoot);
         _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
-        _storageOrchestrator = _serviceProvider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>();
+        _storageOrchestrator = _serviceProvider.GetRequiredService<IRestorageOrchestrator<PingResponseModel>>();
 
     }
+
     /// <summary>
     /// Provides the necessary configuration builder
     /// </summary>
@@ -48,6 +44,7 @@ internal class AppHost : IHostedService
 
                         ;
     }
+
     /// <summary>
     /// Sets up all the application modules in the Dependency injection container.
     /// </summary>
@@ -56,7 +53,7 @@ internal class AppHost : IHostedService
     private ServiceProvider BootstrapApplication(IServiceCollection services, IConfigurationRoot configurationRoot)
     {
 
-        BsonClassMap.RegisterClassMap<PingResponseModel>( cm =>
+        BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
         {
             cm.AutoMap();
             //cm.MapIdMember( c=>c.Id);
@@ -64,8 +61,8 @@ internal class AppHost : IHostedService
         });
 
         _options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
-       
-        
+
+
 
         if (!_options.StorageFolder.Exists) throw new ArgumentException("OutputPath");
 
@@ -82,7 +79,7 @@ internal class AppHost : IHostedService
 
                                     });
                                 })
-            .AddSingleton<JsonSerializerSettings>(x =>
+            .AddSingleton(x =>
             {
                 var settings = new JsonSerializerSettings();
                 settings.Converters.Add(new IPAddressConverter());
@@ -92,38 +89,32 @@ internal class AppHost : IHostedService
                 return settings;
 
             })
-            .AddSingleton<IRepository>(provider =>
+            .AddSingleton<IFileSystemRepository>(provider =>
             {
-                return new PingResponseModelJsonRepository(_options.StorageFolder, 
-                        provider.GetRequiredService<JsonSerializerSettings>(), 
+                return new PingResponseModelJsonRepository(_options.StorageFolder,
+                        provider.GetRequiredService<JsonSerializerSettings>(),
                         _options.FolderDelimiter);
-            })
-            .AddSingleton<IRepository>(provider =>
+            })            
+            .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
             {
-                return new PingResponseModelObjectRepository(_options.StorageService.ConnectionString, "netmon", "ping");
+                var client = new MongoDB.Driver.MongoClient(_options.StorageService.ConnectionString);
+                var database = client.GetDatabase("netmon");
+                var collection = database.GetCollection<PingResponseModel>("ping");
+                return new PingResponseModelObjectRepository(collection);
             })
-            .AddSingleton<IStorageOrchestrator<PingResponseModel>>(
-                (provider) =>
-                {
-                    var respositories = provider.GetServices<IRepository>(); // get em all
-                    var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
-                    return new PingResponseModelStorageOrchestrator(respositories, logger, provider.GetRequiredService<JsonSerializerSettings>());
-                })
-            .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
+            .AddSingleton<IRestorageOrchestrator<PingResponseModel>, PingResponseModelReStorageOrchestrator>()
             ;
         return services.BuildServiceProvider();
     }
 
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-
 
         _logger.LogTrace("Moving Files from .. {path} to {connection}",
                                                 _options.OutputPath,
                                                 _options.StorageService.ConnectionString
                                                  );
-        
+
         while (!cancellationToken.IsCancellationRequested) // until cancelled
         {
             await _storageOrchestrator.MoveFilesToObjectStorage(cancellationToken);

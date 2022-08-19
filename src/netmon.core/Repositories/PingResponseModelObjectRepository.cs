@@ -13,13 +13,11 @@ namespace netmon.core.Storage
         public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store;
 
         private readonly bool? _byPassDocumentValidation = true;
-        private readonly MongoClient _dbClient;
         private readonly IMongoCollection<PingResponseModel> _collection;
 
-        public PingResponseModelObjectRepository(string connectionString, string databaseName, string collectionName)
-        {
-            _dbClient = new MongoClient(connectionString);
-            _collection = _dbClient.GetDatabase(databaseName).GetCollection<PingResponseModel>(collectionName);
+        public PingResponseModelObjectRepository(IMongoCollection<PingResponseModel> collection)
+        {            
+            _collection = collection;
         }
 
         public async Task StoreAsync(PingResponseModel item)

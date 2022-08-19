@@ -2,8 +2,6 @@
 {
     public interface IStorageOrchestrator<T>
     {
-        Task Store(T item);
-
-        Task MoveFilesToObjectStorage(CancellationToken cancellationToken);
+        Task Store(T item);       
     }
 }
