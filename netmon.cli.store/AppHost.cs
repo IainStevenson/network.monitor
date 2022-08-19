@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using MongoDB.Bson.Serialization;
 using netmon.cli;
+using netmon.core.Configuration;
 using netmon.core.Interfaces;
 using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
@@ -94,7 +95,7 @@ internal class AppHost : IHostedService
                 return new PingResponseModelJsonRepository(_options.StorageFolder,
                         provider.GetRequiredService<JsonSerializerSettings>(),
                         _options.FolderDelimiter);
-            })            
+            })
             .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
             {
                 var client = new MongoDB.Driver.MongoClient(_options.StorageService.ConnectionString);
@@ -103,6 +104,26 @@ internal class AppHost : IHostedService
                 return new PingResponseModelObjectRepository(collection);
             })
             .AddSingleton<IRestorageOrchestrator<PingResponseModel>, PingResponseModelReStorageOrchestrator>()
+            .AddSingleton(provider =>
+                {
+                    var instance = new Dictionary<MonitorModes, IMonitorSubOrchestrator>();
+                    instance.Add(MonitorModes.PingOnly, new MonitorPingSubOrchestrator(
+                            provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
+                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
+                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()
+                            ));
+                    instance.Add(MonitorModes.TraceRoute, new MonitorTraceRouteSubOrchestrator(
+                            provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
+                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
+                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()));
+                    instance.Add(MonitorModes.TraceRouteThenPing, new MonitorTraceRouteThenPingSubOrchestrator(
+                        provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
+                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
+                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()
+                        ));
+                    return instance;
+                }
+            )
             ;
         return services.BuildServiceProvider();
     }

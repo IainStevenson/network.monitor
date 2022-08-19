@@ -54,9 +54,9 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
             _unit = new MonitorOrchestrator(
-                _traceRouteOrchestrator,
-                _pingOrchestrator,
-                _pingResponseModelStorageOrchestrator,
+                //_traceRouteOrchestrator,
+                //_pingOrchestrator,
+                //_pingResponseModelStorageOrchestrator,
                 _monitorOrchestratorLogger);
         }
 
@@ -89,9 +89,9 @@ namespace netmon.core.tests.Integration.Orchestrators
 
 
             return new MonitorOrchestrator(
-                    _traceRouteOrchestrator,
-                    _pingOrchestrator,
-                    _pingResponseModelStorageOrchestrator,
+                    //_traceRouteOrchestrator,
+                    //_pingOrchestrator,
+                    //_pingResponseModelStorageOrchestrator,
                     _monitorOrchestratorLogger);
         }
 

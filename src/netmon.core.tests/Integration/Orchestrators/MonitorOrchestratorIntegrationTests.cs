@@ -23,6 +23,13 @@ namespace netmon.core.tests.Integration.Orchestrators
         private ILogger<PingHandler> _pingLogger;
         private ILogger<MonitorOrchestrator> _monitorOrchestratorLogger;
         private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
+
+
+        private IMonitorSubOrchestrator _monitorPingOnlySubOrchestrator;
+        private IMonitorSubOrchestrator _monitorTraceRouteSubOrchestrator;
+        private IMonitorSubOrchestrator _monitorTraceRouteThenPingSubOrchestrator;
+        
+        
         private readonly List<IPAddress> _monitorLoopbackAddresses = new() { IPAddress.Parse("127.0.0.1") };
         private readonly TimeSpan _testUntil = new(0, 0, 2); //would use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
 
@@ -35,6 +42,8 @@ namespace netmon.core.tests.Integration.Orchestrators
         public override void Setup()
         {
             base.Setup();
+
+
             // unit setup - need to get more interfaces going and uses mocking.
             _pingHandlerOptions = new PingHandlerOptions();
             _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
@@ -50,13 +59,21 @@ namespace netmon.core.tests.Integration.Orchestrators
             _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
             _pingResponseModelStorageOrchestrator = Substitute.For<IStorageOrchestrator<PingResponseModel>>();// for the moment mock out the storage.
 
+            // need to test individually each sub orchestrator
+            // and then mock here the sub orchestrators using this test as a template.
+            //var subOrchestrators = new Dictionary<MonitorModes, IMonitorOrchestrator>();
+
+            _monitorPingOnlySubOrchestrator = Substitute.For<IMonitorSubOrchestrator>();
+            _monitorPingOnlySubOrchestrator = Substitute.For<IMonitorSubOrchestrator>();
+            _monitorTraceRouteThenPingSubOrchestrator = Substitute.For<IMonitorSubOrchestrator>();
 
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
-            _unit = new MonitorOrchestrator(
-                _traceRouteOrchestrator,
-                _pingOrchestrator,
-                _pingResponseModelStorageOrchestrator,
-                _monitorOrchestratorLogger);
+            Dictionary<MonitorModes, IMonitorSubOrchestrator> subOrchestrators = new Dictionary<MonitorModes, IMonitorSubOrchestrator>();
+            subOrchestrators.Add(MonitorModes.PingOnly, _monitorPingOnlySubOrchestrator);
+            subOrchestrators.Add(MonitorModes.TraceRoute, _monitorTraceRouteSubOrchestrator);
+            subOrchestrators.Add(MonitorModes.TraceRouteThenPing, _monitorTraceRouteThenPingSubOrchestrator);
+
+            _unit = new MonitorOrchestrator(subOrchestrators, _monitorOrchestratorLogger);
         }
 
 
@@ -72,7 +89,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             PingResponses storedResponses = new();
 
             _pingResponseModelStorageOrchestrator.When(it => it.Store(Arg.Any<PingResponseModel>()))
-                .Do(doit => 
+                .Do(doit =>
                     storedResponses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(
                         doit.Arg<PingResponseModel>().Start, doit.Arg<PingResponseModel>().Request.Address), doit.Arg<PingResponseModel>()));
 
@@ -96,7 +113,7 @@ namespace netmon.core.tests.Integration.Orchestrators
         public async Task OnExecuteNextTimeItJustMonitorsSpecifiedAddresses()
         {
 
-            await _unit.Execute(MonitorModes.PingOnly, _monitorLoopbackAddresses, _testUntil,  _cancellationToken);
+            await _unit.Execute(MonitorModes.PingOnly, _monitorLoopbackAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
 
@@ -105,8 +122,8 @@ namespace netmon.core.tests.Integration.Orchestrators
 
         }
 
-       
-      
+
+
 
     }
 }
