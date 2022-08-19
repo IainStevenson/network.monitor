@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using netmon.core.Configuration;
-using netmon.core.Data;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
 using netmon.core.Messaging;
@@ -8,7 +7,6 @@ using netmon.core.Models;
 using netmon.core.Orchestrators;
 using NSubstitute;
 using System.Net;
-using System.Net.NetworkInformation;
 
 namespace netmon.core.tests.Integration.Orchestrators
 {

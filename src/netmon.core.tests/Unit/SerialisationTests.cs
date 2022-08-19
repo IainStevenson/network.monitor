@@ -1,5 +1,4 @@
-﻿using netmon.core.Data;
-using netmon.core.Models;
+﻿using netmon.core.Models;
 using netmon.core.Serialisation;
 using Newtonsoft.Json;
 using System.Net;

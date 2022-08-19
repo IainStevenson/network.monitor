@@ -1,11 +1,8 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using netmon.core.Configuration;
+﻿using netmon.core.Configuration;
 using netmon.core.Data;
 using netmon.core.Serialisation;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace netmon.core.Models

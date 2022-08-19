@@ -7,6 +7,7 @@ using MongoDB.Bson.Serialization;
 using netmon.core.Configuration;
 using netmon.core.Handlers;
 using netmon.core.Interfaces;
+using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
 using netmon.core.Orchestrators;
 using netmon.core.Serialisation;

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Interfaces;
+using netmon.core.Interfaces.Repositories;
 using netmon.core.Messaging;
-using netmon.core.Models;
 using netmon.core.Orchestrators;
 using netmon.core.Storage;
 using NSubstitute;
@@ -57,14 +56,14 @@ namespace netmon.core.tests.Integration.Orchestrators
         [Category("Integration")]
         public void OnStoreItShouldContainTheAddedItems()
         {
-            foreach (IFileSystemQuery respository in _respositories.Where( w=> w.GetType().IsAssignableTo(typeof(IFileSystemQuery))))
+            foreach (IFileSystemRepository respository in _respositories.Where( w=> w.GetType().IsAssignableTo(typeof(IFileSystemRepository))))
             {
                 var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
                 Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(0));
             }
             AddWorldAddressesTestData();
 
-            foreach (IFileSystemQuery respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemQuery))))
+            foreach (IFileSystemRepository respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemRepository))))
             {
                 var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
 

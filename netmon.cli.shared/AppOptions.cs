@@ -1,5 +1,4 @@
 ﻿using netmon.core.Configuration;
-using netmon.core.Data;
 using Newtonsoft.Json;
 using System.Net;
 

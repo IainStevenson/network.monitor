@@ -1,6 +1,4 @@
-﻿using netmon.core.Models;
-
-namespace netmon.core.Interfaces
+﻿namespace netmon.core.Interfaces
 {
     public interface IStorageOrchestrator<T>
     {

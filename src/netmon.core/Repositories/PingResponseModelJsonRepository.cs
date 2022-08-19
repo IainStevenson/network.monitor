@@ -1,15 +1,24 @@
-﻿using netmon.core.Interfaces;
+﻿using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
 using Newtonsoft.Json;
 using System.Diagnostics;
 
 namespace netmon.core.Storage
 {
+    /// <summary>
+    /// The single responsibiity of this class is to;
+    /// store (insert or update) [upsert] 
+    /// retrieve or 
+    /// delete an instance of <see cref="PingResponseModel"/>, 
+    /// or retieve an <see cref="IEnumerable{T}"/> of them using an instance keys or using a <see cref="Func{T, TResult}"/> query.
+    /// </summary>
     public class PingResponseModelJsonRepository :
         IStorageRepository<Guid, PingResponseModel>,
         IRetrieveRepository<Guid, PingResponseModel>,
-        IDeletionRepository<Guid, PingResponseModel>, IRepository, IFileSystemQuery
+        IDeletionRepository<Guid, PingResponseModel>, IRepository, IFileSystemRepository
     {
+        public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store ^ RepositoryCapabilities.Retrieve ^ RepositoryCapabilities.Delete;
+
         private readonly DirectoryInfo _storageFolder;
         private readonly JsonSerializerSettings _settings;
         private readonly string _storageSystemFolderDelimiter;
@@ -19,17 +28,11 @@ namespace netmon.core.Storage
             _storageFolder = storageFolder;
             _settings = settings;
             _storageSystemFolderDelimiter = storageSystemFolderDelimiter;
-
         }
-
-        public RepositoryCapabilities Capabilities =>
-            RepositoryCapabilities.Store ^
-            RepositoryCapabilities.Retrieve ^
-            RepositoryCapabilities.Delete;
 
         public Task DeleteAsync(Guid id)
         {
-            var itemfileName = $@"{_storageFolder.FullName}{_storageSystemFolderDelimiter}*-*-{id}.json";
+            var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
             if (filesFound.Any())
             {
@@ -37,18 +40,16 @@ namespace netmon.core.Storage
             }
             return Task.FromResult(0);
         }
-        //[DebuggerStepThrough]
+
+        [DebuggerStepThrough]
         public Task<string> GetFileDataAsync(string fullFileName)
         {
             try
             {
                 return Task.FromResult(File.ReadAllText(fullFileName));
             }
-            catch
-            {
+            catch { } // return empty and worry about it next time.
 
-
-            }
             return Task.FromResult(String.Empty);
         }
 
@@ -57,24 +58,31 @@ namespace netmon.core.Storage
             return Task.FromResult(_storageFolder.EnumerateFiles(pattern, SearchOption.TopDirectoryOnly));
         }
 
-        public Task<PingResponseModel?> RetrieveAsync(Guid id)
+        public Task<PingResponseModel> RetrieveAsync(Guid id)
         {
-            PingResponseModel? response = null;
+            PingResponseModel response = new() { Id = Guid.Empty };
             var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
             if (filesFound.Any())
             {
-                response = JsonConvert.DeserializeObject<PingResponseModel>(File.ReadAllText(filesFound.First().FullName), _settings);
+                var json = File.ReadAllText(filesFound.First().FullName);
+                json ??= JsonConvert.SerializeObject(response);
+                response = RehydrateResponse(json)?? response;;
             }
 
             return Task.FromResult(response);
         }
 
+        private PingResponseModel? RehydrateResponse(string json)
+        {
+            return JsonConvert.DeserializeObject<PingResponseModel>(json, _settings);
+        }
+
         public Task StoreAsync(PingResponseModel item)
         {
+            var data = JsonConvert.SerializeObject(item, _settings);
             var timestamp = $"{item.Start:o}";
             var itemfileName = $@"{_storageFolder.FullName}{_storageSystemFolderDelimiter}{timestamp.Replace(":", "-")}-{item.Request.Address}-{item.Id}.json";
-            var data = JsonConvert.SerializeObject(item, _settings);
             File.WriteAllText(itemfileName, data);
             return Task.FromResult(0);
         }

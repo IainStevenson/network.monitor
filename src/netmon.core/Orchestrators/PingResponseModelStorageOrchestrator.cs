@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using netmon.core.Interfaces;
+using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
 using netmon.core.Storage;
 using Newtonsoft.Json;
@@ -56,8 +57,8 @@ namespace netmon.core.Orchestrators
 
 
 
-            List<FileInfo> filesFound = new List<FileInfo>();
-            var jsonFileRepository = jsonRepository as IFileSystemQuery;
+            List<FileInfo> filesFound = new();
+            var jsonFileRepository = jsonRepository as IFileSystemRepository;
             // if (jsonFileRepository != null)
             //{
             filesFound = (await jsonFileRepository.GetFileInformationAsync("*.json")).ToList();
@@ -73,7 +74,7 @@ namespace netmon.core.Orchestrators
                 {
                     var result = await GetItemFromAppropriateRepositoryAsync(guidValue, file, jsonFileRepository, jsonRepository);
 
-                    if (result.Item1 == null) break;
+                    if (result.Item1.Id == Guid.Empty) break;
 
                     await objectRepository.StoreAsync(result.Item1);
 
@@ -92,33 +93,31 @@ namespace netmon.core.Orchestrators
             }
         }
 
-        private string GetGuidValueFromFileName(FileInfo file)
+        private static string GetGuidValueFromFileName(FileInfo file)
         {
+            //                                                  <- this is what we are after ------>
             // 2022-08-18T12-51-24.0788798+00-00-173.231.129.65-4f6ef62f-982d-4ad1-9dbf-bfcc85c40265.json
-
+            // we should realy work out a regular expression to expose it as a match but that is tricky!
 
             var identifier = new StringBuilder(file.Name.Replace(file.Extension, ""));
-            
+
             // 2022-08-18T12-51-24.0788798+00-00-173.231.129.65-4f6ef62f-982d-4ad1-9dbf-bfcc85c40265
             // 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
             // 000000000011111111112222222222333333333344444444445555555555666666666677777777778888888888
-            identifier.Remove(0, 34);    // remove datetimeoffset-
-
+            //                                  ^
+            identifier.Remove(0, 34);    // remove datetimeoffset + '-
 
             // 173.231.129.65-4f6ef62f-982d-4ad1-9dbf-bfcc85c40265
             // 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
             // 000000000011111111112222222222333333333344444444445555555555666666666677777777778888888888
 
             var lengthOfAddress = identifier.ToString().Split('-').First().Length;
-            identifier.Remove(0,lengthOfAddress + 1);
+            identifier.Remove(0, lengthOfAddress + 1);
 
             return identifier.ToString();
-
-
-           // return file.Name.Split('.').First().Split('-').Last(); // before extension, end of name, older files are not translatable to Guid so the new class will create one on deeserlialisation 
         }
 
-        private async Task DeleteFileAsync(Guid fileItemId, FileInfo file, IFileSystemQuery jsonFileRepository, IDeletionRepository<Guid, PingResponseModel> jsonRepository)
+        private static async Task DeleteFileAsync(Guid fileItemId, FileInfo file, IFileSystemRepository jsonFileRepository, IDeletionRepository<Guid, PingResponseModel> jsonRepository)
         {
             if (fileItemId == Guid.Empty)
             {
@@ -130,11 +129,12 @@ namespace netmon.core.Orchestrators
             }
         }
 
-        private async Task<(PingResponseModel?, Guid)> GetItemFromAppropriateRepositoryAsync(string guidValue, 
-                                                    FileInfo file, 
-                                                    IFileSystemQuery jsonFileRepository, 
-                                                    IRetrieveRepository<Guid,PingResponseModel> jsonRepository)
+        private async Task<(PingResponseModel, Guid)> GetItemFromAppropriateRepositoryAsync(string guidValue,
+                                                    FileInfo file,
+                                                    IFileSystemRepository jsonFileRepository,
+                                                    IRetrieveRepository<Guid, PingResponseModel> jsonRepository)
         {
+            PingResponseModel response = new() { Id = Guid.Empty };
             if (Guid.TryParse(guidValue, out Guid fileItemId))
             {
                 return (await jsonRepository.RetrieveAsync(fileItemId), fileItemId);
@@ -143,9 +143,9 @@ namespace netmon.core.Orchestrators
             {
                 var json = await jsonFileRepository.GetFileDataAsync(file.FullName);
                 if (!string.IsNullOrEmpty(json))
-                    return (JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings), fileItemId);
+                    return (JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings) ?? response, fileItemId);
             }
-            return (null, Guid.Empty);
+            return (response, Guid.Empty);
         }
     }
 }

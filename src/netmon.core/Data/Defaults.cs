@@ -1,7 +1,6 @@
 ﻿using netmon.core.Serialisation;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 
 namespace netmon.core.Data

@@ -1,4 +1,4 @@
-﻿using netmon.core.Interfaces;
+﻿using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
 using System.Collections.Concurrent;
 
@@ -9,38 +9,32 @@ namespace netmon.core.Storage
     /// Implements and in memory store of <see cref="PingRequestModel"/>. 
     /// Stores the resusts of pings of target addresses.
     /// </summary>
-    public class PingResponseModelInMemoryRepository : 
-            IStorageRepository<Guid, PingResponseModel>, 
+    public class PingResponseModelInMemoryRepository :
+            IStorageRepository<Guid, PingResponseModel>,
             IRetrieveRepository<Guid, PingResponseModel>,
             IDeletionRepository<Guid, PingResponseModel>, IRepository
     {
+        public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store ^ RepositoryCapabilities.Retrieve ^ RepositoryCapabilities.Delete;
+        
         private readonly ConcurrentDictionary<Guid, PingResponseModel> _storage = new();
 
         public Task DeleteAsync(Guid id)
         {
-            
             if (_storage.ContainsKey(id))
             {
-                _storage.Remove(id, out _);
+                _= _storage.Remove(id, out _);
             }
             return Task.FromResult(0);
         }
 
-        public RepositoryCapabilities Capabilities =>
-            RepositoryCapabilities.Store ^
-            RepositoryCapabilities.Retrieve ^
-            RepositoryCapabilities.Delete;
-
-
-        public Task<PingResponseModel?> RetrieveAsync(Guid id)
+        public Task<PingResponseModel> RetrieveAsync(Guid id)
         {
             if (_storage.ContainsKey(id))
             {
                 return Task.FromResult(_storage[id]);
             }
-            return Task.FromResult(null as PingResponseModel);
+            return Task.FromResult(new PingResponseModel() { Id = Guid.Empty});
         }
-
 
         public Task StoreAsync(PingResponseModel item)
         {
@@ -54,8 +48,5 @@ namespace netmon.core.Storage
             }
             return Task.FromResult(0);
         }
-
-       
     }
-
 }
