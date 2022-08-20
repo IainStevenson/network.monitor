@@ -5,24 +5,46 @@ using System.Net;
 
 namespace netmon.core.Orchestrators
 {
-    public class MonitorPingSubOrchestrator : MonitorBaseSubOrchestrator
-    {
-        public MonitorPingSubOrchestrator(IStorageOrchestrator<PingResponseModel> pingResponseModelStorageOrchestrator,
-                ITraceRouteOrchestrator traceRouteOrchestrator,
-                IPingOrchestrator pingOrchestrator,
-               ILogger<MonitorBaseSubOrchestrator> logger) : base(pingResponseModelStorageOrchestrator, traceRouteOrchestrator, pingOrchestrator, logger)
-        { }
 
-        public async override Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+    /// <summary>
+    /// Continuously pings the specified addresses until cancelled or the specified period has passsed. Recording results via the Storage orchestrator.
+    /// </summary>
+    public class MonitorPingSubOrchestrator : IMonitorSubOrchestrator
+    {
+        private readonly IPingOrchestrator _pingOrchestrator;
+        private readonly IStorageOrchestrator<PingResponseModel> _pingResponseModelStorageOrchestrator;
+        private readonly ILogger<MonitorPingSubOrchestrator> _logger;
+
+        public MonitorPingSubOrchestrator(IStorageOrchestrator<PingResponseModel> pingResponseModelStorageOrchestrator,
+                IPingOrchestrator pingOrchestrator,
+               ILogger<MonitorPingSubOrchestrator> logger)
         {
-            _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(), until, cancellationToken);
-            }
-            _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
+            _pingResponseModelStorageOrchestrator = pingResponseModelStorageOrchestrator;
+            _pingOrchestrator = pingOrchestrator;
+            _logger = logger;
         }
 
+        public event EventHandler<SubOrchestratorEventArgs>? Reset; // TODO, Address this perhaps as another interface
+
+        public async  Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        {
+            if (addressesToMonitor.Any())
+            {
+                _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(), until, cancellationToken);
+                }
+                _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
+            }
+        }
+
+        private void StoreResutlsAsTheyComeIn(object? source, PingResponseModelEventArgs? e)
+        {
+            if (e == null) return;
+
+            _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
+        }      
 
     }
 }

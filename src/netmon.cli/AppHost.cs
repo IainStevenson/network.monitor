@@ -18,10 +18,16 @@ namespace netmon.cli
 {
     public class AppHost : IHostedService
     {
+        private readonly object _resettingObject = new();
+        private bool _continuing = true;
+        private DateTimeOffset _resetTime;
+        private const int _cancellationThreadSleepTime = 500; 
         private readonly ServiceProvider _serviceProvider;
         private readonly ILogger<AppHost> _logger;
+        private readonly IEnumerable<IMonitorSubOrchestrator> _monitors;
         private readonly IMonitorOrchestrator _monitorOrchestrator;
         private AppOptions _options;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public AppHost(IServiceCollection services, IHostEnvironment environment, string[] args)
         {
@@ -30,6 +36,8 @@ namespace netmon.cli
             _serviceProvider = BootstrapApplication(services, config);
             _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
             _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
+            _monitors = _serviceProvider.GetServices<IMonitorSubOrchestrator>(); // get em all
+            _cancellationTokenSource = _serviceProvider.GetRequiredService<CancellationTokenSource>();
         }
 
         /// <summary>
@@ -59,8 +67,8 @@ namespace netmon.cli
                 cm.AutoMap();
                 //cm.MapIdMember(c => c.Id);
                 cm.SetIgnoreExtraElements(true);
-            }); 
-            
+            });
+
             _options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
 
             var storageDirectory = new DirectoryInfo(_options.OutputPath);
@@ -80,6 +88,7 @@ namespace netmon.cli
                         });
                     }
                     )
+                    .AddSingleton<CancellationTokenSource>()
                     .AddSingleton<PingHandlerOptions>() // the defaults are good here
                     .AddSingleton<TraceRouteOrchestratorOptions>()// the defaults are good here
                     .AddSingleton<PingOrchestratorOptions>() // the defaults are good here
@@ -87,7 +96,7 @@ namespace netmon.cli
                     .AddTransient<IPingHandler, PingHandler>()
                     .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
                     .AddSingleton<IPingOrchestrator, PingOrchestrator>()
-                    .AddSingleton<JsonSerializerSettings>( x=>
+                    .AddSingleton<JsonSerializerSettings>(x =>
                     {
                         var settings = new JsonSerializerSettings();
                         settings.Converters.Add(new IPAddressConverter());
@@ -112,6 +121,9 @@ namespace netmon.cli
                             var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
                             return new PingResponseModelStorageOrchestrator(respositories, logger, provider.GetRequiredService<JsonSerializerSettings>());
                         })
+                    .AddSingleton<IMonitorSubOrchestrator, MonitorTraceRouteThenPingSubOrchestrator>()
+                    .AddSingleton<IMonitorSubOrchestrator, MonitorTraceRouteSubOrchestrator>()
+                    .AddSingleton<IMonitorSubOrchestrator, MonitorPingSubOrchestrator>()
                     .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
                     ;
 
@@ -133,18 +145,48 @@ namespace netmon.cli
                                                     _options.Mode
                                                      );
 
+            foreach (var monitor in _monitors)
+            {
+                monitor.Reset += Monitor_Reset;
+            }
 
-            await _monitorOrchestrator.Execute(_options.Mode,
+
+            while (_continuing)
+            {
+                await _monitorOrchestrator.Execute(_options.Mode,
                                                     _options.IPAddresses,
                                                     _options.Until,
                                                     cancellationToken);
+                _continuing = false;
 
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(1000, cancellationToken);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
             }
+
+
+            foreach (var monitor in _monitors)
+            {
+                monitor.Reset -= Monitor_Reset;
+            }
+
         }
+
+        private void Monitor_Reset(object? sender, SubOrchestratorEventArgs e)
+        {
+            if (_resetTime.AddMinutes(2) > DateTimeOffset.UtcNow) return; // ignore repeats too soon
+            lock (_resettingObject)
+            {
+                if (_continuing) return; // already done
+                _continuing = true;
+                _resetTime = DateTimeOffset.UtcNow;
+                _cancellationTokenSource.Cancel();
+            }
+            Thread.Sleep(_cancellationThreadSleepTime);
+        }
+
+     
 
         public Task StopAsync(CancellationToken cancellationToken)
         {

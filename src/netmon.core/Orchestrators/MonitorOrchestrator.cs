@@ -11,7 +11,7 @@ namespace netmon.core.Orchestrators
     /// </summary>
     public class MonitorOrchestrator : IMonitorOrchestrator
     {
-        private Dictionary<MonitorModes, IMonitorSubOrchestrator> _monitors;
+        private readonly Dictionary<MonitorModes, IMonitorSubOrchestrator> _monitors;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
         public MonitorOrchestrator(Dictionary<MonitorModes, IMonitorSubOrchestrator> monitors,
@@ -23,8 +23,9 @@ namespace netmon.core.Orchestrators
         }
 
         /// <summary>
-        /// Continuously ping the addresses until the time has expired.
+        /// Handle the requested mode for the monitor session.
         /// </summary>
+        /// <param name="mode">The monitoring mode requried.</param>
         /// <param name="addressesToMonitor">The addresses to ping.</param>
         /// <param name="until">The time span to continue monitoring over. 
         /// should use this for continuous use: var forEver = new TimeSpan(DateTimeOffset.MaxValue.Ticks - DateTimeOffset.UtcNow.Ticks);
@@ -34,6 +35,7 @@ namespace netmon.core.Orchestrators
         /// <returns>An instance of <see cref="Task"/>.</returns>
         public async Task Execute(MonitorModes mode, List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
+            _logger.LogTrace("Handling call with orchestrator for {mode}", mode);
             await _monitors[mode].Handle(addressesToMonitor, until, cancellationToken);
         }
     }

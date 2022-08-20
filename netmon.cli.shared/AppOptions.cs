@@ -27,7 +27,7 @@ namespace netmon.cli
 
         public TimeSpan Until { get; set; } = new(DateTimeOffset.UtcNow.AddYears(99).Ticks);
 
-        public MonitorModes Mode { get; set; } = MonitorModes.TraceRouteThenPing;
+        public MonitorModes Mode { get; set; } = MonitorModes.TraceRouteThenPingContinuously;
 
         public string OutputPath { get; set; }
         public StorageServiceOptions StorageService { get; set; } = new StorageServiceOptions();

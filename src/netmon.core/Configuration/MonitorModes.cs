@@ -2,8 +2,8 @@
 {
     public enum MonitorModes
     {
-        TraceRoute,
-        TraceRouteThenPing,
-        PingOnly
+        TraceRouteContinuously,
+        TraceRouteThenPingContinuously,
+        PingContinuously
     }
 }

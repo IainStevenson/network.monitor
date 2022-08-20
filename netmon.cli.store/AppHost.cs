@@ -106,21 +106,32 @@ internal class AppHost : IHostedService
             .AddSingleton<IRestorageOrchestrator<PingResponseModel>, PingResponseModelReStorageOrchestrator>()
             .AddSingleton(provider =>
                 {
-                    var instance = new Dictionary<MonitorModes, IMonitorSubOrchestrator>();
-                    instance.Add(MonitorModes.PingOnly, new MonitorPingSubOrchestrator(
+                    var instance = new Dictionary<MonitorModes, IMonitorSubOrchestrator>
+                    {
+                        {
+                            MonitorModes.PingContinuously,
+                            new MonitorPingSubOrchestrator(
                             provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
-                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()
-                            ));
-                    instance.Add(MonitorModes.TraceRoute, new MonitorTraceRouteSubOrchestrator(
+                            provider.GetRequiredService<IPingOrchestrator>(),
+                            provider.GetRequiredService<ILogger<MonitorPingSubOrchestrator>>()
+                            )
+                        },
+                        {
+                            MonitorModes.TraceRouteContinuously,
+                            new MonitorTraceRouteSubOrchestrator(
                             provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
-                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()));
-                    instance.Add(MonitorModes.TraceRouteThenPing, new MonitorTraceRouteThenPingSubOrchestrator(
+                            provider.GetRequiredService<ITraceRouteOrchestrator>(),
+                            provider.GetRequiredService<ILogger<MonitorTraceRouteSubOrchestrator>>())
+                        },
+                        {
+                            MonitorModes.TraceRouteThenPingContinuously,
+                            new MonitorTraceRouteThenPingSubOrchestrator(
                         provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
                             provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorBaseSubOrchestrator>>()
-                        ));
+                            provider.GetRequiredService<ILogger<MonitorTraceRouteThenPingSubOrchestrator>>()
+                        )
+                        }
+                    };
                     return instance;
                 }
             )

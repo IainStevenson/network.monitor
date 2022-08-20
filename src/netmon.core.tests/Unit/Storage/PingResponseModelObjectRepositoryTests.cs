@@ -11,7 +11,7 @@ namespace netmon.core.tests.Integration.Storage
         private IMongoCollection<PingResponseModel> _collection;
 
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
 
             base.Setup();
