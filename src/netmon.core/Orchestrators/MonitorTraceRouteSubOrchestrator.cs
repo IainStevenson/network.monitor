@@ -27,8 +27,9 @@ namespace netmon.core.Orchestrators
         public async Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
             _traceRouteOrchestrator.Results += StoreResutlsAsTheyComeIn;
+            var untilThen = DateTime.UtcNow.Add(until);
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested && untilThen > DateTimeOffset.UtcNow )
             {
                 _ = await ValidateAddressesByTraceRoute(addressesToMonitor, cancellationToken);
             }

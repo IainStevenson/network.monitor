@@ -12,15 +12,17 @@ namespace netmon.core.tests.Integration.Orchestrators
 {
 
     /// <summary>
+    /// Test Objective:
+    /// Test the Monitor Orchestrator in all modes with its possible inputs and behaviours.
     /// Test Summary:
     /// Fore each <see cref="MonitorModes"/>. 
-    /// no addresses passed - <see cref="OnExecuteWithZeroAddresses_ItDoesNothingAndTerminates"/>
-    /// One address passed - <see cref="OnExecuteWithOneAddress_ItStores"/>
-    /// multiple addresses passed - <see cref="OnExecuteWithMultipleAddresses_ItStoresAll"/>
-    /// Timepsan immediately expired (0) - <see cref="OnExecuteWithZeroUntil_ItDoesNothingAndTerminates"/>
-    /// Cancelled already - <see cref="OnExecuteWhenAlreadyCancelled_ItDoesNothingAndTerminates"/>
-    /// cancels early. - <see cref="OnExecuteWhenCancelled_ItTerminates"/>
-    /// Ping Throws exception - <see cref="OnExecuteWhenThrowsException_ItDoesNotStoreButContinuesTrying"/>
+    /// no addresses passed - <see cref="OnExecuteWithZeroAddresses"/>
+    /// One address passed - <see cref="OnExecuteWithOneAddress"/>
+    /// multiple addresses passed - <see cref="OnExecuteWithMultipleAddresses"/>
+    /// Timepsan immediately expired (0) - <see cref="OnExecuteWithZeroUntil"/>
+    /// Cancelled already - <see cref="OnExecuteWhenAlreadyCancelled"/>
+    /// cancels early. - <see cref="OnExecuteWhenCancelled"/>
+    /// Ping Throws exception - <see cref="OnExecuteWhenThrowsException"/>
     /// </summary>
     public class MonitorOrchestratorIntegrationTests : TestBase<MonitorOrchestrator>
     {
@@ -29,8 +31,8 @@ namespace netmon.core.tests.Integration.Orchestrators
         private ILogger<MonitorOrchestrator> _monitorOrchestratorLogger;
         private ILogger<TraceRouteOrchestrator> _traceRouteOrchestratorLogger;
 
-        
-        
+
+
         private ITraceRouteOrchestrator _traceRouteOrchestrator;
         private IPingOrchestrator _pingOrchestrator;
         private IPingHandler _pingHandler;
@@ -61,49 +63,38 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             // unit setup - need to get more interfaces going and uses mocking.
             _pingLogger = Substitute.For<ILogger<PingHandler>>();
-            
+            _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorOrchestrator>>();
-
             _monitorPingOnlySubOrchestratorLogger = Substitute.For<ILogger<MonitorPingSubOrchestrator>>();
             _monitorTraceRouteSubOrchestratorLogger = Substitute.For<ILogger<MonitorTraceRouteSubOrchestrator>>();
             _monitorTraceRouteThenPingSubOrchestratorLogger = Substitute.For<ILogger<MonitorTraceRouteThenPingSubOrchestrator>>();
-            _traceRouteOrchestratorLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
-            
-            _pingHandlerOptions = new PingHandlerOptions();
-            _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
-            _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
-            
-            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
-            
-            _pingHandler = new PingHandler(_pingHandlerOptions, _pingLogger);
-            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler,
-                                                                    _traceRouteOrchestratorOptions,
-                                                                    _pingRequestModelFactory,
-                                                                    _traceRouteOrchestratorLogger);
-            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
-            
-            
+
             _pingResponseModelStorageOrchestrator = Substitute.For<IStorageOrchestrator<PingResponseModel>>();// for the moment mock out the storage.
 
-           
-            _monitorPingOnlySubOrchestrator = new MonitorPingSubOrchestrator(
-                    _pingResponseModelStorageOrchestrator, 
-                    _pingOrchestrator,
-                    _monitorPingOnlySubOrchestratorLogger);
+            _pingHandlerOptions = new PingHandlerOptions();
+            _pingHandler = new PingHandler(_pingHandlerOptions, _pingLogger);
+            _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
+            _pingOrchestratorOptions = new PingOrchestratorOptions() { MillisecondsBetweenPings = 1000 };// faster for testing
+            _pingOrchestrator = new PingOrchestrator(_pingHandler, _pingRequestModelFactory, _pingOrchestratorOptions);
 
-            _monitorTraceRouteSubOrchestrator = new MonitorTraceRouteSubOrchestrator(
-                    _pingResponseModelStorageOrchestrator,
-                    _traceRouteOrchestrator,
-                    _monitorTraceRouteSubOrchestratorLogger
-                );
+            _traceRouteOrchestratorOptions = new TraceRouteOrchestratorOptions();
+            _traceRouteOrchestrator = new TraceRouteOrchestrator(_pingHandler,
+                                                            _traceRouteOrchestratorOptions,
+                                                            _pingRequestModelFactory,
+                                                            _traceRouteOrchestratorLogger);
 
-            _monitorTraceRouteThenPingSubOrchestrator = new MonitorTraceRouteThenPingSubOrchestrator(
-                    _pingResponseModelStorageOrchestrator,
-                    _traceRouteOrchestrator,
-                    _pingOrchestrator,
-                    _monitorTraceRouteThenPingSubOrchestratorLogger
-                );
+            _monitorPingOnlySubOrchestrator = new MonitorPingSubOrchestrator(_pingResponseModelStorageOrchestrator,
+                                                            _pingOrchestrator,
+                                                            _monitorPingOnlySubOrchestratorLogger);
 
+            _monitorTraceRouteSubOrchestrator = new MonitorTraceRouteSubOrchestrator(_pingResponseModelStorageOrchestrator,
+                                                            _traceRouteOrchestrator,
+                                                            _monitorTraceRouteSubOrchestratorLogger);
+
+            _monitorTraceRouteThenPingSubOrchestrator = new MonitorTraceRouteThenPingSubOrchestrator(_pingResponseModelStorageOrchestrator,
+                                                            _traceRouteOrchestrator,
+                                                            _pingOrchestrator,
+                                                            _monitorTraceRouteThenPingSubOrchestratorLogger);
 
 
             Dictionary<MonitorModes, IMonitorSubOrchestrator> subOrchestrators = new()
@@ -117,26 +108,47 @@ namespace netmon.core.tests.Integration.Orchestrators
         }
 
         [Test]
-        [Category("Integration")] 
-        public void OnExecuteWithZeroAddresses_ItDoesNothingAndTerminates() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        [Category("Integration")]
+        public void OnExecuteWithZeroAddresses()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWithOneAddress_ItStores() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWithOneAddress()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWithMultipleAddresses_ItStoresAll() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWithMultipleAddresses()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWithZeroUntil_ItDoesNothingAndTerminates() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWithZeroUntil()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWhenAlreadyCancelled_ItDoesNothingAndTerminates() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWhenAlreadyCancelled()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWhenCancelled_ItTerminates() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWhenCancelled()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
         [Test]
         [Category("Integration")]
-        public void OnExecuteWhenThrowsException_ItDoesNotStoreButContinuesTrying() { Assert.That((1 == 11), Is.EqualTo(true)); }
+        public void OnExecuteWhenThrowsException()
+        {
+            Assert.That((1 == 11), Is.EqualTo(true));
+        }
 
         [Test]
         [Category("Integration")]

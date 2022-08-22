@@ -26,15 +26,16 @@ namespace netmon.core.Orchestrators
 
         public event EventHandler<SubOrchestratorEventArgs>? Reset; // TODO, Address this perhaps as another interface
 
-        public async  Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        public async Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
-            if (addressesToMonitor.Any())
+            if (addressesToMonitor.Any() && !cancellationToken.IsCancellationRequested)
             {
                 _pingOrchestrator.Results += StoreResutlsAsTheyComeIn;
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
                     _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(), until, cancellationToken);
                 }
+                catch { }
                 _pingOrchestrator.Results -= StoreResutlsAsTheyComeIn;
             }
         }
@@ -44,7 +45,7 @@ namespace netmon.core.Orchestrators
             if (e == null) return;
 
             _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
-        }      
+        }
 
     }
 }

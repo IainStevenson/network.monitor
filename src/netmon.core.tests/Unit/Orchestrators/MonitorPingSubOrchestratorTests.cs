@@ -265,7 +265,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
 
             // assert 
-            await _pingOrchestrator.Received(_pingTestResponses.Count).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
