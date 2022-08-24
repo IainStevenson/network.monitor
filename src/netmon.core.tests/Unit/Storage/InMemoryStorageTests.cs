@@ -1,6 +1,8 @@
 ﻿using MongoDB.Driver;
 using netmon.core.Messaging;
+using netmon.core.Models;
 using netmon.core.Storage;
+using System.Collections.Concurrent;
 using System.Net;
 
 namespace netmon.core.tests.Integration.Storage
@@ -9,17 +11,13 @@ namespace netmon.core.tests.Integration.Storage
     public class InMemoryStorageTests : TestBase<PingResponseModelInMemoryRepository>
     {
         private PingResponses _TestData = new();
+        private ConcurrentDictionary<Guid, PingResponseModel> _storage;
         [SetUp]
         public override void Setup()
         {
             base.Setup();
-            _unit = new PingResponseModelInMemoryRepository();
-        }
-
-        private void AddWorldAddressesTestData()
-        {
             _TestData = new PingResponses();
-            // simualte traceroute response.
+            // simulate traceroute response.
             List<bool> states = new();
             foreach (var address in TestConditions.WorldAddresses)
             {
@@ -28,20 +26,22 @@ namespace netmon.core.tests.Integration.Storage
                       new Models.PingResponseModel() { Request = new Models.PingRequestModel() { Address = address } })
                     );
             }
-            if (states.Any(a => !a)) return; // fail the test
-            // load it into storage as needed.
-            foreach (var item in _TestData)
-            {
-                _unit.StoreAsync(item.Value).Wait();
-            }
+            _storage = new();
+            _unit = new PingResponseModelInMemoryRepository(_storage);
         }
 
         [Test]
         [Category("Unit")]
-        public async Task OnStoreItShouldContainTheAddedItems()
+        public async Task OnRetrieveItShouldContainAllOfTheAddedItems()
         {
 
-            AddWorldAddressesTestData();
+            // Arrange
+            foreach (var item in _TestData)
+            {
+                await _unit.StoreAsync(item.Value);
+            }
+            Assert.That(_storage, Has.Count.EqualTo(_TestData.Count));
+            // Act
 
             foreach (var item in _TestData)
             {
@@ -49,11 +49,47 @@ namespace netmon.core.tests.Integration.Storage
                 Assert.That(response, Is.Not.Null);
                 Assert.That(response.Id, Is.EqualTo(item.Value.Id));
             }
-
-
         }
 
+        [Test]
+        [Category("Unit")]
+        public async Task OnStoreItShouldContainTheUniqueAddedItems()
+        {
+            // Arrange
 
+            Assert.That( _storage, Is.Empty);
 
+             // Act
+            foreach (var item in _TestData)
+            {
+                await _unit.StoreAsync(item.Value);
+                await _unit.StoreAsync(item.Value); // note that this is idempotent                
+            }
+
+            // Assert
+            Assert.That(_storage, Has.Count.EqualTo(_TestData.Count)); // proves it is idempotent
+            
+        }
+
+        [Test]
+        [Category("Unit")]
+        public async Task OnDeleteItShouldNoLongerContainTheUniqueAddedItems()
+        {
+            // Arrange
+            foreach (var item in _TestData)
+            {
+                await _unit.StoreAsync(item.Value);
+            }
+            Assert.That(_storage, Has.Count.EqualTo(_TestData.Count));
+
+            // Act
+            foreach (var item in _TestData)
+            {
+                await _unit.DeleteAsync(item.Value.Id);
+            }
+
+            // Assert
+            Assert.That(_storage, Is.Empty);
+        }
     }
 }

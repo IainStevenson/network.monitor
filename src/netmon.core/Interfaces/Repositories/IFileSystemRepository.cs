@@ -4,7 +4,7 @@
     {
         Task<IEnumerable<FileInfo>> GetFileInformationAsync(string pattern);
         Task<string> GetFileDataAsync(string fullFileName);
-        Task DeleteFileAsync(string fullFileName);
+        Task<string> DeleteFileAsync(string fullFileName);
     }
 
 }

@@ -12,7 +12,7 @@
         /// </summary>
         /// <param name="id">The items unique identifier.</param>
         /// <returns></returns>
-        Task<TItem> RetrieveAsync(TKey id);
+        Task<TItem?> RetrieveAsync(TKey id);
         /// <summary>
         /// Retrieves any items matching the query.
         /// </summary>

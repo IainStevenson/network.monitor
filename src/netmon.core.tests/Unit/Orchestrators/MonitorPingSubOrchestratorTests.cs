@@ -123,7 +123,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -148,7 +148,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(1).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(1).StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -170,7 +170,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(1).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(1).StoreAsync(Arg.Any<PingResponseModel>());
         }
 
 
@@ -194,7 +194,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -219,7 +219,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -244,7 +244,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(1).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(1).StoreAsync(Arg.Any<PingResponseModel>());
 
 
         }
@@ -269,7 +269,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).Store(Arg.Any<PingResponseModel>());
+            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
 
         }
     }

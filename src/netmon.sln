@@ -22,9 +22,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli", "netmon.cli\ne
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.store", "..\netmon.cli.store\netmon.cli.store.csproj", "{2ABB8015-9745-41F1-9022-30D7ADE80F3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.store", "netmon.cli.store\netmon.cli.store.csproj", "{2ABB8015-9745-41F1-9022-30D7ADE80F3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.shared", "..\netmon.cli.shared\netmon.cli.shared.csproj", "{E4794D3E-47D0-43AE-A92C-35D6114F9179}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.shared", "netmon.cli.shared\netmon.cli.shared.csproj", "{E4794D3E-47D0-43AE-A92C-35D6114F9179}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

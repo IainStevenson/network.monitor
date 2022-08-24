@@ -1,6 +1,7 @@
 ﻿using netmon.core.Interfaces.Repositories;
 using netmon.core.Models;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace netmon.core.Storage
 {
@@ -15,37 +16,28 @@ namespace netmon.core.Storage
             IDeletionRepository<Guid, PingResponseModel>, IRepository
     {
         public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store ^ RepositoryCapabilities.Retrieve ^ RepositoryCapabilities.Delete;
-        
-        private readonly ConcurrentDictionary<Guid, PingResponseModel> _storage = new();
+
+        private readonly ConcurrentDictionary<Guid, PingResponseModel> _storage;
+
+        public PingResponseModelInMemoryRepository(ConcurrentDictionary<Guid, PingResponseModel> storage)
+        {
+            _storage = storage;
+        }
 
         public Task DeleteAsync(Guid id)
         {
-            if (_storage.ContainsKey(id))
-            {
-                _= _storage.Remove(id, out _);
-            }
+            _ = _storage.Remove(id, out _);
             return Task.FromResult(0);
         }
 
         public Task<PingResponseModel> RetrieveAsync(Guid id)
         {
-            if (_storage.ContainsKey(id))
-            {
-                return Task.FromResult(_storage[id]);
-            }
-            return Task.FromResult(new PingResponseModel() { Id = Guid.Empty});
+            return Task.FromResult(_storage.GetValueOrDefault(id, new PingResponseModel() { Id = Guid.Empty }));
         }
 
         public Task StoreAsync(PingResponseModel item)
         {
-            if (_storage.ContainsKey(item.Id))
-            {
-                _storage[item.Id] = item;
-            }
-            else
-            {
-                _storage.TryAdd(item.Id, item);
-            }
+            _storage.AddOrUpdate(key: item.Id, addValue: item, updateValueFactory: (k, i) => i = item);
             return Task.FromResult(0);
         }
     }

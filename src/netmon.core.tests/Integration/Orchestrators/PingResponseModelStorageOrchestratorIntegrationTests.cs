@@ -4,7 +4,9 @@ using netmon.core.Messaging;
 using netmon.core.Orchestrators;
 using netmon.core.Storage;
 using NSubstitute;
+using NUnit.Framework.Interfaces;
 using System.Net;
+using System.Linq;
 
 namespace netmon.core.tests.Integration.Orchestrators
 {
@@ -13,6 +15,7 @@ namespace netmon.core.tests.Integration.Orchestrators
         private List<IRepository> _respositories;
         private ILogger<PingResponseModelStorageOrchestrator> _logger;
         private DirectoryInfo _testFolder;
+        private PingResponses _testData;
         private const string _storageFolderDelimiter = "\\";
         [SetUp]
         public override void Setup()
@@ -23,6 +26,16 @@ namespace netmon.core.tests.Integration.Orchestrators
             {
                 _testFolder.Create();
             }
+
+            _testData = new PingResponses();
+            foreach (var address in TestConditions.WorldAddresses)
+            {
+                _testData.TryAdd(
+                      new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
+                      new Models.PingResponseModel() { Request = new Models.PingRequestModel() { Address = address } })
+                    ;
+            }
+
             _respositories = new List<IRepository>()
             {
                 { new PingResponseModelJsonRepository(_testFolder,_settings, _storageFolderDelimiter) },
@@ -30,48 +43,32 @@ namespace netmon.core.tests.Integration.Orchestrators
              };
             _logger = Substitute.For<ILogger<PingResponseModelStorageOrchestrator>>();
             _unit = new PingResponseModelStorageOrchestrator(_respositories, _logger, _settings);
-        }
 
-        private void AddWorldAddressesTestData()
-        {
-            var items = new PingResponses();
-            // simualte traceroute response.
-            List<bool> states = new();
-            foreach (var address in TestConditions.WorldAddresses)
-            {
-                states.Add(items.TryAdd(
-                      new Tuple<DateTimeOffset, IPAddress>(DateTimeOffset.UtcNow, address),
-                      new Models.PingResponseModel() { Request = new Models.PingRequestModel() { Address = address } })
-                    );
-            }
-            if (states.Any(a => !a)) return; // fail the test
-                                             // load it into storage as needed.
-            foreach (var item in items)
-            {
-                _unit.Store(item.Value).Wait();
-            }
+
         }
 
         [Test]
         [Category("Integration")]
-        public void OnStoreItShouldContainTheAddedItems()
+        public async Task OnStoreItShouldContainTheAddedItems()
         {
-            foreach (IFileSystemRepository respository in _respositories.Where( w=> w.GetType().IsAssignableTo(typeof(IFileSystemRepository))))
+            foreach (var (respository, pattern) in from IFileSystemRepository respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemRepository)))
+                                                   let pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt"
+                                                   select (respository, pattern))
             {
-                var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
                 Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(0));
             }
-            AddWorldAddressesTestData();
 
-            foreach (IFileSystemRepository respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemRepository))))
+            foreach (var item in _testData.Values)
             {
-                var pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt";
-
-
-                Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
+                await _unit.StoreAsync(item);
             }
 
-
+            foreach (var (respository, pattern) in from IFileSystemRepository respository in _respositories.Where(w => w.GetType().IsAssignableTo(typeof(IFileSystemRepository)))
+                                                   let pattern = respository.GetType() == typeof(PingResponseModelJsonRepository) ? "*.json" : "*-summary.txt"
+                                                   select (respository, pattern))
+            {
+                Assert.That(respository.GetFileInformationAsync(pattern).Result.Count, Is.EqualTo(TestConditions.WorldAddresses.Length));
+            }
         }
     }
 }

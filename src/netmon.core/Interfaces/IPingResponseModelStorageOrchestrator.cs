@@ -2,6 +2,6 @@
 {
     public interface IStorageOrchestrator<T>
     {
-        Task Store(T item);       
+        Task StoreAsync(T item);       
     }
 }

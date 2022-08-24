@@ -50,7 +50,7 @@ namespace netmon.core.Orchestrators
         {
             if (e == null) return;
 
-            _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
+            _pingResponseModelStorageOrchestrator.StoreAsync(e.Model).Wait();
 
             // track the recent history of response times for this address for reset triggering.
             UpdateResponseHistoryForAddress(e);

@@ -161,7 +161,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // trap the mock storage results here and display them in the test output.
             PingResponses storedResponses = new();
 
-            _pingResponseModelStorageOrchestrator.When(it => it.Store(Arg.Any<PingResponseModel>()))
+            _pingResponseModelStorageOrchestrator.When(it => it.StoreAsync(Arg.Any<PingResponseModel>()))
                 .Do(doit =>
                     storedResponses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(
                         doit.Arg<PingResponseModel>().Start, doit.Arg<PingResponseModel>().Request.Address), doit.Arg<PingResponseModel>()));
@@ -170,7 +170,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             ShowResults(storedResponses);
 
-            _pingResponseModelStorageOrchestrator.Received((int)(storedResponses.Count)).Store(Arg.Any<PingResponseModel>()).Wait();
+            _pingResponseModelStorageOrchestrator.Received((int)(storedResponses.Count)).StoreAsync(Arg.Any<PingResponseModel>()).Wait();
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             await _unit.Execute(MonitorModes.PingContinuously, _monitorLoopbackAddresses, _testUntil, _cancellationToken);
 
-            _pingResponseModelStorageOrchestrator.Received(2).Store(Arg.Any<PingResponseModel>()).Wait();
+            _pingResponseModelStorageOrchestrator.Received(2).StoreAsync(Arg.Any<PingResponseModel>()).Wait();
 
         }
 

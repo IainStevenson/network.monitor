@@ -7,9 +7,7 @@ namespace netmon.core.Storage
 {
     /// <summary>
     /// The single responsibiity of this class is to;
-    /// store (insert or update) [upsert] 
-    /// retrieve or 
-    /// delete an instance of <see cref="PingResponseModel"/>, 
+    /// store (insert or update) [upsert], retrieve,  or delete an instance of <see cref="PingResponseModel"/>, 
     /// or retieve an <see cref="IEnumerable{T}"/> of them using an instance keys or using a <see cref="Func{T, TResult}"/> query.
     /// </summary>
     public class PingResponseModelJsonRepository :
@@ -58,25 +56,20 @@ namespace netmon.core.Storage
             return Task.FromResult(_storageFolder.EnumerateFiles(pattern, SearchOption.TopDirectoryOnly));
         }
 
-        public Task<PingResponseModel> RetrieveAsync(Guid id)
+        public Task<PingResponseModel?> RetrieveAsync(Guid id)
         {
-            PingResponseModel response = new() { Id = Guid.Empty };
+            PingResponseModel? response = null;
             var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
             if (filesFound.Any())
             {
                 var json = File.ReadAllText(filesFound.First().FullName);
-                json ??= JsonConvert.SerializeObject(response);
-                response = RehydrateResponse(json)?? response;;
+                response = JsonConvert.DeserializeObject<PingResponseModel>(json, _settings);
             }
 
             return Task.FromResult(response);
         }
 
-        private PingResponseModel? RehydrateResponse(string json)
-        {
-            return JsonConvert.DeserializeObject<PingResponseModel>(json, _settings);
-        }
 
         public Task StoreAsync(PingResponseModel item)
         {
@@ -87,10 +80,14 @@ namespace netmon.core.Storage
             return Task.FromResult(0);
         }
 
-        public Task DeleteFileAsync(string fullName)
+        public Task<string> DeleteFileAsync(string fullName)
         {
-            File.Delete(fullName);
-            return Task.FromResult(0);
+            if (File.Exists(fullName))
+            {
+                File.Delete(fullName);
+                return Task.FromResult(string.Empty);
+            }
+            return Task.FromResult(fullName);
         }
     }
 }

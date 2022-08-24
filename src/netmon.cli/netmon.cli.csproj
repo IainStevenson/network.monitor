@@ -22,10 +22,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\netmon.cli.shared\netmon.cli.shared.csproj" />
-    <ProjectReference Include="..\netmon.core\netmon.core.csproj" />
-  </ItemGroup>
+  
 
   <ItemGroup>
     <None Update="appSettings.json">
@@ -35,6 +32,11 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\netmon.cli.shared\netmon.cli.shared.csproj" />
+    <ProjectReference Include="..\netmon.core\netmon.core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,8 @@
-﻿namespace netmon.core.Models
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace netmon.core.Models
 {
+    [ExcludeFromCodeCoverage]
     public class PingResponseModelEventArgs : EventArgs
     {
         public PingResponseModel Model { get; set; }

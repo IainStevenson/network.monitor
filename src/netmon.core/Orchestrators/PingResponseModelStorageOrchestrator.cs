@@ -31,7 +31,7 @@ namespace netmon.core.Orchestrators
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public Task Store(PingResponseModel item)
+        public Task StoreAsync(PingResponseModel item)
         {
             _logger.LogTrace("Storing item {start} {address} {response} {identifier}", item.Start, item.Request.Address.ToString(), item.Response?.RoundtripTime ?? 0, item.Id);
             var tasks = _repositories

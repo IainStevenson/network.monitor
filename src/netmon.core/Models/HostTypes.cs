@@ -1,4 +1,6 @@
-﻿namespace netmon.core.Models
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace netmon.core.Models
 {
     public enum HostTypes
     {

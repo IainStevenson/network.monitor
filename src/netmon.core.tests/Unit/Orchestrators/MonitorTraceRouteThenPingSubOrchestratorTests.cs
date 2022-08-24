@@ -144,7 +144,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
             await _pingResponseModelStorageOrchestrator.Received(NumberofStorageCalls)
-                    .Store(Arg.Any<PingResponseModel>());
+                    .StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -176,7 +176,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
             await _pingResponseModelStorageOrchestrator.Received(NumberofStorageCalls)
-                    .Store(Arg.Any<PingResponseModel>());
+                    .StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 
@@ -210,7 +210,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
             await _pingResponseModelStorageOrchestrator.Received(1)
-                    .Store(Arg.Any<PingResponseModel>());
+                    .StoreAsync(Arg.Any<PingResponseModel>());
         }
         //TODO: Move to the sub orchestrator tests
         [Test]
@@ -239,7 +239,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
             /// its just 1 per ping request
             await _pingResponseModelStorageOrchestrator.Received(NumberofStorageCalls)
-                    .Store(Arg.Any<PingResponseModel>());
+                    .StoreAsync(Arg.Any<PingResponseModel>());
 
         }
 

@@ -42,7 +42,7 @@ namespace netmon.core.Orchestrators
         {
             if (e == null) return;
 
-            _pingResponseModelStorageOrchestrator.Store(e.Model).Wait();
+            _pingResponseModelStorageOrchestrator.StoreAsync(e.Model).Wait();
         }
         private async Task<List<IPAddress>> ValidateAddressesByTraceRoute(List<IPAddress> requestedAddresses, CancellationToken cancellationToken)
         {
