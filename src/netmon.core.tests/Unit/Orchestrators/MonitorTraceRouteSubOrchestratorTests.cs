@@ -128,7 +128,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
-            await _unit.Handle(requestedAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(requestedAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
 
@@ -166,7 +166,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle(testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
             // assert traceroute
@@ -195,7 +195,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle(testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
 
@@ -228,7 +228,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle( testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute( testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
             // assert traceroute to both addresses

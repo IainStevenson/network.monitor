@@ -36,7 +36,7 @@ namespace netmon.core.Orchestrators
         public async Task Execute(MonitorModes mode, List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
             _logger.LogTrace("Handling call with orchestrator for {mode}", mode);
-            await _monitors[mode].Handle(addressesToMonitor, until, cancellationToken);
+            await _monitors[mode].Execute(addressesToMonitor, until, cancellationToken);
         }
     }
 }

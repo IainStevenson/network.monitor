@@ -53,19 +53,19 @@ namespace netmon.core.tests.Integration.Orchestrators
             switch (mode)
             {
                 case MonitorModes.TraceRouteThenPingContinuously:
-                    _traceRouteThenPingContinuously.Received(1).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _traceRouteContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _pingContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteThenPingContinuously.Received(1).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _pingContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
                     break;
                 case MonitorModes.TraceRouteContinuously:
-                    _traceRouteThenPingContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _traceRouteContinuously.Received(1).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _pingContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteThenPingContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteContinuously.Received(1).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _pingContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
                     break;
                 case MonitorModes.PingContinuously:
-                    _traceRouteThenPingContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _traceRouteContinuously.Received(0).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
-                    _pingContinuously.Received(1).Handle(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteThenPingContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _traceRouteContinuously.Received(0).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
+                    _pingContinuously.Received(1).Execute(Arg.Any<List<IPAddress>>(), _testUntil, _cancellationToken);
                     break;
             }
         }

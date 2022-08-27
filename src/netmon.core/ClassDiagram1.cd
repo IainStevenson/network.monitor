@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="netmon.core.Handlers.PingHandler">
+    <Position X="1" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAQAAAAAAAAAIAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Handlers\PingHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="netmon.core.Orchestrators.PingOrchestrator">
+    <Position X="3.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAAAAAAAABAACAAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>Orchestrators\PingOrchestrator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="netmon.core.Orchestrators.TraceRouteOrchestrator">
+    <Position X="5.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAQAAAAACAAEKAJIAAAAAABAAAAAAAA=</HashCode>
+      <FileName>Orchestrators\TraceRouteOrchestrator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="netmon.core.Orchestrators.MonitorOrchestrator">
+    <Position X="7.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAIABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Orchestrators\MonitorOrchestrator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="netmon.core.Orchestrators.MonitorPingSubOrchestrator">
+    <Position X="9.75" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAABAQAAAAAAAAAIIAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>Orchestrators\MonitorPingSubOrchestrator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

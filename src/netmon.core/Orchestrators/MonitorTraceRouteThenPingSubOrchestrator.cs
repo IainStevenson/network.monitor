@@ -28,7 +28,7 @@ namespace netmon.core.Orchestrators
             _logger = logger;
         }
         
-        public async  Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        public async  Task Execute(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
             _traceRouteOrchestrator.Results += StoreResutlsAsTheyComeIn;
             addressesToMonitor = await ValidateAddressesByTraceRoute(addressesToMonitor, cancellationToken);

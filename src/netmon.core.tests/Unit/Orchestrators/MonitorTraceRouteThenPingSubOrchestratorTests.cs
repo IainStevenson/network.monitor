@@ -116,7 +116,7 @@ namespace netmon.core.tests.Integration.Orchestrators
         //// Call with list of addresses , false -> traces routes to and then monitors all discover hops of all addresses
         [Test]
         [Category("Unit")]
-        public async Task OnExecuteWithNoAddressesAllowingTraceRouteItWillTraceRouteToTheDefaultAddressAndThenMonitorAllOfTheDiscoveredAddresses()
+        public async Task OnExecuteWithNoAddressesItWillTraceRouteToTheDefaultAddressAndThenMonitorAllOfTheDiscoveredAddresses()
         {
 
             var requestedAddresses = new List<IPAddress>(); // no addresses defined
@@ -128,7 +128,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _unit = CreateIsolatedUnit(responsesFromTraceRoute, responsesFromPingUntil);
 
-            await _unit.Handle(requestedAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(requestedAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
 
@@ -166,7 +166,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle(testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
             // assert traceroute
@@ -195,7 +195,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle(testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
 
@@ -228,7 +228,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             _traceRouteOrchestrator.Execute(Defaults.DefaultMonitoringDestination, _cancellationToken).Returns(responsesFromTraceRoute);
 
-            await _unit.Handle( testAddresses, _testUntil, _cancellationToken);
+            await _unit.Execute( testAddresses, _testUntil, _cancellationToken);
 
             //ShowResults(responses);
             // assert traceroute to both addresses

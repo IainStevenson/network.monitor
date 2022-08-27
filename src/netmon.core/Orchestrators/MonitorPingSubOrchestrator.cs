@@ -26,7 +26,7 @@ namespace netmon.core.Orchestrators
 
         public event EventHandler<SubOrchestratorEventArgs>? Reset; // TODO, Address this perhaps as another interface
 
-        public async Task Handle(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
+        public async Task Execute(List<IPAddress> addressesToMonitor, TimeSpan until, CancellationToken cancellationToken)
         {
             if (addressesToMonitor.Any() && !cancellationToken.IsCancellationRequested)
             {
