@@ -1,11 +1,11 @@
 ﻿using MongoDB.Driver;
-using netmon.core.Messaging;
-using netmon.core.Models;
-using netmon.core.Storage;
+using netmon.domain.Messaging;
+using netmon.domain.Models;
+using netmon.domain.Storage;
 using System.Collections.Concurrent;
 using System.Net;
 
-namespace netmon.core.tests.Integration.Storage
+namespace netmon.domain.tests.Integration.Storage
 {
     [TestFixture]
     public class InMemoryStorageTests : TestBase<PingResponseModelInMemoryRepository>

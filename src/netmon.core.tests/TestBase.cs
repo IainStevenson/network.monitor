@@ -1,9 +1,11 @@
-﻿using netmon.core.Messaging;
-using netmon.core.Serialisation;
+﻿using netmon.domain.Messaging;
+using netmon.domain.Serialisation;
 using Newtonsoft.Json;
 
-namespace netmon.core.tests
+namespace netmon.domain.tests
 {
+
+
     public abstract class TestBase<T>
     {
         protected T _unit;
@@ -37,8 +39,7 @@ namespace netmon.core.tests
         [TearDown]
         public void Teardown()
         {
-            var disposable = _unit as IDisposable;
-            disposable?.Dispose();
+            (_unit as IDisposable)?.Dispose();
         }
         protected void ShowResults<TData>(TData results)
         {

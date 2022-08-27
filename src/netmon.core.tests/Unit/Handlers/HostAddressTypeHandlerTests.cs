@@ -1,8 +1,8 @@
-﻿using netmon.core.Handlers;
-using netmon.core.Models;
+﻿using netmon.domain.Handlers;
+using netmon.domain.Models;
 using System.Net;
 
-namespace netmon.core.tests.Unit.Handlers
+namespace netmon.domain.tests.Unit.Handlers
 {
     public class HostAddressTypeHandlerTests
     {

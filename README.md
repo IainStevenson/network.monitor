@@ -5,13 +5,13 @@ This is a work in progress!
 
 A command line tool and reusable libraries that use the .NET PING to test connections to remote addresses.
 
-Uses PING and trace route techniques and can call out to external code such as the ookla speed test cli to monitor and record your networks connection to the internet in terms of access (awhen was I connected), reliability (when did it fail) and performance (how fast it was).
+Uses PING and trace route techniques and can call out to external code such as the ookla speed test cli to monitor and record your networks connection to the internet in terms of access (when was I connected), reliability (when did it fail) and performance (how fast it was).
 
-`Access` is determined by being able to ping one ore more remote IP addresses that you choose. The default is the dns.google address at 8.8.8.8, and all of the hops in between you and california. All are hops are then pinged independently every 5 seconds after discovery. The reason behind the multiple hop pinging is that your destination address may be down but all of the hops to get there may not. This becomes a vital clue in figuring out what any problem with your might be.
+`Access` is determined by being able to ping one ore more remote IP addresses that you choose. The default is the dns.google address at 8.8.8.8, and all of the hops in between you and california. All are hops are then pinged independently every x seconds after discovery. The reason behind the multiple hop pinging is that your destination address may be down but all of the hops to get there may not. This becomes a vital clue in figuring out what any problem with your might be.
 
-`Reliability` is determined by continually accessing those remote addresses onve every 5 seconds and recording the respones with UTC date and time stamps (unlike PING.EXE). 
+`Reliability` is determined by continually accessing those remote addresses onve every x seconds and recording the respones with UTC date and time stamps (unlike PING.EXE). 
 
-`Performance` is determined optionally by regularly performing ookla speed tests to grab actual bandwidth statistics. The frequency of this is once per hour at the same time (xx:30) each hour so as to ensure 'hour of the day' based histogram values for statistical reports. This being a large data consuming event its recommended you adjust this period to suit your data plan. I use 20 minutes for 3 times an hour on an unlimited data plan. This consumes <= 72 * ~150Mb  == 10.8 Gb of data per day!
+`Performance` is determined optionally by regularly performing e.g. ookla, speed tests to grab actual bandwidth statistics. The frequency of this is once per hour at the same time (xx:30) each hour so as to ensure 'hour of the day' based histogram values for statistical reports. This being a large data consuming event its recommended you adjust this period to suit your data plan. I use 20 minutes for 3 times an hour on an unlimited data plan. This consumes <= 72 * ~150Mb  == 10.8 Gb of data per day!
 
 Deployable in two containers, 1 for capture .net core CLI, and 1 for storage (MongoDb). Analysis and reporting can then bedone from the CLI on any host that can access the storage container.
 
@@ -27,8 +27,8 @@ This tool should be all you need to be able to keep a track of how your ISP is s
 # Requirements
 For use
 * Visual Studio Code
-* .NET Runtime framework
-* Windows, linux or IOS operating system.
+* .NET 6 or above runtime framework
+* Windows, linux or IoS operating system.
 * A functional internet connected network already setup and working. NOTE: This tool does not help you setup your network at all.
 
 # Get started

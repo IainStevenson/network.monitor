@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
-using netmon.core.Configuration;
-using netmon.core.Handlers;
-using netmon.core.Interfaces;
-using netmon.core.Models;
+using netmon.domain.Configuration;
+using netmon.domain.Handlers;
+using netmon.domain.Interfaces;
+using netmon.domain.Models;
 using NSubstitute;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests.Integration.Handlers
+namespace netmon.domain.tests.Integration.Handlers
 {
     public class PingHandlerIntegrationTests : TestBase<PingHandler>
     {

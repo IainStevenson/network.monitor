@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\netmon.cli.shared\netmon.cli.shared.csproj" />
+    <ProjectReference Include="..\netmon.domain\netmon.domain.csproj" />
   </ItemGroup>
 
 

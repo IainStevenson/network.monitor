@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core", "netmon.core\netmon.core.csproj", "{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core.tests", "netmon.core.tests\netmon.core.tests.csproj", "{47B53F2C-9D2C-4437-8903-3A5B416642C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.domain.tests", "netmon.core.tests\netmon.domain.tests.csproj", "{47B53F2C-9D2C-4437-8903-3A5B416642C4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D2BF152F-23FE-4F78-A0E2-C084A7BA7F1D}"
 	ProjectSection(SolutionItems) = preProject
@@ -18,13 +16,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\usage.md = ..\usage.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli", "netmon.cli\netmon.cli.csproj", "{48860781-4216-43A5-A2BF-39356CAE6258}"
-EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.store", "netmon.cli.store\netmon.cli.store.csproj", "{2ABB8015-9745-41F1-9022-30D7ADE80F3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.store", "netmon.cli.store\netmon.cli.store.csproj", "{2ABB8015-9745-41F1-9022-30D7ADE80F3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netmon.cli.shared", "netmon.cli.shared\netmon.cli.shared.csproj", "{E4794D3E-47D0-43AE-A92C-35D6114F9179}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.domain", "netmon.domain\netmon.domain.csproj", "{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.shared", "netmon.cli.shared\netmon.cli.shared.csproj", "{CB77869A-9767-4860-9CCD-152779E2A4BC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.monitor", "netmon.cli.monitor\netmon.cli.monitor.csproj", "{F20B2ADB-A5DA-4868-83B2-0FF1D25A9385}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,18 +32,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -52,10 +44,18 @@ Global
 		{2ABB8015-9745-41F1-9022-30D7ADE80F3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2ABB8015-9745-41F1-9022-30D7ADE80F3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2ABB8015-9745-41F1-9022-30D7ADE80F3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E4794D3E-47D0-43AE-A92C-35D6114F9179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E4794D3E-47D0-43AE-A92C-35D6114F9179}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E4794D3E-47D0-43AE-A92C-35D6114F9179}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E4794D3E-47D0-43AE-A92C-35D6114F9179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB77869A-9767-4860-9CCD-152779E2A4BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB77869A-9767-4860-9CCD-152779E2A4BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB77869A-9767-4860-9CCD-152779E2A4BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB77869A-9767-4860-9CCD-152779E2A4BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F20B2ADB-A5DA-4868-83B2-0FF1D25A9385}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F20B2ADB-A5DA-4868-83B2-0FF1D25A9385}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F20B2ADB-A5DA-4868-83B2-0FF1D25A9385}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F20B2ADB-A5DA-4868-83B2-0FF1D25A9385}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

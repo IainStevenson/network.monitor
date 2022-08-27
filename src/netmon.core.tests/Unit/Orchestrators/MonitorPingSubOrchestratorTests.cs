@@ -1,16 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Data;
-using netmon.core.Interfaces;
-using netmon.core.Messaging;
-using netmon.core.Models;
-using netmon.core.Orchestrators;
+using netmon.domain.Data;
+using netmon.domain.Interfaces;
+using netmon.domain.Messaging;
+using netmon.domain.Models;
+using netmon.domain.Orchestrators;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReceivedExtensions;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests.Integration.Orchestrators
+namespace netmon.domain.tests.Integration.Orchestrators
 {
     /// <summary>
     /// Test Summary:
@@ -25,6 +25,7 @@ namespace netmon.core.tests.Integration.Orchestrators
     public class MonitorPingSubOrchestratorTests : TestBase<MonitorPingSubOrchestrator>
     {
         private IStorageOrchestrator<PingResponseModel> _pingResponseModelStorageOrchestrator;
+        private TestStorageOrchestrator? _mockStorageOrcestrator;
         private IPingOrchestrator _pingOrchestrator;
         private ILogger<MonitorPingSubOrchestrator> _monitorOrchestratorLogger;
         private static PingResponses _pingTestResponses = new();
@@ -35,25 +36,10 @@ namespace netmon.core.tests.Integration.Orchestrators
         {
             base.Setup();
 
-            _pingResponseModelStorageOrchestrator = Substitute.For<IStorageOrchestrator<PingResponseModel>>();
+            _pingResponseModelStorageOrchestrator = new TestStorageOrchestrator();
+            _mockStorageOrcestrator = _pingResponseModelStorageOrchestrator as TestStorageOrchestrator;
             _pingOrchestrator = Substitute.For<IPingOrchestrator>();
             _monitorOrchestratorLogger = Substitute.For<ILogger<MonitorPingSubOrchestrator>>();
-
-
-            // dont do this as it duplicates events
-            //_pingOrchestrator.Results += (sender, args) => 
-            //        _pingResponseStorage.Store(args.Model); // call through to the mocked storage
-            // now make sure the event is raised...when the mocked method is called
-
-            //////_pingOrchestrator.When(it => it.PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>()))
-            //////.Do(doit =>
-            //////        _pingOrchestrator.Results +=
-            //////        Raise.Event<EventHandler<PingResponseModelEventArgs>>(
-            //////            this,
-            //////            new PingResponseModelEventArgs(new PingResponseModel() { }))
-            //////    ); // add address to event data? perhaps multiple calls via foreach?
-
-
             _unit = new MonitorPingSubOrchestrator(_pingResponseModelStorageOrchestrator, _pingOrchestrator, _monitorOrchestratorLogger);
         }
 
@@ -120,9 +106,7 @@ namespace netmon.core.tests.Integration.Orchestrators
 
             await _pingOrchestrator.Received(0).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(0));
 
         }
 
@@ -145,9 +129,8 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(_pingTestResponses.Count).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(1).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(_pingTestResponses.Count));
+
 
         }
 
@@ -167,9 +150,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(testAddresses.Count).PingUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(testAddresses.Count).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(testAddresses.Count));
         }
 
 
@@ -191,9 +172,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(0).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(0));
 
         }
 
@@ -216,9 +195,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(0).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(0));
 
         }
 
@@ -228,11 +205,11 @@ namespace netmon.core.tests.Integration.Orchestrators
         public async Task OnHandleWhenCancelled_ItTerminates() {
 
             // Arrange
-            var testAddresses = new List<IPAddress>() { IPAddress.Parse("8.8.4.4") }; // one addresses defined
+            var testAddresses = new List<IPAddress>() { IPAddress.Parse("127.0.0.1") }; 
 
             TestDatasetup(testAddresses);
 
-            _cancellationTokenSource.CancelAfter( 800 );
+            _cancellationTokenSource.CancelAfter( 5001 );
 
             // Act
             await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
@@ -241,9 +218,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(_pingTestResponses.Count).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(1).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(_pingTestResponses.Count));
 
 
         }
@@ -267,9 +242,7 @@ namespace netmon.core.tests.Integration.Orchestrators
             // assert 
             await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
 
-            /// NOTE: Because we are not able to mock the repeat until or loops for multiple addresses 
-            /// its just 1 per ping request
-            await _pingResponseModelStorageOrchestrator.Received(0).StoreAsync(Arg.Any<PingResponseModel>());
+            Assert.That(_mockStorageOrcestrator?.StorageRequestCount, Is.EqualTo(1));
 
         }
     }

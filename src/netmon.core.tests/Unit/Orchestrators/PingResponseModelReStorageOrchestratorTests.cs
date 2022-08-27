@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Interfaces.Repositories;
-using netmon.core.Models;
-using netmon.core.Orchestrators;
+using netmon.domain.Interfaces.Repositories;
+using netmon.domain.Models;
+using netmon.domain.Orchestrators;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 
-namespace netmon.core.tests.Unit.Orchestrators
+namespace netmon.domain.tests.Unit.Orchestrators
 {
     public class PingResponseModelReStorageOrchestratorTests : TestBase<PingResponseModelReStorageOrchestrator>
     {

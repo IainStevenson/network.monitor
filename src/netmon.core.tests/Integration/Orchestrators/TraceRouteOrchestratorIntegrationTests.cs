@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Configuration;
-using netmon.core.Data;
-using netmon.core.Handlers;
-using netmon.core.Interfaces;
-using netmon.core.Orchestrators;
+using netmon.domain.Configuration;
+using netmon.domain.Data;
+using netmon.domain.Handlers;
+using netmon.domain.Interfaces;
+using netmon.domain.Orchestrators;
 using NSubstitute;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests.Integration.Orchestrators
+namespace netmon.domain.tests.Integration.Orchestrators
 {
     public class TraceRouteOrchestratorIntegrationTests : TestBase<TraceRouteOrchestrator>
     {

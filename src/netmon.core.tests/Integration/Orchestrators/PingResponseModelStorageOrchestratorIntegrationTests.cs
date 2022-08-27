@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Interfaces.Repositories;
-using netmon.core.Messaging;
-using netmon.core.Orchestrators;
-using netmon.core.Storage;
+using netmon.domain.Interfaces.Repositories;
+using netmon.domain.Messaging;
+using netmon.domain.Orchestrators;
+using netmon.domain.Storage;
 using NSubstitute;
 using NUnit.Framework.Interfaces;
 using System.Net;
 using System.Linq;
 
-namespace netmon.core.tests.Integration.Orchestrators
+namespace netmon.domain.tests.Integration.Orchestrators
 {
     public class PingResponseModelStorageOrchestratorIntegrationTests : TestBase<PingResponseModelStorageOrchestrator>
     {

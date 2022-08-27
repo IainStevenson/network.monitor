@@ -1,16 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using netmon.core.Configuration;
-using netmon.core.Data;
-using netmon.core.Handlers;
-using netmon.core.Interfaces;
-using netmon.core.Messaging;
-using netmon.core.Models;
-using netmon.core.Orchestrators;
+using netmon.domain.Configuration;
+using netmon.domain.Data;
+using netmon.domain.Handlers;
+using netmon.domain.Interfaces;
+using netmon.domain.Messaging;
+using netmon.domain.Models;
+using netmon.domain.Orchestrators;
 using NSubstitute;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace netmon.core.tests.Integration.Orchestrators
+namespace netmon.domain.tests.Integration.Orchestrators
 {
     /// <summary>
     /// Test Summary:

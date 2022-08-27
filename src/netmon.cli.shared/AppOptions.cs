@@ -1,4 +1,4 @@
-﻿using netmon.core.Configuration;
+﻿using netmon.domain.Configuration;
 using Newtonsoft.Json;
 using System.Net;
 

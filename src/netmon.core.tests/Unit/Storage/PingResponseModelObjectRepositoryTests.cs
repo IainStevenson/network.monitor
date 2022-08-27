@@ -1,9 +1,9 @@
 ﻿using MongoDB.Driver;
-using netmon.core.Models;
-using netmon.core.Storage;
+using netmon.domain.Models;
+using netmon.domain.Storage;
 using NSubstitute;
 
-namespace netmon.core.tests.Integration.Storage
+namespace netmon.domain.tests.Integration.Storage
 {
     [TestFixture]
     public class PingResponseModelObjectRepositoryTests : TestBase<PingResponseModelObjectRepository>

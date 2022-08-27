@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using MongoDB.Bson.Serialization;
 using netmon.cli;
-using netmon.core.Configuration;
-using netmon.core.Interfaces;
-using netmon.core.Interfaces.Repositories;
-using netmon.core.Models;
-using netmon.core.Orchestrators;
-using netmon.core.Serialisation;
-using netmon.core.Storage;
+using netmon.domain.Configuration;
+using netmon.domain.Interfaces;
+using netmon.domain.Interfaces.Repositories;
+using netmon.domain.Models;
+using netmon.domain.Orchestrators;
+using netmon.domain.Serialisation;
+using netmon.domain.Storage;
 using Newtonsoft.Json;
 
 internal class AppHost : IHostedService

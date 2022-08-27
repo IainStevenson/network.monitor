@@ -1,8 +1,8 @@
-﻿using netmon.core.Messaging;
-using netmon.core.Storage;
+﻿using netmon.domain.Messaging;
+using netmon.domain.Storage;
 using System.Net;
 
-namespace netmon.core.tests.Integration.Storage
+namespace netmon.domain.tests.Integration.Storage
 {
     public class PingResponseModelTextSummaryStorageIntegrationTests : TestBase<PingResponseModelTextSummaryRepository>
     {

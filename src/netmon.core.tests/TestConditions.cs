@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace netmon.core.tests
+namespace netmon.domain.tests
 {
     public static class TestConditions
     {

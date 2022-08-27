@@ -1,9 +1,9 @@
-﻿using netmon.core.Models;
-using netmon.core.Serialisation;
+﻿using netmon.domain.Models;
+using netmon.domain.Serialisation;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace netmon.core.tests.Unit
+namespace netmon.domain.tests.Unit
 {
     public class SerialisationTests
     {
