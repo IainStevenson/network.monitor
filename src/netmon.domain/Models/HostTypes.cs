@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace netmon.domain.Models
+﻿namespace netmon.domain.Models
 {
     public enum HostTypes
     {

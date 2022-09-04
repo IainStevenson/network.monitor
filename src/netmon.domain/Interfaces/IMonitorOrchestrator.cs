@@ -7,4 +7,5 @@ namespace netmon.domain.Interfaces
     {
         Task Execute(MonitorModes mode, List<IPAddress> addressesToMonitor, TimeSpan until,  CancellationToken cancellationToken);
     }
+
 }

@@ -1,6 +1,8 @@
-﻿using netmon.domain.Configuration;
+﻿using MongoDB.Driver;
+using netmon.domain.Configuration;
 using netmon.domain.Handlers;
 using netmon.domain.Interfaces;
+using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Messaging;
 using netmon.domain.Models;
 using System.Net;
@@ -16,31 +18,81 @@ namespace netmon.domain.Orchestrators
         private readonly IPingHandler _pingHandler;
         private readonly IPingRequestModelFactory _pingRequestModelFactory;
         private readonly PingOrchestratorOptions _options;
-
-        public PingOrchestrator(IPingHandler pingHandler, IPingRequestModelFactory pingRequestModelFactory, PingOrchestratorOptions options)
+        private readonly IEnumerable<IRepository> _repositories;
+        public PingOrchestrator(
+            IPingHandler pingHandler,
+            IPingRequestModelFactory pingRequestModelFactory,
+            PingOrchestratorOptions options,
+             IEnumerable<IRepository> repositories)
         {
             _pingHandler = pingHandler;
             _pingRequestModelFactory = pingRequestModelFactory;
             _options = options;
+            _repositories = repositories;
         }
 
-        public event EventHandler<PingResponseModelEventArgs>? Results;
+        public async Task<PingResponseModels> Ping(IPAddress[] addresses, CancellationToken cancellation)
+        {
+            var pauseTimeBetweenInstances = new TimeSpan(_options.MillisecondsBetweenPings * 10000);
+            var parallelTasks = new List<Task<PingResponseModel>>(addresses.Length);
+            var responses = new PingResponseModels();
 
-        public async Task<PingResponses> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
+            for (int i = 0; i < addresses.Length; i++)
+            {
+                var request = _pingRequestModelFactory.Create(addresses[i]);
+
+                Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
+                parallelTasks.Add(task);
+            }
+
+            if (cancellation.IsCancellationRequested) return new PingResponseModels();
+
+            await Task.WhenAll(parallelTasks);
+
+            var results = parallelTasks.Select(x => x.Result);
+
+            ProcessResults(responses, results);
+
+            return responses;
+        }
+
+        private void ProcessResults(PingResponseModels responses, IEnumerable<PingResponseModel> results)
+        {
+            
+            foreach (var result in results)
+            {
+                responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
+                var tasks = _repositories
+                                 .Where(w => w.Capabilities.HasFlag(RepositoryCapabilities.Store))
+                                 .Select(async (repository) => await ((IStorageRepository<Guid, PingResponseModel>)repository).StoreAsync(result)).ToArray();
+                Task.WaitAll(tasks);
+            }
+           
+        }
+
+        public async Task<PingResponseModels> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
             var pauseTimeBetweenInstances = new TimeSpan(_options.MillisecondsBetweenPings * 10000);
             var end = DateTimeOffset.UtcNow.Add(until);
-            var responses = new PingResponses();
+            var responses = new PingResponseModels();
 
             while (DateTimeOffset.UtcNow < end && !cancellation.IsCancellationRequested)
             {
-                var looptime = DateTimeOffset.UtcNow.Add(pauseTimeBetweenInstances);
+                if (!cancellation.IsCancellationRequested)
+                {
+                    var looptime = DateTimeOffset.UtcNow.Add(pauseTimeBetweenInstances);
+                    while (responses.Any() && DateTimeOffset.UtcNow < looptime)
+                    {
+                        Thread.Sleep((int)(pauseTimeBetweenInstances.Milliseconds / 10));
+                    }
+                }
                 var parallelTasks = new List<Task<PingResponseModel>>(addresses.Length);
 
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    var request = _pingRequestModelFactory.Create();
-                    request.Address = addresses[i];
+                    var request = _pingRequestModelFactory.Create(addresses[i]);
+
+
                     Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
                     parallelTasks.Add(task);
                 }
@@ -48,18 +100,9 @@ namespace netmon.domain.Orchestrators
                 await Task.WhenAll(parallelTasks);
 
                 var results = parallelTasks.Select(x => x.Result);
-                foreach (var result in results)
-                {
-                    responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
-                    Results?.Invoke(this, new PingResponseModelEventArgs(result));
-                }
-                if (!cancellation.IsCancellationRequested)
-                {
-                    while (DateTimeOffset.UtcNow < looptime)
-                    {
-                        Thread.Sleep((int)(pauseTimeBetweenInstances.Milliseconds / 10));
-                    }
-                }
+
+                ProcessResults(responses, results);
+
             }
 
             return responses;

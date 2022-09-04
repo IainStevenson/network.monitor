@@ -65,7 +65,7 @@ internal class AppHost : IHostedService
 
 
 
-        if (!_options.StorageFolder.Exists) throw new ArgumentException("OutputPath");
+        if (!_options.Capture.StorageFolder.Exists) throw new ArgumentException("OutputPath");
 
         services
             .AddLogging(configure =>
@@ -92,43 +92,45 @@ internal class AppHost : IHostedService
             })
             .AddSingleton<IFileSystemRepository>(provider =>
             {
-                return new PingResponseModelJsonRepository(_options.StorageFolder,
+                return new PingResponseModelJsonRepository(_options.Capture.StorageFolder,
                         provider.GetRequiredService<JsonSerializerSettings>(),
-                        _options.FolderDelimiter);
+                        _options.Capture.FolderDelimiter,
+                            provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>());
             })
             .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
             {
-                var client = new MongoDB.Driver.MongoClient(_options.StorageService.ConnectionString);
+                var client = new MongoDB.Driver.MongoClient(_options.Storage.ConnectionString);
                 var database = client.GetDatabase("netmon");
                 var collection = database.GetCollection<PingResponseModel>("ping");
-                return new PingResponseModelObjectRepository(collection);
+                return new PingResponseModelObjectRepository(collection,
+                            provider.GetRequiredService<ILogger<PingResponseModelObjectRepository>>());
             })
             .AddSingleton<IRestorageOrchestrator<PingResponseModel>, PingResponseModelReStorageOrchestrator>()
             .AddSingleton(provider =>
                 {
-                    var instance = new Dictionary<MonitorModes, IMonitorSubOrchestrator>
+                    var instance = new Dictionary<MonitorModes, IMonitorModeOrchestrator>
                     {
                         {
                             MonitorModes.PingContinuously,
-                            new MonitorPingSubOrchestrator(
-                            provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
+                            new PingContinuouslyOrchestrator(
                             provider.GetRequiredService<IPingOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorPingSubOrchestrator>>()
+                            provider.GetRequiredService<PingOrchestratorOptions>(),
+                            provider.GetRequiredService<ILogger<PingContinuouslyOrchestrator>>()
                             )
                         },
                         {
                             MonitorModes.TraceRouteContinuously,
-                            new MonitorTraceRouteSubOrchestrator(
-                            provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
-                            provider.GetRequiredService<ITraceRouteOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorTraceRouteSubOrchestrator>>())
+                            new TraceRouteContinuouslyOrchestrator(
+                                provider.GetRequiredService<ITraceRouteOrchestrator>(),
+                                provider.GetRequiredService<ILogger<TraceRouteContinuouslyOrchestrator>>()
+                                )
                         },
                         {
                             MonitorModes.TraceRouteThenPingContinuously,
-                            new MonitorTraceRouteThenPingSubOrchestrator(
-                        provider.GetRequiredService<IStorageOrchestrator<PingResponseModel>>(),
-                            provider.GetRequiredService<ITraceRouteOrchestrator>(), provider.GetRequiredService<IPingOrchestrator>(),
-                            provider.GetRequiredService<ILogger<MonitorTraceRouteThenPingSubOrchestrator>>()
+                            new TraceRouteThenPingContinuouslyOrchestrator(
+                            provider.GetRequiredService<ITraceRouteOrchestrator>(), 
+                            provider.GetRequiredService<IPingOrchestrator>(),
+                            provider.GetRequiredService<ILogger<TraceRouteThenPingContinuouslyOrchestrator>>()
                         )
                         }
                     };
@@ -143,8 +145,8 @@ internal class AppHost : IHostedService
     {
 
         _logger.LogTrace("Moving Files from .. {path} to {connection}",
-                                                _options.OutputPath,
-                                                _options.StorageService.ConnectionString
+                                                _options.Capture.OutputPath,
+                                                _options.Storage.ConnectionString
                                                  );
 
         while (!cancellationToken.IsCancellationRequested) // until cancelled

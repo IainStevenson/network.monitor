@@ -1,6 +1,7 @@
 ﻿using netmon.domain.Data;
 using netmon.domain.Interfaces;
 using netmon.domain.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace netmon.domain.Handlers
@@ -8,6 +9,7 @@ namespace netmon.domain.Handlers
     /// <summary>
     /// With reference to: https://en.wikipedia.org/wiki/Reserved_IP_addresses
     /// </summary>
+    [ExcludeFromCodeCoverage(Justification = "Future codfeature early ideas code")]
     public class HostAddressTypeHandler : IHostAddressTypeHandler
     {
 

@@ -1,4 +1,5 @@
-﻿using netmon.domain.Interfaces.Repositories;
+﻿using Microsoft.Extensions.Logging;
+using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Models;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -15,21 +16,33 @@ namespace netmon.domain.Storage
         IRetrieveRepository<Guid, PingResponseModel>,
         IDeletionRepository<Guid, PingResponseModel>, IRepository, IFileSystemRepository
     {
-        public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store ^ RepositoryCapabilities.Retrieve ^ RepositoryCapabilities.Delete;
+        public RepositoryCapabilities Capabilities =>
+                RepositoryCapabilities.Store |
+                RepositoryCapabilities.Retrieve |
+                RepositoryCapabilities.Delete |
+                RepositoryCapabilities.File
+            ;
 
+        private ILogger<PingResponseModelJsonRepository> _logger;
         private readonly DirectoryInfo _storageFolder;
         private readonly JsonSerializerSettings _settings;
         private readonly string _storageSystemFolderDelimiter;
 
-        public PingResponseModelJsonRepository(DirectoryInfo storageFolder, JsonSerializerSettings settings, string storageSystemFolderDelimiter)
+        public PingResponseModelJsonRepository(
+            DirectoryInfo storageFolder,
+            JsonSerializerSettings settings,
+            string storageSystemFolderDelimiter,
+            ILogger<PingResponseModelJsonRepository> logger)
         {
             _storageFolder = storageFolder;
             _settings = settings;
             _storageSystemFolderDelimiter = storageSystemFolderDelimiter;
+            _logger = logger;
         }
 
         public Task DeleteAsync(Guid id)
         {
+            _logger.LogTrace("Removing item {identifier} ", id);
             var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
             if (filesFound.Any())
@@ -42,6 +55,7 @@ namespace netmon.domain.Storage
         [DebuggerStepThrough]
         public Task<string> GetFileDataAsync(string fullFileName)
         {
+            _logger.LogTrace("Retrieving file data {identifier} ", fullFileName);
             try
             {
                 return Task.FromResult(File.ReadAllText(fullFileName));
@@ -53,11 +67,13 @@ namespace netmon.domain.Storage
 
         public Task<IEnumerable<FileInfo>> GetFileInformationAsync(string pattern)
         {
+            _logger.LogTrace("Retrieving file information with pattern {pattern} ", pattern);
             return Task.FromResult(_storageFolder.EnumerateFiles(pattern, SearchOption.TopDirectoryOnly));
         }
 
         public Task<PingResponseModel?> RetrieveAsync(Guid id)
         {
+            _logger.LogTrace("Retrieving item {identifier} ", id);
             PingResponseModel? response = null;
             var itemfileName = $@"*-{id}.json";
             var filesFound = _storageFolder.EnumerateFiles(itemfileName, SearchOption.TopDirectoryOnly);
@@ -73,6 +89,7 @@ namespace netmon.domain.Storage
 
         public Task StoreAsync(PingResponseModel item)
         {
+            _logger.LogTrace("Storing item {start} {address} {response} {identifier}", item.Start, item.Request.Address.ToString(), item.Response?.RoundtripTime ?? 0, item.Id);
             var data = JsonConvert.SerializeObject(item, _settings);
             var timestamp = $"{item.Start:o}";
             var itemfileName = $@"{_storageFolder.FullName}{_storageSystemFolderDelimiter}{timestamp.Replace(":", "-")}-{item.Request.Address}-{item.Id}.json";
@@ -84,9 +101,12 @@ namespace netmon.domain.Storage
         {
             if (File.Exists(fullName))
             {
+                _logger.LogTrace("Deleting file item {identifier}", fullName);
                 File.Delete(fullName);
                 return Task.FromResult(string.Empty);
             }
+            _logger.LogTrace("File item {identifier} does not exist.", fullName);
+
             return Task.FromResult(fullName);
         }
     }

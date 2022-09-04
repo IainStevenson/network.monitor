@@ -3,10 +3,11 @@
     [Flags]
     public enum RepositoryCapabilities
     {
-        None = 0,
+        Undeclared = 0,
         Store,
         Retrieve,
         Delete,
+        File,
     }
 
 }

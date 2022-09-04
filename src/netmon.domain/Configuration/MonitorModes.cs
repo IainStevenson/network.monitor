@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace netmon.domain.Configuration
+﻿namespace netmon.domain.Configuration
 {
     public enum MonitorModes
     {

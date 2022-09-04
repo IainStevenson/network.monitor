@@ -1,39 +1,14 @@
-﻿using netmon.domain.Configuration;
-using Newtonsoft.Json;
-using System.Net;
+﻿using System.Text.RegularExpressions;
 
 namespace netmon.cli
 {
     public class AppOptions
     {
 
-        //TODO: Time between pings
-        //TODO: PING Timeout
-        public AppOptions()
-        {
-            OutputPath = DefaultOutputPath();
-        }
-
-        public List<string> Addresses { get; set; } = new();
-
-        [JsonIgnore]
-        public List<IPAddress> IPAddresses
-        {
-            get
-            {
-                return Addresses.Select(x => IPAddress.Parse(x)).ToList();
-            }
-        }
-
-        public TimeSpan Until { get; set; } = new(DateTimeOffset.UtcNow.AddYears(99).Ticks);
-
-        public MonitorModes Mode { get; set; } = MonitorModes.TraceRouteThenPingContinuously;
-
-        public string OutputPath { get; set; }
-        public StorageServiceOptions StorageService { get; set; } = new StorageServiceOptions();
-
-        [JsonIgnore]
-        public DirectoryInfo StorageFolder => new(OutputPath);
+        public CaptureOptions Capture { get; set; } = new();
+        public AnalysisOptions Analysis { get; set; } = new();
+        public StorageOptions Storage { get; set; } = new();
+        public ReportingOptions Reporting { get; set; } = new();
 
         ///// <summary>
         ///// --addresses=8.8.8.8,192,168,0,1,192,168,1,1 --mode=TraceRouteThenPing
@@ -69,27 +44,6 @@ namespace netmon.cli
 
         //}
 
-        [JsonIgnore]
-        public string FolderDelimiter = Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\";
-
-        public DirectoryInfo EnsureStorageDirectoryExits(string outputPath)
-        {
-            if (string.IsNullOrWhiteSpace(outputPath))
-            {
-                outputPath = DefaultOutputPath();
-            }
-            var storageDirectory = new DirectoryInfo(outputPath);
-            if (!storageDirectory.Exists)
-            {
-                storageDirectory.Create();
-            }
-            return storageDirectory;
-        }
-
-        private string DefaultOutputPath()
-        {
-            var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            return $"{commonDataFolder}{FolderDelimiter}netmon";
-        }
+      
     }
 }

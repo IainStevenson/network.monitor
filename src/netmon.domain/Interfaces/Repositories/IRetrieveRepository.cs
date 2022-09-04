@@ -13,17 +13,5 @@
         /// <param name="id">The items unique identifier.</param>
         /// <returns></returns>
         Task<TItem?> RetrieveAsync(TKey id);
-        /// <summary>
-        /// Retrieves any items matching the query.
-        /// </summary>
-        /// <param name="query">A delegate function that identifies the items.</param>
-        /// <returns></returns>
-        //Task<IEnumerable<T>> RetrieveAsync(Func<bool, T> query);
-        /// <summary>
-        /// Deletes the item matching the identifier.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns>An isntance of <see cref="Task"/>.</returns>
     }
-
 }

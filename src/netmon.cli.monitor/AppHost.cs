@@ -21,10 +21,10 @@ namespace netmon.cli.monitor
         private readonly object _resettingObject = new();
         private bool _continuing = true;
         private DateTimeOffset _resetTime;
-        private const int _cancellationThreadSleepTime = 500; 
+        private const int _cancellationThreadSleepTime = 500;
         private readonly ServiceProvider _serviceProvider;
         private readonly ILogger<AppHost> _logger;
-        private readonly IEnumerable<IMonitorSubOrchestrator> _monitors;
+        private readonly IEnumerable<IMonitorModeOrchestrator> _monitors;
         private readonly IMonitorOrchestrator _monitorOrchestrator;
         private AppOptions _options;
         private readonly CancellationTokenSource _cancellationTokenSource;
@@ -36,7 +36,7 @@ namespace netmon.cli.monitor
             _serviceProvider = BootstrapApplication(services, config);
             _monitorOrchestrator = _serviceProvider.GetRequiredService<IMonitorOrchestrator>();
             _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
-            _monitors = _serviceProvider.GetServices<IMonitorSubOrchestrator>(); // get em all
+            _monitors = _serviceProvider.GetServices<IMonitorModeOrchestrator>(); // get em all
             _cancellationTokenSource = _serviceProvider.GetRequiredService<CancellationTokenSource>();
         }
 
@@ -71,7 +71,7 @@ namespace netmon.cli.monitor
 
             _options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
 
-            var storageDirectory = new DirectoryInfo(_options.OutputPath);
+            var storageDirectory = new DirectoryInfo(_options.Capture.OutputPath);
             if (!storageDirectory.Exists) throw new ArgumentException("OutputPath");
 
             services.AddLogging(configure =>
@@ -108,23 +108,52 @@ namespace netmon.cli.monitor
                     })
                     .AddSingleton<IRepository>(provider =>
                     {
-                        return new PingResponseModelJsonRepository(storageDirectory, provider.GetRequiredService<JsonSerializerSettings>(), _options.FolderDelimiter);
+                        return new PingResponseModelJsonRepository(
+                            storageDirectory,
+                            provider.GetRequiredService<JsonSerializerSettings>(),
+                            _options.Capture.FolderDelimiter,
+                            provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>());
                     })
                     .AddSingleton<IRepository>(provider =>
                     {
-                        return new PingResponseModelTextSummaryRepository(storageDirectory, _options.FolderDelimiter);
+                        return new PingResponseModelTextSummaryRepository(storageDirectory, _options.Capture.FolderDelimiter);
                     })
-                    .AddSingleton<IStorageOrchestrator<PingResponseModel>>(
-                        (provider) =>
-                        {
-                            var respositories = provider.GetServices<IRepository>(); // get em all
-                            var logger = provider.GetRequiredService<ILogger<PingResponseModelStorageOrchestrator>>();
-                            return new PingResponseModelStorageOrchestrator(respositories, logger, provider.GetRequiredService<JsonSerializerSettings>());
-                        })
-                    .AddSingleton<IMonitorSubOrchestrator, MonitorTraceRouteThenPingSubOrchestrator>()
-                    .AddSingleton<IMonitorSubOrchestrator, MonitorTraceRouteSubOrchestrator>()
-                    .AddSingleton<IMonitorSubOrchestrator, MonitorPingSubOrchestrator>()
+                    .AddSingleton<IMonitorModeOrchestrator, TraceRouteContinuouslyOrchestrator>()
+                    .AddSingleton<IMonitorModeOrchestrator, PingContinuouslyOrchestrator>()
                     .AddSingleton<IMonitorOrchestrator, MonitorOrchestrator>()
+                    .AddSingleton<IMonitorModeOrchestrator, TraceRouteThenPingContinuouslyOrchestrator>()
+                    .AddSingleton<IEnumerable<IRepository>>((provider) => { return provider.GetServices<IRepository>(); })
+                    .AddSingleton(provider =>
+                    {
+                        var instance = new Dictionary<MonitorModes, IMonitorModeOrchestrator>
+                            {
+                                {
+                                    MonitorModes.PingContinuously,
+                                    new PingContinuouslyOrchestrator(
+                                    provider.GetRequiredService<IPingOrchestrator>(),
+                                    provider.GetRequiredService<PingOrchestratorOptions>(),
+                                    provider.GetRequiredService<ILogger<PingContinuouslyOrchestrator>>()
+                                    )
+                                },
+                                {
+                                    MonitorModes.TraceRouteContinuously,
+                                    new TraceRouteContinuouslyOrchestrator(
+                                        provider.GetRequiredService<ITraceRouteOrchestrator>(),
+                                        provider.GetRequiredService<ILogger<TraceRouteContinuouslyOrchestrator>>()
+                                        )
+                                },
+                                {
+                                    MonitorModes.TraceRouteThenPingContinuously,
+                                    new TraceRouteThenPingContinuouslyOrchestrator(
+                                    provider.GetRequiredService<ITraceRouteOrchestrator>(),
+                                    provider.GetRequiredService<IPingOrchestrator>(),
+                                    provider.GetRequiredService<ILogger<TraceRouteThenPingContinuouslyOrchestrator>>()
+                                )
+                                }
+                            };
+                        return instance;
+                        }
+                        )
                     ;
 
             return services.BuildServiceProvider();
@@ -135,27 +164,22 @@ namespace netmon.cli.monitor
         public async Task StartAsync(CancellationToken cancellationToken)
         {
 
-            //"Temporary code whilst getting fix for ping problems in linux with low TTL"
+            // "Temporary code whilst getting fix for ping problems in linux with low TTL"
             var canUseRawSockets = RawSocketPermissions.CanUseRawSockets(System.Net.Sockets.AddressFamily.InterNetwork);
+
             _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
 
             _logger.LogTrace("Monitoring... {addresses} {until} {mode}",
-                                                    _options.Addresses,
-                                                    _options.Until,
-                                                    _options.Mode
+                                                    _options.Capture.Addresses,
+                                                    _options.Capture.Until,
+                                                    _options.Capture.Mode
                                                      );
-
-            foreach (var monitor in _monitors)
-            {
-                monitor.Reset += Monitor_Reset;
-            }
-
 
             while (_continuing)
             {
-                await _monitorOrchestrator.Execute(_options.Mode,
-                                                    _options.IPAddresses,
-                                                    _options.Until,
+                await _monitorOrchestrator.Execute(_options.Capture.Mode,
+                                                    _options.Capture.IPAddresses,
+                                                    _options.Capture.Until,
                                                     cancellationToken);
                 _continuing = false;
 
@@ -165,28 +189,9 @@ namespace netmon.cli.monitor
                 }
             }
 
-
-            foreach (var monitor in _monitors)
-            {
-                monitor.Reset -= Monitor_Reset;
-            }
-
         }
 
-        private void Monitor_Reset(object? sender, SubOrchestratorEventArgs e)
-        {
-            if (_resetTime.AddMinutes(2) > DateTimeOffset.UtcNow) return; // ignore repeats too soon
-            lock (_resettingObject)
-            {
-                if (_continuing) return; // already done
-                _continuing = true;
-                _resetTime = DateTimeOffset.UtcNow;
-                _cancellationTokenSource.Cancel();
-            }
-            Thread.Sleep(_cancellationThreadSleepTime);
-        }
 
-     
 
         public Task StopAsync(CancellationToken cancellationToken)
         {

@@ -6,10 +6,7 @@ namespace netmon.cli.monitor
     public class Program
     {
         static void Main(string[] args)
-        {
-
-            
-            
+        {            
             Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) => {
                     services.AddHostedService<AppHost>( (provider) => {

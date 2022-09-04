@@ -30,19 +30,18 @@ namespace netmon.domain.Handlers
         public Task<PingResponseModel> Execute(PingRequestModel request, CancellationToken cancellationToken)
         {
             var response = new PingResponseModel();
-
             return Task.Run(() =>
             {
                 using (Ping pingSender = new())
                 {
                     response.Request = request;
+                   
 
                     var pingOptions = new PingOptions()
                     {
                         DontFragment = _pingOptions.DontFragment,
                         Ttl = request.Ttl
                     };
-
 
                     _logger.LogTrace(
                         "{class}.{method} PING request  {address}, Timeout: {timeout}, TTL {timetolive}", 
@@ -70,11 +69,11 @@ namespace netmon.domain.Handlers
                     }
                     _logger.LogTrace("{class}.{method} PING response {duration} ms, Status {status},  TTL {timetolive}", 
                         nameof(PingHandler), nameof(Execute), response.Duration.TotalMilliseconds, response.Response?.Status, response.Response?.Options?.Ttl);
-
-
                 }
                 return response;
             });
         }
+
+
     }
 }

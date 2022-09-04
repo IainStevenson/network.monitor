@@ -7,17 +7,17 @@ namespace netmon.domain.Models
 {
 
     [ExcludeFromCodeCoverage]
-    public class PingResponseModel: StorageBase
+    public class PingResponseModel : StorageBase
     {
 
         /// <summary>
         /// When it started
         /// </summary>
-        [BsonRepresentation(BsonType.String)] public DateTimeOffset Start { get;  set; } = DateTimeOffset.MinValue;
+        [BsonRepresentation(BsonType.String)] public DateTimeOffset Start { get; set; } = DateTimeOffset.MinValue;
         /// <summary>
         /// When it finished
         /// </summary>
-        [BsonRepresentation(BsonType.String)] public DateTimeOffset Finish { get;  set; } = DateTimeOffset.MinValue;
+        [BsonRepresentation(BsonType.String)] public DateTimeOffset Finish { get; set; } = DateTimeOffset.MinValue;
         /// <summary>
         /// How long it took.
         /// </summary>
@@ -33,18 +33,9 @@ namespace netmon.domain.Models
         /// Waht was asked for.
         /// </summary>
         public PingRequestModel Request { get; set; } = new PingRequestModel();
-        /// <summary>
-        /// The hop number for a Trace route ping
-        /// </summary>
-        public int? Hop { get; set; }
-        /// <summary>
-        /// The attemtp number for a trace route ping.
-        /// </summary>
-        public int? Attempt { get; set; }
-        /// <summary>
-        /// The maximum attempts number foa trace route operation
-        /// </summary>
-        public int? MaxAttempts { get; set; }
+
+        public TraceInfoModel? TraceInfo { get; set; } 
+
         public Exception? Exception { get; set; }
     }
 }

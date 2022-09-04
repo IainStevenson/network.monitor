@@ -11,10 +11,10 @@ namespace netmon.domain.Orchestrators
     /// </summary>
     public class MonitorOrchestrator : IMonitorOrchestrator
     {
-        private readonly Dictionary<MonitorModes, IMonitorSubOrchestrator> _monitors;
+        private readonly Dictionary<MonitorModes, IMonitorModeOrchestrator> _monitors;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
-        public MonitorOrchestrator(Dictionary<MonitorModes, IMonitorSubOrchestrator> monitors,
+        public MonitorOrchestrator(Dictionary<MonitorModes, IMonitorModeOrchestrator> monitors,
         ILogger<MonitorOrchestrator> logger)
         {
             _monitors = monitors;

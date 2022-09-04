@@ -8,12 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Configuration\MonitorOptions.cs" />
     <Compile Remove="Data\IPVAddressRangeAttribute.cs" />
     <Compile Remove="Data\ISPV4AddressRanges.cs" />
     <Compile Remove="Handlers\IcmpV4MessageConstants.cs" />
     <Compile Remove="Handlers\IcmpV6MessageConstants.cs" />
     <Compile Remove="Handlers\PingReply.cs" />
     <Compile Remove="Handlers\PseudoPing.cs" />
+    <Compile Remove="Interfaces\IPingResponseModelStorageOrchestrator.cs" />
+    <Compile Remove="Messaging\MonitorResponses.cs" />
+    <Compile Remove="Models\PingResponseModelEventArgs.cs" />
   </ItemGroup>
 
   <ItemGroup>

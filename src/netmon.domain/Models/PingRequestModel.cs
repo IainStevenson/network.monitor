@@ -11,7 +11,13 @@ namespace netmon.domain.Models
     [ExcludeFromCodeCoverage]
     public class PingRequestModel
     {
-       
+
+        /// <summary>
+        /// The address to ping. Default is the loopback address.
+        /// </summary>
+        [JsonConverter(typeof(IPAddressConverter))]
+        public IPAddress? Origin { get; set; } = Defaults.LoopbackAddress;
+
         /// <summary>
         /// The address to ping. Default is the loopback address.
         /// </summary>

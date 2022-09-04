@@ -44,34 +44,35 @@ namespace netmon.domain.Orchestrators
 
             foreach (var file in filesFound)
             {
-                _logger.LogTrace("Processing {name} ...", file.FullName);
-                try
-                {
-                    var json = await _jsonRepository.GetFileDataAsync(file.FullName);
-
-                    var response = JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings);
-
-                    if (response != null)
-                    {
-                        await _objectRepository.StoreAsync(response);
-
-                        await _jsonRepository.DeleteFileAsync(file.FullName);
-
-                        _logger.LogTrace("Processed {name} ", file.FullName);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Null result when deserializing {name} ...", file.FullName);
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("An exception has occured during a response file data move {name}: {message}", file.Name, ex.Message);
-                }
-
                 if (cancellationToken.IsCancellationRequested) break;
+
+                await ProcessFile(file.FullName);
+
+                await Cleanup(file.FullName);
             }
+        }
+
+        private async Task ProcessFile(string fullName)
+        {
+            _logger.LogTrace("Processing file {name} ...", fullName);
+            var json = await _jsonRepository.GetFileDataAsync(fullName);
+            try
+            {
+                var response = JsonConvert.DeserializeObject<PingResponseModel>(json, _jsonSerializerSettings);
+                if (response != null)
+                {
+                    await _objectRepository.StoreAsync(response);
+                }
+            }
+            catch (Exception){ }
+
+        }
+
+        private async Task Cleanup(string fullName)
+        {
+            await _jsonRepository.DeleteFileAsync(fullName);
+
+            _logger.LogTrace("Removed file {name} ", fullName);
         }
     }
 }
