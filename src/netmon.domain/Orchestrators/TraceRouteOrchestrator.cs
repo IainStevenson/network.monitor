@@ -2,6 +2,7 @@
 using netmon.domain.Configuration;
 using netmon.domain.Data;
 using netmon.domain.Interfaces;
+using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Messaging;
 using netmon.domain.Models;
 using System.Net;
@@ -19,16 +20,19 @@ namespace netmon.domain.Orchestrators
         private readonly TraceRouteOrchestratorOptions _options;
         private readonly IPingRequestModelFactory _requestModelFactory;
         private readonly ILogger<TraceRouteOrchestrator> _logger;
+        private IEnumerable<IRepository> _repositories;
 
         public TraceRouteOrchestrator(
-            IPingOrchestrator pingOrchestrator, 
-            TraceRouteOrchestratorOptions options, 
+            IPingOrchestrator pingOrchestrator,
+            TraceRouteOrchestratorOptions options,
             IPingRequestModelFactory requestModelFactory,
+            IEnumerable<IRepository> repositories,
             ILogger<TraceRouteOrchestrator> logger)
         {
             _pingOrchestrator = pingOrchestrator;
             _options = options;
             _requestModelFactory = requestModelFactory;
+            _repositories = repositories;
             _logger = logger;
         }
 
@@ -130,6 +134,10 @@ namespace netmon.domain.Orchestrators
         {
             if (pingResponse == null) return;
             responses.TryAdd(new(pingResponse.Start, pingResponse.Request.Address), pingResponse);
+            var tasks = _repositories
+                                 .Where(w => w.Capabilities.HasFlag(RepositoryCapabilities.Store))
+                                 .Select(async (repository) => await ((IStorageRepository<Guid, PingResponseModel>)repository).StoreAsync(pingResponse)).ToArray();
+            Task.WaitAll(tasks);
         }
 
     }

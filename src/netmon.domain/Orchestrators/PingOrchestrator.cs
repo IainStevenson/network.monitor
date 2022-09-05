@@ -35,7 +35,8 @@ namespace netmon.domain.Orchestrators
 
         public async Task<PingResponseModel> PingOne(PingRequestModel request, CancellationToken cancellationToken)
         {
-            return await _pingHandler.Ping(request, cancellationToken);
+            var response = await _pingHandler.Ping(request, cancellationToken);         
+            return response;
         }
 
         public async Task<PingResponseModels> PingMany(IPAddress[] addresses, CancellationToken cancellationToken)
@@ -65,7 +66,7 @@ namespace netmon.domain.Orchestrators
 
         private void ProcessResults(PingResponseModels responses, IEnumerable<PingResponseModel> results)
         {
-            
+
             foreach (var result in results)
             {
                 responses.TryAdd(new Tuple<DateTimeOffset, IPAddress>(result.Start, result.Request.Address), result);
@@ -74,7 +75,7 @@ namespace netmon.domain.Orchestrators
                                  .Select(async (repository) => await ((IStorageRepository<Guid, PingResponseModel>)repository).StoreAsync(result)).ToArray();
                 Task.WaitAll(tasks);
             }
-           
+
         }
 
         public async Task<PingResponseModels> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)

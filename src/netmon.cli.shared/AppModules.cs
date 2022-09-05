@@ -8,6 +8,8 @@ using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Models;
 using netmon.domain.Orchestrators;
 using netmon.domain.Storage;
+using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace netmon.cli.monitor
 {
@@ -57,14 +59,22 @@ namespace netmon.cli.monitor
         }
 
         /// <summary>
-        /// Adds object storage repositories and Orchestrators.
+        /// Adds object storage repositories and Orchestrators plus BSON mapping
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> instance to populate.</param>
         /// <param name="options">The already configured <see cref="AppOptions"/> instance to use.</param>
         /// <returns>The same <see cref="IServiceCollection"/> intance.</returns>
         public static IServiceCollection AddAppObjectStorage(this IServiceCollection services, AppOptions options)
         {
-            services.AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
+            BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
+            {
+                cm.AutoMap();
+                //cm.MapIdMember(c => c.Id);
+                cm.SetIgnoreExtraElements(true);
+            });
+            services
+                .AddSingleton<PingResponseModelObjectRepository>()
+                .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
             {
                 var client = new MongoDB.Driver.MongoClient(options.Storage.ConnectionString);
                 var database = client.GetDatabase(options.Storage.DatabaseName);
@@ -77,21 +87,6 @@ namespace netmon.cli.monitor
             return services;
         }
 
-        /// <summary>
-        /// Provides BSON mapping setup for all apps requiring MongoDB storage access
-        /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/> instance to populate.</param>
-        /// <returns>The same <see cref="IServiceCollection"/> intance.</returns>
-        public static IServiceCollection AddAppStorageBsonMapping(this IServiceCollection services)
-        {
-            BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
-            {
-                cm.AutoMap();
-                //cm.MapIdMember(c => c.Id);
-                cm.SetIgnoreExtraElements(true);
-            });
-            return services;
-        }
 
         /// <summary>
         /// Add the repositories for file storage, both JSON and text.
@@ -101,16 +96,20 @@ namespace netmon.cli.monitor
         /// <returns>The same <see cref="IServiceCollection"/> intance.</returns>
         public static IServiceCollection AddAppFileStorage(this IServiceCollection services, AppOptions options)
         {
-            services.AddSingleton<IRepository>(provider =>
-                                                {
-                                                    return provider.GetRequiredService<PingResponseModelJsonRepository>();
-                                                }
-                    )
-                    .AddSingleton<IRepository>(provider =>
-                    {
-                        return new PingResponseModelTextSummaryRepository(options.Monitor.StorageFolder, options.Monitor.FolderDelimiter);
-                    })
-
+            services
+                .AddSingleton<IRepository>(provider =>
+                {
+                    return new PingResponseModelJsonRepository(
+                            options.Monitor.StorageFolder,
+                            provider.GetRequiredService<JsonSerializerSettings>(),
+                            options.Monitor.FolderDelimiter,
+                            provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>() );
+                })
+                .AddSingleton<IRepository>(provider =>
+                {
+                    return new PingResponseModelTextSummaryRepository(options.Monitor.StorageFolder,
+                            options.Monitor.FolderDelimiter);
+                })
                 ;
             return services;
         }
