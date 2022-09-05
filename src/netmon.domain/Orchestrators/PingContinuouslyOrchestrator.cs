@@ -33,7 +33,7 @@ namespace netmon.domain.Orchestrators
             _logger.LogTrace("PINGing {count} addresses until {until}.", addressesToMonitor.Count, until);
             try
             {
-                _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(), until, cancellationToken);
+                _ = await _pingOrchestrator.PingManyUntil(addressesToMonitor.ToArray(), until, cancellationToken);
             }
             catch (Exception ex)
             {

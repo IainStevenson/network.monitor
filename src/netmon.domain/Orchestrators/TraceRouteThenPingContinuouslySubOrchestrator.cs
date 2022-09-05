@@ -28,7 +28,7 @@ namespace netmon.domain.Orchestrators
         {
             addressesToMonitor = await GetPingAddressesByTraceRoute(addressesToMonitor, cancellationToken);
 
-            _ = await _pingOrchestrator.PingUntil(addressesToMonitor.ToArray(),
+            _ = await _pingOrchestrator.PingManyUntil(addressesToMonitor.ToArray(),
                                                  until,
                                                  cancellationToken);
            

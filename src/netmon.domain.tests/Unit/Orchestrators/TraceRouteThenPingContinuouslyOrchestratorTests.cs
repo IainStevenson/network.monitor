@@ -49,7 +49,7 @@ namespace netmon.domain.tests.Unit.Orchestrators
                 .Returns(_traceRouteResponses);
 
             _pingOrchestrator
-                .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>())
+                .PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>())
                 .Returns(_pingResponses);
 
             _unitLogger = Substitute.For<ILogger<TraceRouteThenPingContinuouslyOrchestrator>>();
@@ -116,7 +116,7 @@ namespace netmon.domain.tests.Unit.Orchestrators
                     .Execute(Defaults.DefaultMonitoringDestination, _cancellationToken);
 
             await _pingOrchestrator.Received(1)
-                    .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+                    .PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
         }
 
@@ -139,7 +139,7 @@ namespace netmon.domain.tests.Unit.Orchestrators
                     .Execute(Arg.Any<IPAddress>(), _cancellationToken);
 
             await _pingOrchestrator.Received(1)
-                    .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+                    .PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
 
 
@@ -158,7 +158,7 @@ namespace netmon.domain.tests.Unit.Orchestrators
            
             // Assert 
             await _traceRouteOrchestrator.Received(testAddresses.Count).Execute(Arg.Any<IPAddress>(), _cancellationToken);            
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            await _pingOrchestrator.Received(1).PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
             
         }

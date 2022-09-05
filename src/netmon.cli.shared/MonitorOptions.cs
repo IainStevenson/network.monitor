@@ -4,16 +4,16 @@ using System.Net;
 
 namespace netmon.cli
 {
-    public class CaptureOptions
+    public class MonitorOptions
     {
         [JsonIgnore]
         public string FolderDelimiter = Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\";
 
-        public DirectoryInfo EnsureStorageDirectoryExits(string outputPath)
+        public DirectoryInfo EnsureStorageDirectoryExists(string outputPath)
         {
             if (string.IsNullOrWhiteSpace(outputPath))
             {
-                outputPath = DefaultOutputPath();
+                outputPath = OutputPath;
             }
             var storageDirectory = new DirectoryInfo(outputPath);
             if (!storageDirectory.Exists)
@@ -23,15 +23,6 @@ namespace netmon.cli
             return storageDirectory;
         }
 
-        private string DefaultOutputPath()
-        {
-            var commonDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            return $"{commonDataFolder}{FolderDelimiter}netmon";
-        }
-        public CaptureOptions()
-        {
-            OutputPath = DefaultOutputPath();
-        }
         public List<string> Addresses { get; set; } = new();
 
         [JsonIgnore]
@@ -47,7 +38,7 @@ namespace netmon.cli
 
         public MonitorModes Mode { get; set; } = MonitorModes.TraceRouteThenPingContinuously;
 
-        public string OutputPath { get; set; }
+        public string OutputPath { get; set; }= $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)}{(Environment.OSVersion.Platform == PlatformID.Unix ? "/" : "\\")}netmon";
 
         [JsonIgnore]
         public DirectoryInfo StorageFolder => new(OutputPath);

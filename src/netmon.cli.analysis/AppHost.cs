@@ -64,7 +64,7 @@ internal class AppHost : IHostedService
         _options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
 
 
-        if (!_options.Capture.StorageFolder.Exists) throw new ArgumentException("OutputPath");
+        if (!_options.Monitor.StorageFolder.Exists) throw new ArgumentException("OutputPath");
 
         services
             .AddLogging(configure =>
@@ -91,9 +91,9 @@ internal class AppHost : IHostedService
             })
             .AddSingleton<IFileSystemRepository>(provider =>
             {
-                return new PingResponseModelJsonRepository(_options.Capture.StorageFolder,
+                return new PingResponseModelJsonRepository(_options.Monitor.StorageFolder,
                         provider.GetRequiredService<JsonSerializerSettings>(),
-                        _options.Capture.FolderDelimiter, 
+                        _options.Monitor.FolderDelimiter, 
                         provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>());
             })
             .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
@@ -105,37 +105,7 @@ internal class AppHost : IHostedService
                     provider.GetRequiredService<ILogger<PingResponseModelObjectRepository>>());
             })
             .AddSingleton<IRestorageOrchestrator<PingResponseModel>, PingResponseModelReStorageOrchestrator>()
-            //.AddSingleton(provider =>
-            //{
-            //    var instance = new Dictionary<MonitorModes, IMonitorModeOrchestrator>
-            //                {
-            //                    {
-            //                        MonitorModes.PingContinuously,
-            //                        new PingContinuouslyOrchestrator(
-            //                        provider.GetRequiredService<IPingOrchestrator>(),
-            //                        provider.GetRequiredService<PingOrchestratorOptions>(),
-            //                        provider.GetRequiredService<ILogger<PingContinuouslyOrchestrator>>()
-            //                        )
-            //                    },
-            //                    {
-            //                        MonitorModes.TraceRouteContinuously,
-            //                        new TraceRouteContinuouslyOrchestrator(
-            //                            provider.GetRequiredService<ITraceRouteOrchestrator>(),
-            //                            provider.GetRequiredService<ILogger<TraceRouteContinuouslyOrchestrator>>()
-            //                            )
-            //                    },
-            //                    {
-            //                        MonitorModes.TraceRouteThenPingContinuously,
-            //                        new TraceRouteThenPingContinuouslyOrchestrator(
-            //                        provider.GetRequiredService<ITraceRouteOrchestrator>(),
-            //                        provider.GetRequiredService<IPingOrchestrator>(),
-            //                        provider.GetRequiredService<ILogger<TraceRouteThenPingContinuouslyOrchestrator>>()
-            //                    )
-            //                    }
-            //                };
-            //    return instance;
-            //}
-            //            )
+           
             ;
         return services.BuildServiceProvider();
     }

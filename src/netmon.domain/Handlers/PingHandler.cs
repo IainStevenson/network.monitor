@@ -8,9 +8,9 @@ namespace netmon.domain.Handlers
 {
 
     /// <summary>
-    /// Handles <see cref="Ping"/> tasks.
+    /// Handles <see cref="System.Net.NetworkInformation.Ping"/> tasks.
     /// </summary>
-    public class PingHandler : IPingHandler
+    public class PingHandler : IPinOrchestrator
     {
         private readonly PingHandlerOptions _pingOptions;
         private readonly ILogger<PingHandler> _logger;
@@ -27,7 +27,7 @@ namespace netmon.domain.Handlers
         /// </summary>
         /// <param name="action"></param>
         /// <returns>An instance of <see cref="Task"/> delivering an instance of <see cref="PingResponseModel"/></returns>
-        public Task<PingResponseModel> Execute(PingRequestModel request, CancellationToken cancellationToken)
+        public Task<PingResponseModel> Ping(PingRequestModel request, CancellationToken cancellationToken)
         {
             var response = new PingResponseModel();
             return Task.Run(() =>
@@ -45,7 +45,7 @@ namespace netmon.domain.Handlers
 
                     _logger.LogTrace(
                         "{class}.{method} PING request  {address}, Timeout: {timeout}, TTL {timetolive}", 
-                        nameof(PingHandler), nameof(Execute), request.Address, _pingOptions.Timeout, request.Ttl);
+                        nameof(PingHandler), nameof(Ping), request.Address, _pingOptions.Timeout, request.Ttl);
 
                     response.Start = DateTimeOffset.UtcNow;
                     
@@ -68,7 +68,7 @@ namespace netmon.domain.Handlers
                         };
                     }
                     _logger.LogTrace("{class}.{method} PING response {duration} ms, Status {status},  TTL {timetolive}", 
-                        nameof(PingHandler), nameof(Execute), response.Duration.TotalMilliseconds, response.Response?.Status, response.Response?.Options?.Ttl);
+                        nameof(PingHandler), nameof(Ping), response.Duration.TotalMilliseconds, response.Response?.Status, response.Response?.Options?.Ttl);
                 }
                 return response;
             });

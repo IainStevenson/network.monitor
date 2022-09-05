@@ -84,7 +84,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
 
 
             _pingOrchestrator
-                .PingUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>())
+                .PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, Arg.Any<CancellationToken>())
                 .Returns(_pingTestResponses);
 
         }
@@ -106,7 +106,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
 
             // assert 
 
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            await _pingOrchestrator.Received(1).PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
             
 
@@ -131,7 +131,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
 
 
             // assert 
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
+            await _pingOrchestrator.Received(1).PingManyUntil(Arg.Any<IPAddress[]>(), _testUntil, _cancellationToken);
 
 
         }
@@ -147,14 +147,14 @@ namespace netmon.domain.tests.Integration.Orchestrators
             TestDatasetup(testAddresses);
 
 
-            _pingOrchestrator.PingUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).ThrowsAsync<Exception>();
+            _pingOrchestrator.PingManyUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).ThrowsAsync<Exception>();
 
             // Act
             await _unit.Execute(testAddresses, _testUntil, _cancellationToken);
 
 
             // assert 
-            await _pingOrchestrator.Received(1).PingUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            await _pingOrchestrator.Received(1).PingManyUntil(Arg.Any<IPAddress[]>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
 
         }
     }

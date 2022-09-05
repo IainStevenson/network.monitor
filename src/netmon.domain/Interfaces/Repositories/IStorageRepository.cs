@@ -3,7 +3,7 @@
 namespace netmon.domain.Interfaces.Repositories
 {
     /// <summary>
-    /// Defines storage in a repository of items of type <see cref="T"/>.
+    /// Defines storage in a repository of items of type <see cref="TItem"/> with an unique key of <see cref="TKey"/>
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TItem"></typeparam>

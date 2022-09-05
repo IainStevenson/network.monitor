@@ -7,32 +7,28 @@ using System.Diagnostics;
 namespace netmon.domain.Storage
 {
     /// <summary>
-    /// The single responsibiity of this class is to;
-    /// store (insert or update) [upsert], retrieve,  or delete an instance of <see cref="PingResponseModel"/>, 
-    /// or retieve an <see cref="IEnumerable{T}"/> of them using an instance keys or using a <see cref="Func{T, TResult}"/> query.
+    /// The single responsibiity of this class is to; provide various storage action capabilities for the <see cref="PingRequestModel"/> data type.
     /// </summary>
-    public class PingResponseModelJsonRepository :
-        IStorageRepository<Guid, PingResponseModel>,
-        IRetrieveRepository<Guid, PingResponseModel>,
-        IDeletionRepository<Guid, PingResponseModel>, IRepository, IFileSystemRepository
+    public class PingResponseModelJsonRepository : IRepository,
+                                                    IFileSystemRepository,
+                                                    IStorageRepository<Guid, PingResponseModel>,
+                                                    IRetrieveRepository<Guid, PingResponseModel>,
+                                                    IDeletionRepository<Guid, PingResponseModel>
     {
-        public RepositoryCapabilities Capabilities =>
-                RepositoryCapabilities.Store |
-                RepositoryCapabilities.Retrieve |
-                RepositoryCapabilities.Delete |
-                RepositoryCapabilities.File
-            ;
+        public RepositoryCapabilities Capabilities => RepositoryCapabilities.Store |
+                                                        RepositoryCapabilities.Retrieve |
+                                                        RepositoryCapabilities.Delete |
+                                                        RepositoryCapabilities.File;
 
         private ILogger<PingResponseModelJsonRepository> _logger;
         private readonly DirectoryInfo _storageFolder;
         private readonly JsonSerializerSettings _settings;
         private readonly string _storageSystemFolderDelimiter;
 
-        public PingResponseModelJsonRepository(
-            DirectoryInfo storageFolder,
-            JsonSerializerSettings settings,
-            string storageSystemFolderDelimiter,
-            ILogger<PingResponseModelJsonRepository> logger)
+        public PingResponseModelJsonRepository(DirectoryInfo storageFolder,
+                                                JsonSerializerSettings settings,
+                                                string storageSystemFolderDelimiter,
+                                                ILogger<PingResponseModelJsonRepository> logger)
         {
             _storageFolder = storageFolder;
             _settings = settings;
@@ -52,6 +48,13 @@ namespace netmon.domain.Storage
             return Task.FromResult(0);
         }
 
+        /// <summary>
+        /// Retrieves and returns the data within a file as text regardless of actual content type. There is no mime-type checking.
+        /// Uses <see cref="DebuggerStepThroughAttribute"/> to prevent debugging stopping on any exception catches 
+        /// whereby the exception is dicarded and the return value is intetnially null.
+        /// </summary>
+        /// <param name="fullFileName">The full file name of the file.</param>
+        /// <returns>The file content if retrievable or present as text</returns>
         [DebuggerStepThrough]
         public Task<string> GetFileDataAsync(string fullFileName)
         {
@@ -60,7 +63,7 @@ namespace netmon.domain.Storage
             {
                 return Task.FromResult(File.ReadAllText(fullFileName));
             }
-            catch { } // return empty and worry about it next time.
+            catch { }
 
             return Task.FromResult(String.Empty);
         }

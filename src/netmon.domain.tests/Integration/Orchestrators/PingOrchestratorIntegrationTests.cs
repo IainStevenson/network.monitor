@@ -15,7 +15,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
 {
     public class PingOrchestratorIntegrationTests : TestBase<PingOrchestrator>
     {
-        private IPingHandler _pingHandler;
+        private IPinOrchestrator _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
         private ILogger<PingHandler> _pingHandlerLogger;
         private IPingRequestModelFactory _pingRequestModelFactory;
@@ -52,7 +52,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
             // Arrange
             var request = new IPAddress[] { Defaults.LoopbackAddress };
             // Act
-            var responses = await _unit.Ping(request, _cancellationToken);
+            var responses = await _unit.PingMany(request, _cancellationToken);
             // Assert
             Assert.That(responses, Has.Count.EqualTo(request.Length), "The test returned the wrong number of results");
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
@@ -69,7 +69,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
             var duration = new TimeSpan(0, 0, 2);
             var request = new IPAddress[] { Defaults.LoopbackAddress };
             // Act
-            var responses = await _unit.PingUntil(request, duration, _cancellationToken);
+            var responses = await _unit.PingManyUntil(request, duration, _cancellationToken);
             // Assert
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
             Assert.That(_storage.Count, Is.EqualTo(responses.Count), "The responses were not stored");
@@ -83,7 +83,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
         {
             var duration = new TimeSpan(0, 0, 3);
             var request = new IPAddress[] { Defaults.LoopbackAddress };
-            var responses = _unit.PingUntil(request, duration, _cancellationToken).Result;
+            var responses = _unit.PingManyUntil(request, duration, _cancellationToken).Result;
             Assert.That(responses.Where(x => x.Value.Request.Address is null).Count, Is.EqualTo(0), "One or more null address were returned");
             Assert.That(_storage.Count, Is.EqualTo(responses.Count), "The responses were not stored");
             ShowResults(responses);
@@ -98,7 +98,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
             request.AddRange(TestConditions.LocalAddresses);
             request.AddRange(TestConditions.WorldAddresses);
 
-            var responses = _unit.PingUntil(request.ToArray(), duration, _cancellationToken).Result;
+            var responses = _unit.PingManyUntil(request.ToArray(), duration, _cancellationToken).Result;
 
             Assert.That(responses, Has.Count.EqualTo(request.Count * duration.Seconds), "The test returned the wrong number of results");
             Assert.That(_storage.Count, Is.EqualTo(responses.Count), "The responses were not stored");

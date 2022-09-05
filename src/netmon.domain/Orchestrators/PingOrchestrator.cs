@@ -12,15 +12,16 @@ namespace netmon.domain.Orchestrators
 
     /// <summary>
     /// Handles complex ping tasks via the <see cref="PingHandler"/> and and returns the results  as <see cref="PingResponses"/>.
+    /// Storeds the result via injected storage repositories.
     /// </summary>
     public class PingOrchestrator : IPingOrchestrator
     {
-        private readonly IPingHandler _pingHandler;
+        private readonly IPinOrchestrator _pingHandler;
         private readonly IPingRequestModelFactory _pingRequestModelFactory;
         private readonly PingOrchestratorOptions _options;
         private readonly IEnumerable<IRepository> _repositories;
         public PingOrchestrator(
-            IPingHandler pingHandler,
+            IPinOrchestrator pingHandler,
             IPingRequestModelFactory pingRequestModelFactory,
             PingOrchestratorOptions options,
              IEnumerable<IRepository> repositories)
@@ -31,7 +32,13 @@ namespace netmon.domain.Orchestrators
             _repositories = repositories;
         }
 
-        public async Task<PingResponseModels> Ping(IPAddress[] addresses, CancellationToken cancellation)
+
+        public async Task<PingResponseModel> PingOne(PingRequestModel request, CancellationToken cancellationToken)
+        {
+            return await _pingHandler.Ping(request, cancellationToken);
+        }
+
+        public async Task<PingResponseModels> PingMany(IPAddress[] addresses, CancellationToken cancellationToken)
         {
             var pauseTimeBetweenInstances = new TimeSpan(_options.MillisecondsBetweenPings * 10000);
             var parallelTasks = new List<Task<PingResponseModel>>(addresses.Length);
@@ -41,11 +48,11 @@ namespace netmon.domain.Orchestrators
             {
                 var request = _pingRequestModelFactory.Create(addresses[i]);
 
-                Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
+                Task<PingResponseModel> task = _pingHandler.Ping(request, cancellationToken);
                 parallelTasks.Add(task);
             }
 
-            if (cancellation.IsCancellationRequested) return new PingResponseModels();
+            if (cancellationToken.IsCancellationRequested) return new PingResponseModels();
 
             await Task.WhenAll(parallelTasks);
 
@@ -70,7 +77,7 @@ namespace netmon.domain.Orchestrators
            
         }
 
-        public async Task<PingResponseModels> PingUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
+        public async Task<PingResponseModels> PingManyUntil(IPAddress[] addresses, TimeSpan until, CancellationToken cancellation)
         {
             var pauseTimeBetweenInstances = new TimeSpan(_options.MillisecondsBetweenPings * 10000);
             var end = DateTimeOffset.UtcNow.Add(until);
@@ -93,7 +100,7 @@ namespace netmon.domain.Orchestrators
                     var request = _pingRequestModelFactory.Create(addresses[i]);
 
 
-                    Task<PingResponseModel> task = _pingHandler.Execute(request, cancellation);
+                    Task<PingResponseModel> task = _pingHandler.Ping(request, cancellation);
                     parallelTasks.Add(task);
                 }
 

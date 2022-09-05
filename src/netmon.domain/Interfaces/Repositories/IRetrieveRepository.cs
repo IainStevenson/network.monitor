@@ -1,10 +1,10 @@
 ﻿namespace netmon.domain.Interfaces.Repositories
 {
     /// <summary>
-    /// Defines item retrieval from a repository of type <see cref="T"/>
+    /// Defines item retrieval from a repository of type <see cref="TItem"/> with an unique key of <see cref="TKey"/>.
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TItem"></typeparam>
+    /// <typeparam name="TKey">The type of the item unique key.</typeparam>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
     public interface IRetrieveRepository<TKey, TItem>
     {
         /// <summary>

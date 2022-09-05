@@ -34,7 +34,7 @@ namespace netmon.domain.tests.Integration.Handlers
         public void OnExecuteWithDefaltLoopbackRequestASuccessResponseIsReturned()
         {
             PingRequestModel request = _pingRequestModelFactory.Create(Defaults.LoopbackAddress);
-            PingResponseModel response = _unit.Execute(request, _cancellationToken).Result;
+            PingResponseModel response = _unit.Ping(request, _cancellationToken).Result;
             Assert.Multiple(() =>
             {
                 Assert.That(response.Response?.Status, Is.EqualTo(IPStatus.Success), "The test was a complete failure it is probable the environment has no network layer at all");
@@ -52,7 +52,7 @@ namespace netmon.domain.tests.Integration.Handlers
         public void OnExecuteWithDefaltLoopbackRequestAndOneMillisecondTimeoutASuccessResponseIsReturned()
         {
             PingRequestModel request = _pingRequestModelFactory.Create(Defaults.LoopbackAddress);
-            PingResponseModel response = _unit.Execute(request, _cancellationToken).Result;
+            PingResponseModel response = _unit.Ping(request, _cancellationToken).Result;
             Assert.That(response.Response?.Status, Is.EqualTo(IPStatus.Success), "The test was a complete failure");
         }
         [Test]
@@ -61,7 +61,7 @@ namespace netmon.domain.tests.Integration.Handlers
         {
             _pingHandlerOptions.Timeout = 0;
             PingRequestModel request = _pingRequestModelFactory.Create(Defaults.LoopbackAddress);
-            Assert.ThrowsAsync<PingException>(async () => await _unit.Execute(request, _cancellationToken));
+            Assert.ThrowsAsync<PingException>(async () => await _unit.Ping(request, _cancellationToken));
         }
     }
 }

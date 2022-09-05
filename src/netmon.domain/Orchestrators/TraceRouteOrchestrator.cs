@@ -11,22 +11,22 @@ namespace netmon.domain.Orchestrators
 {
 
     /// <summary>
-    /// Orchestrates a traceroute using an instance of  <see cref="IPingHandler"/> and obtains raw response data.
+    /// Orchestrates a traceroute using an instance of  <see cref="IPinOrchestrator"/> and obtains raw response data.
     /// </summary>
     public class TraceRouteOrchestrator : ITraceRouteOrchestrator
     {
-        private readonly IPingHandler _pingHandler;
+        private readonly IPingOrchestrator _pingOrchestrator;
         private readonly TraceRouteOrchestratorOptions _options;
         private readonly IPingRequestModelFactory _requestModelFactory;
         private readonly ILogger<TraceRouteOrchestrator> _logger;
 
         public TraceRouteOrchestrator(
-            IPingHandler pingHandler, 
+            IPingOrchestrator pingOrchestrator, 
             TraceRouteOrchestratorOptions options, 
             IPingRequestModelFactory requestModelFactory,
             ILogger<TraceRouteOrchestrator> logger)
         {
-            _pingHandler = pingHandler;
+            _pingOrchestrator = pingOrchestrator;
             _options = options;
             _requestModelFactory = requestModelFactory;
             _logger = logger;
@@ -41,7 +41,7 @@ namespace netmon.domain.Orchestrators
         /// </summary>
         /// <param name="iPAddress">The network address to trace.</param>
         /// <param name="cancellationToken">An async cancellation token.</param>
-        /// <returns></returns>
+        /// <returns>An instance of <see cref="PingResponseModels"/> within a <see cref="Task"/> completion object.</returns>
         public async Task<PingResponseModels> Execute(IPAddress iPAddress, CancellationToken cancellationToken)
         {
             _logger.LogTrace("Tracing route to {iPAddress}", iPAddress);
@@ -59,7 +59,7 @@ namespace netmon.domain.Orchestrators
                 try
                 {
 
-                    var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
+                    var pingResponse = await _pingOrchestrator.PingOne(pingRequest, cancellationToken);
 
 
                     RecordResultIfNotNull(responses, pingResponse);
@@ -94,7 +94,7 @@ namespace netmon.domain.Orchestrators
                 pingRequest.Address = hopAddress;
 
 
-                var pingResponse = await _pingHandler.Execute(pingRequest, cancellationToken);
+                var pingResponse = await _pingOrchestrator.PingOne(pingRequest, cancellationToken);
 
                 AddTraceInfo(pingResponse, attempt, _options.MaxAttempts, hop);
 

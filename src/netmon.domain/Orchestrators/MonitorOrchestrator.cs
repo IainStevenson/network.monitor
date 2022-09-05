@@ -14,8 +14,9 @@ namespace netmon.domain.Orchestrators
         private readonly Dictionary<MonitorModes, IMonitorModeOrchestrator> _monitors;
         private readonly ILogger<MonitorOrchestrator> _logger;
 
-        public MonitorOrchestrator(Dictionary<MonitorModes, IMonitorModeOrchestrator> monitors,
-        ILogger<MonitorOrchestrator> logger)
+        public MonitorOrchestrator(
+            Dictionary<MonitorModes, IMonitorModeOrchestrator> monitors,
+            ILogger<MonitorOrchestrator> logger)
         {
             _monitors = monitors;
             _logger = logger;
