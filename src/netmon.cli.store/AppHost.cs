@@ -31,7 +31,6 @@ internal class AppHost : BaseAppHost
 
         services = base.BootstrapApplication(services, configurationRoot);
         services
-                .AddAppStorageBsonMapping()        
                 .AddAppFileStorage(Options)
                 .AddAppObjectStorage(Options)
             ;
