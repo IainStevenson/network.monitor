@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace netmon.cli
+﻿namespace netmon.cli
 {
     public class AppOptions
     {

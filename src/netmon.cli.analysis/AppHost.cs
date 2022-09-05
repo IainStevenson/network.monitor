@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using MongoDB.Bson.Serialization;
 using netmon.cli;
-using netmon.domain.Configuration;
 using netmon.domain.Interfaces;
 using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Models;

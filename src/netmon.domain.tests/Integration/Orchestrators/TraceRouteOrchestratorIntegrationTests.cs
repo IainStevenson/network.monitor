@@ -7,9 +7,7 @@ using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Models;
 using netmon.domain.Orchestrators;
 using netmon.domain.Storage;
-using Newtonsoft.Json;
 using NSubstitute;
-using NUnit.Framework.Constraints;
 using System.Collections.Concurrent;
 using System.Net.NetworkInformation;
 
