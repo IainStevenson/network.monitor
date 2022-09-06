@@ -2,9 +2,12 @@
 using netmon.domain.Configuration;
 using netmon.domain.Data;
 using netmon.domain.Interfaces;
+using netmon.domain.Interfaces.Repositories;
 using netmon.domain.Models;
 using netmon.domain.Orchestrators;
+using netmon.domain.Storage;
 using NSubstitute;
+using System.Collections.Concurrent;
 using System.Net.NetworkInformation;
 
 namespace netmon.domain.tests.Integration.Orchestrators
@@ -15,9 +18,11 @@ namespace netmon.domain.tests.Integration.Orchestrators
         private IPingRequestModelFactory _pingRequestModelFactory;
         private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
         private ILogger<TraceRouteOrchestrator> _unitLogger;
+        private IEnumerable<IRepository> _repositories;
         private PingHandlerOptions _pingHandlerOptions;
         //private ILogger<PingHandler> _pingHandlerLogger;
-
+        private ConcurrentDictionary<Guid, PingResponseModel> _store = new();
+        private ILogger<PingResponseModelInMemoryRepository> _storeLogger;
         /// <summary>
         /// TODO: Mock out all deppendencies
         /// </summary>
@@ -26,12 +31,19 @@ namespace netmon.domain.tests.Integration.Orchestrators
         {
             base.Setup();
             // unit setup
+            _store.Clear();
             _pingOrchestrator = Substitute.For<IPingOrchestrator>(); ;
             _traceRouteHandlerOptions = new TraceRouteOrchestratorOptions();
             _pingHandlerOptions = new PingHandlerOptions();
             _pingRequestModelFactory = new PingRequestModelFactory(_pingHandlerOptions);
             _unitLogger = Substitute.For<ILogger<TraceRouteOrchestrator>>();
-            _unit = new TraceRouteOrchestrator(_pingOrchestrator, _traceRouteHandlerOptions, _pingRequestModelFactory, _unitLogger);
+            _storeLogger = Substitute.For<ILogger<PingResponseModelInMemoryRepository>>();
+
+            _repositories = new List<IRepository>() {
+                new PingResponseModelInMemoryRepository(_store, _storeLogger)
+            };
+            _unit = new TraceRouteOrchestrator(_pingOrchestrator, _traceRouteHandlerOptions, _pingRequestModelFactory,
+                    _repositories, _unitLogger);
 
         }
 

@@ -54,7 +54,8 @@ namespace netmon.domain.tests.Integration.Orchestrators
             _unit = new TraceRouteOrchestrator(
                     _pingOrchestrator, 
                     _traceRouteHandlerOptions, 
-                    _pingRequestModelFactory, 
+                    _pingRequestModelFactory,
+                    _repositories,
                     _logger);
 
 
