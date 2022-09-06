@@ -32,6 +32,7 @@ internal class AppHost : BaseAppHost
     protected override IServiceCollection BootstrapApplication(IServiceCollection services, IConfigurationRoot configurationRoot)
     {
         Options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();
+        Options.Monitor.EnsureStorageDirectoryExists(Options.Monitor.OutputPath);
         if (!Options.Monitor.StorageFolder.Exists) throw new ArgumentException("OutputPath");
 
         services

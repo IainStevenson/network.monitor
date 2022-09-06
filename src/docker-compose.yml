@@ -1,10 +1,17 @@
 version: '3.4'
 
 services:
-  netmon.cli:
-    image: ${DOCKER_REGISTRY-}netmoncli
+  netmon.cli.monitor:
+    image: ${DOCKER_REGISTRY-}netmonclimonitor
     build:
       context: .
-      dockerfile: netmon.cli/Dockerfile
+      dockerfile: netmon.cli.monitor/Dockerfile
     volumes:
-        - ${APPDATA}/netmon/data:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
+        - ${APPDATA}/netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
+  netmon.cli.store:
+    image: ${DOCKER_REGISTRY-}netmonclistore
+    build:
+      context: .
+      dockerfile: netmon.cli.store/Dockerfile
+    volumes:
+        - ${APPDATA}/netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
