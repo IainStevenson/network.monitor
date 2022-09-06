@@ -15,7 +15,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
 {
     public class PingOrchestratorIntegrationTests : TestBase<PingOrchestrator>
     {
-        private IPinOrchestrator _pingHandler;
+        private IPingHandler _pingHandler;
         private PingHandlerOptions _pingHandlerOptions;
         private ILogger<PingHandler> _pingHandlerLogger;
         private IPingRequestModelFactory _pingRequestModelFactory;

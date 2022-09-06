@@ -16,7 +16,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
     public class TraceRouteOrchestratorIntegrationTests : TestBase<TraceRouteOrchestrator>
     {
         private PingHandlerOptions _pingHandlerOptions;
-        private IPinOrchestrator _pingHandler;
+        private IPingHandler _pingHandler;
         private IPingRequestModelFactory _pingRequestModelFactory;
         private TraceRouteOrchestratorOptions _traceRouteHandlerOptions;
         private ILogger<PingHandler> _pingHandlerLogger;

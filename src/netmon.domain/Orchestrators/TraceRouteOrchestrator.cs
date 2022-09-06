@@ -12,7 +12,7 @@ namespace netmon.domain.Orchestrators
 {
 
     /// <summary>
-    /// Orchestrates a traceroute using an instance of  <see cref="IPinOrchestrator"/> and obtains raw response data.
+    /// Orchestrates a traceroute using an instance of  <see cref="IPingHandler"/> and obtains raw response data.
     /// </summary>
     public class TraceRouteOrchestrator : ITraceRouteOrchestrator
     {

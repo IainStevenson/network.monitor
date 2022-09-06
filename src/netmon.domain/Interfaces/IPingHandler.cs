@@ -4,9 +4,8 @@ namespace netmon.domain.Interfaces
 {
     /// <summary>
     /// Abstracts handling  Internet Control Message Protocol (ICMP) echo request message via the <see cref="System.Net.NetworkInformation.Ping"/> class.
-    ///  
     /// </summary>
-    public interface IPinOrchestrator
+    public interface IPingHandler
     {
         /// <summary>
         /// Asnychronously emit a ping to an address and return the response.

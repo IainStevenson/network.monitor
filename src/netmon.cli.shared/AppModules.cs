@@ -28,7 +28,7 @@ namespace netmon.cli.monitor
                     .AddSingleton<PingOrchestratorOptions>() // the defaults are good here
                     .AddSingleton<TraceRouteOrchestratorOptions>()// the defaults are good here
                     .AddSingleton<IPingRequestModelFactory, PingRequestModelFactory>()
-                    .AddTransient<IPinOrchestrator, PingHandler>()
+                    .AddTransient<IPingHandler, PingHandler>()
                     .AddSingleton<ITraceRouteOrchestrator, TraceRouteOrchestrator>()
                     .AddSingleton<IPingOrchestrator, PingOrchestrator>()
                     .AddSingleton<PingContinuouslyOrchestrator>()

@@ -42,7 +42,7 @@ namespace netmon.domain.tests.Integration.Orchestrators
         [Category("Unit")]
         public void OnExecuteToLoopbackOnPingExceptionReturnsResultsWithoutResponses()
         {
-            var pingHandler = Substitute.For<IPinOrchestrator>();
+            var pingHandler = Substitute.For<IPingHandler>();
 
             _pingOrchestrator.PingOne(Arg.Any<PingRequestModel>(), Arg.Any<CancellationToken>())
                         .Returns(Task.FromException<PingResponseModel>(new PingException("some fake error")));

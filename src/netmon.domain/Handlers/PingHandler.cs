@@ -7,10 +7,8 @@ using System.Net.NetworkInformation;
 namespace netmon.domain.Handlers
 {
 
-    /// <summary>
-    /// Handles <see cref="System.Net.NetworkInformation.Ping"/> tasks.
-    /// </summary>
-    public class PingHandler : IPinOrchestrator
+    /// <inheritdoc/>
+    public class PingHandler : IPingHandler
     {
         private readonly PingHandlerOptions _pingOptions;
         private readonly ILogger<PingHandler> _logger;
@@ -20,13 +18,7 @@ namespace netmon.domain.Handlers
             _pingOptions = pingOptions;
             _logger = logger;
         }
-
-
-        /// <summary>
-        /// Asnychronously emit a ping to an address and return the response.
-        /// </summary>
-        /// <param name="action"></param>
-        /// <returns>An instance of <see cref="Task"/> delivering an instance of <see cref="PingResponseModel"/></returns>
+        /// <inheritdoc/>
         public Task<PingResponseModel> Ping(PingRequestModel request, CancellationToken cancellationToken)
         {
             var response = new PingResponseModel();
@@ -73,7 +65,5 @@ namespace netmon.domain.Handlers
                 return response;
             });
         }
-
-
     }
 }
