@@ -12,14 +12,11 @@ namespace netmon.cli.monitor
     public abstract class BaseAppHost : IHostedService
     {
         protected AppOptions Options = new();
-        protected ILogger<BaseAppHost> Logger;
-        protected ServiceProvider ServiceProvider;
-
+        
         public BaseAppHost(IServiceCollection services, IHostEnvironment environment, string[] args)
         {
             var config = BootstrapConfiguration(environment.EnvironmentName, args).Build();
-            ServiceProvider = BootstrapApplication(services, config).BuildServiceProvider();
-            Logger = ServiceProvider.GetRequiredService<ILogger<BaseAppHost>>();            
+            _ = BootstrapCrossCuttingModules(services, config);
         }
 
         /// <summary>
@@ -35,6 +32,8 @@ namespace netmon.cli.monitor
         /// <param name="cancellationToken">The asnychronous cancellation token.</param>
         /// <returns>An instance of <see cref="Task"/></returns>
         public abstract Task StopAsync(CancellationToken cancellationToken);
+
+        protected abstract IServiceCollection BootstrapApplication(IServiceCollection services, IConfigurationRoot configurationRoot);
 
         /// <summary>
         /// Provides the necessary configuration providers for json configuration with environment optional, and command line arguments.
@@ -59,7 +58,7 @@ namespace netmon.cli.monitor
         /// </summary>
         /// <param name="configurationRoot">Uses the configuration to assist in setup.</param>
         /// <returns></returns>
-        protected virtual IServiceCollection BootstrapApplication(IServiceCollection services, IConfigurationRoot configurationRoot)
+        protected IServiceCollection BootstrapCrossCuttingModules(IServiceCollection services, IConfigurationRoot configurationRoot)
         {
 
             Options = configurationRoot.GetSection("AppOptions").Get<AppOptions>();

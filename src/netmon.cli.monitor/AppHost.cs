@@ -1,15 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DnsClient.Internal;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using netmon.domain.Configuration;
 using netmon.domain.Handlers;
 using netmon.domain.Interfaces;
+using System;
 
 namespace netmon.cli.monitor
 {
     public class AppHost : BaseAppHost
     {
+        private ServiceProvider _serviceProvider;
+        private ILogger<AppHost> _logger;
         private readonly Dictionary<MonitorModes, IMonitorModeOrchestrator> _monitors;
 
         
@@ -17,9 +21,9 @@ namespace netmon.cli.monitor
         {
             var configurationRoot = BootstrapConfiguration(environment.EnvironmentName, args).Build();
 
-            ServiceProvider = BootstrapApplication(services, configurationRoot).BuildServiceProvider();           
-
-            _monitors = ServiceProvider.GetRequiredService<Dictionary<MonitorModes, IMonitorModeOrchestrator>>();
+            _serviceProvider = BootstrapApplication(services, configurationRoot).BuildServiceProvider();
+            _logger = _serviceProvider.GetRequiredService<ILogger<AppHost>>();
+            _monitors = _serviceProvider.GetRequiredService<Dictionary<MonitorModes, IMonitorModeOrchestrator>>();
 
         }
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -28,9 +32,9 @@ namespace netmon.cli.monitor
             // "Temporary code whilst getting fix for ping problems in linux with low TTL"
             var canUseRawSockets = RawSocketPermissions.CanUseRawSockets(System.Net.Sockets.AddressFamily.InterNetwork);
 
-            Logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
+            _logger.LogTrace("Can use Sockets On this host... {canUse}", canUseRawSockets);
 
-            Logger.LogTrace("Monitoring... {addresses} {until} {mode}",
+            _logger.LogTrace("Monitoring... {addresses} {until} {mode}",
                                                     Options.Monitor.Addresses,
                                                     $"{DateTimeOffset.UtcNow.Add(Options.Monitor.Until):o}",
                                                     Options.Monitor.Mode
@@ -46,7 +50,7 @@ namespace netmon.cli.monitor
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            Logger.LogTrace("Stopping...");
+            _logger.LogTrace("Stopping...");
             return Task.CompletedTask;
         }
 
@@ -65,7 +69,6 @@ namespace netmon.cli.monitor
             Options.Monitor.EnsureStorageDirectoryExists(Options.Monitor.OutputPath);
             if (!Options.Monitor.StorageFolder.Exists) throw new ArgumentException("OutputPath");
 
-            services = base.BootstrapApplication(services,configurationRoot);
             services
                     .AddAppMonitoring()
                     .AddAppFileStorage(Options)

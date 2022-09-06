@@ -9,7 +9,6 @@ using netmon.domain.Models;
 using netmon.domain.Orchestrators;
 using netmon.domain.Storage;
 using Newtonsoft.Json;
-using System.Text.Json.Serialization;
 
 namespace netmon.cli.monitor
 {
@@ -66,14 +65,16 @@ namespace netmon.cli.monitor
         /// <returns>The same <see cref="IServiceCollection"/> intance.</returns>
         public static IServiceCollection AddAppObjectStorage(this IServiceCollection services, AppOptions options)
         {
-            BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
+            if (!BsonClassMap.IsClassMapRegistered(typeof(PingResponseModel)))
             {
-                cm.AutoMap();
-                //cm.MapIdMember(c => c.Id);
-                cm.SetIgnoreExtraElements(true);
-            });
+                BsonClassMap.RegisterClassMap<PingResponseModel>(cm =>
+                {
+                    cm.AutoMap();
+                    //cm.MapIdMember(c => c.Id);
+                    cm.SetIgnoreExtraElements(true);
+                });
+            }
             services
-                .AddSingleton<PingResponseModelObjectRepository>()
                 .AddSingleton<IStorageRepository<Guid, PingResponseModel>>(provider =>
             {
                 var client = new MongoDB.Driver.MongoClient(options.Storage.ConnectionString);
@@ -97,13 +98,22 @@ namespace netmon.cli.monitor
         public static IServiceCollection AddAppFileStorage(this IServiceCollection services, AppOptions options)
         {
             services
+
+                .AddSingleton<IFileSystemRepository>(provider =>
+                {
+                    return new PingResponseModelJsonRepository(options.Monitor.StorageFolder,
+                            provider.GetRequiredService<JsonSerializerSettings>(),
+                            options.Monitor.FolderDelimiter, provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>());
+                })
+            
+
                 .AddSingleton<IRepository>(provider =>
                 {
                     return new PingResponseModelJsonRepository(
                             options.Monitor.StorageFolder,
                             provider.GetRequiredService<JsonSerializerSettings>(),
                             options.Monitor.FolderDelimiter,
-                            provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>() );
+                            provider.GetRequiredService<ILogger<PingResponseModelJsonRepository>>());
                 })
                 .AddSingleton<IRepository>(provider =>
                 {
