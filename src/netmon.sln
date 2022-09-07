@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core", "netmon.core\netmon.core.csproj", "{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.core.tests", "netmon.core.tests\netmon.core.tests.csproj", "{47B53F2C-9D2C-4437-8903-3A5B416642C4}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D2BF152F-23FE-4F78-A0E2-C084A7BA7F1D}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
@@ -18,7 +14,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\usage.md = ..\usage.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli", "netmon.cli\netmon.cli.csproj", "{48860781-4216-43A5-A2BF-39356CAE6258}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.domain", "netmon.domain\netmon.domain.csproj", "{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.domain.tests", "netmon.domain.tests\netmon.domain.tests.csproj", "{0CE6EC36-08DF-4880-BA00-CD6682F5DD16}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.shared", "netmon.cli.shared\netmon.cli.shared.csproj", "{563CFFC4-1A1C-4C85-A1A0-D11370C841C4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.monitor", "netmon.cli.monitor\netmon.cli.monitor.csproj", "{42030809-70CA-47BC-94AC-848F48286A95}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.store", "netmon.cli.store\netmon.cli.store.csproj", "{1857E818-4C4F-4B47-AAD8-3560C18E8532}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "netmon.cli.analysis", "netmon.cli.analysis\netmon.cli.analysis.csproj", "{984D8C8F-858C-4B61-ABB0-7B4B5E1D8F7A}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}"
 EndProject
@@ -28,18 +34,30 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7596945-9EE6-4450-BFA4-C1AA232A3DB8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{47B53F2C-9D2C-4437-8903-3A5B416642C4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48860781-4216-43A5-A2BF-39356CAE6258}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30AB9B9D-25E9-408C-BDA7-EBCF4E294160}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CE6EC36-08DF-4880-BA00-CD6682F5DD16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CE6EC36-08DF-4880-BA00-CD6682F5DD16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CE6EC36-08DF-4880-BA00-CD6682F5DD16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CE6EC36-08DF-4880-BA00-CD6682F5DD16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{563CFFC4-1A1C-4C85-A1A0-D11370C841C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{563CFFC4-1A1C-4C85-A1A0-D11370C841C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{563CFFC4-1A1C-4C85-A1A0-D11370C841C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{563CFFC4-1A1C-4C85-A1A0-D11370C841C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42030809-70CA-47BC-94AC-848F48286A95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42030809-70CA-47BC-94AC-848F48286A95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42030809-70CA-47BC-94AC-848F48286A95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42030809-70CA-47BC-94AC-848F48286A95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1857E818-4C4F-4B47-AAD8-3560C18E8532}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1857E818-4C4F-4B47-AAD8-3560C18E8532}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1857E818-4C4F-4B47-AAD8-3560C18E8532}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1857E818-4C4F-4B47-AAD8-3560C18E8532}.Release|Any CPU.Build.0 = Release|Any CPU
+		{984D8C8F-858C-4B61-ABB0-7B4B5E1D8F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{984D8C8F-858C-4B61-ABB0-7B4B5E1D8F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{984D8C8F-858C-4B61-ABB0-7B4B5E1D8F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{984D8C8F-858C-4B61-ABB0-7B4B5E1D8F7A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE1C3ADD-7B81-4701-B6CB-2AA473CE5512}.Release|Any CPU.ActiveCfg = Release|Any CPU
