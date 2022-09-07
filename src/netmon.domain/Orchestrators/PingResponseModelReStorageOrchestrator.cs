@@ -46,14 +46,15 @@ namespace netmon.domain.Orchestrators
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
-                await ProcessFile(file.FullName);
+                var isDone = await ProcessFile(file.FullName);
 
-                await Cleanup(file.FullName);
+                if (isDone) await Cleanup(file.FullName);
             }
         }
 
-        private async Task ProcessFile(string fullName)
+        private async Task<bool> ProcessFile(string fullName)
         {
+            var result = false;
             _logger.LogTrace("Processing file {name} ...", fullName);
             var json = await _jsonRepository.GetFileDataAsync(fullName);
             try
@@ -62,10 +63,12 @@ namespace netmon.domain.Orchestrators
                 if (response != null)
                 {
                     await _objectRepository.StoreAsync(response);
+                    result = true;
                 }
             }
-            catch (Exception){ }
+            catch (Exception) { }
 
+           return result;
         }
 
         private async Task Cleanup(string fullName)
