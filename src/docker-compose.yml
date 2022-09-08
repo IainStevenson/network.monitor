@@ -7,11 +7,11 @@ services:
       context: .
       dockerfile: netmon.cli.monitor/Dockerfile
     volumes:
-        - ${APPDATA}/netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
+        - ${APPDATA}\netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
   netmon.cli.store:
     image: ${DOCKER_REGISTRY-}netmonclistore
     build:
       context: .
       dockerfile: netmon.cli.store/Dockerfile
     volumes:
-        - ${APPDATA}/netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
+        - ${APPDATA}\netmon:/usr/share/netmon ## Environment.SpecialFolder.CommonApplicationData/netmon
