@@ -35,12 +35,9 @@ For use
 
 Download this repository
 
-In the repository root folder execute ```.\netmon --monitor``` to start a background task to ping the internet and record results. A bit like a submarine.
-
-```.\netmon --status``` will show you how you are doing over the last 5 minutes.
+Open a terminal in teh src fodler and execute `.\coverage.bat`
 
 See the usage read me for more cli options.
-
 
 # Development Notes:
 
