@@ -35,7 +35,7 @@ For use
 
 Download this repository
 
-Open a terminal in teh src fodler and execute `.\coverage.bat`
+Open a terminal in the src fodler and execute `.\coverage.bat`
 
 See the usage read me for more cli options.
 
